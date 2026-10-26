@@ -1,0 +1,47 @@
+# Pulse Rewards
+
+基于 Vite、React、TypeScript、Tailwind CSS 和 shadcn/ui 的项目，使用 shadcn preset `b4hZZS5Uu`。
+
+## 本地开发
+
+使用 Node.js 24（见 `.nvmrc`）和 pnpm 12.15.0。
+
+```sh
+pnpm install
+pnpm dev
+```
+
+## 常用命令
+
+| 命令 | 用途 |
+| --- | --- |
+| `pnpm dev` | 启动开发服务 |
+| `pnpm build` | 类型检查并构建到 `dist/` |
+| `pnpm preview` | 预览构建结果 |
+| `pnpm lint` | 检查代码规范 |
+| `pnpm typecheck` | 检查 TypeScript 类型 |
+| `pnpm test` | 执行一次单元测试 |
+| `pnpm test:watch` | 监听文件变化并执行单元测试 |
+
+## 项目约定
+
+- 页面入口：`src/App.tsx`。
+- 全局样式与主题：`src/index.css`。
+- UI 组件：`src/components/ui/`；shadcn 配置：`components.json`。
+- 工具函数：`src/lib/`。
+- 路径别名：`@/` 指向 `src/`。
+
+添加 shadcn 组件：
+
+```sh
+pnpm exec shadcn add <component>
+```
+
+## 单元测试
+
+Vitest 只用于单元测试，在 Node 环境运行，不配置浏览器模式、集成测试或端到端测试。
+测试文件与被测模块放在一起，命名为 `*.test.ts` 或 `*.test.tsx`，仅收集 `src/` 下的测试文件。
+从 `vitest` 显式导入 `describe`、`it`、`expect` 等 API。
+
+配置位于 `vitest.config.ts`，复用 Vite 的插件与路径别名。
+`src/lib/utils.test.ts` 提供工具函数单测示例。
