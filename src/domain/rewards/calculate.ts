@@ -4,6 +4,7 @@ import { convertMinorInverse, microRcForSpend, proportionalMicroRc, safeInteger 
 import { requireIsoDate, rewardPeriod } from '../normalization/dates'
 import { UNKNOWN_CURRENCY } from '../normalization/currency'
 import { LATEST_RULES } from './rules'
+import { summarizeCardRewards } from './summarize'
 
 export type RewardTier = 'basic' | 'abroad' | 'pulse'
 
@@ -16,6 +17,8 @@ export interface TierReward {
   readonly capBasisMinor?: number | null
   readonly reasonCodes: readonly string[]
   readonly poolKey?: string
+  /** Exact state after this transaction, for historical views that must retain earlier-period cap use. */
+  readonly poolAfter?: RewardPool
 }
 
 export interface TransactionReward {
@@ -89,21 +92,23 @@ export function calculateRewards(input: readonly Transaction[], cards: readonly 
     const ownerId = card.pool?.id ?? card.id
     const key = JSON.stringify([card.pool ? 'shared' : 'card', ownerId, tier, period])
     const prior = poolMap.get(key)
-    if (prior?.remainingMinor === 0) return { tier, rateBasisPoints, eligibleMinor: 0, cappedMinor: transaction.account.minor, capBasisMinor: null, microRc: 0, reasonCodes: ['reward.cap-applied'], poolKey: key }
+    if (prior?.remainingMinor === 0) return { tier, rateBasisPoints, eligibleMinor: 0, cappedMinor: transaction.account.minor, capBasisMinor: null, microRc: 0, reasonCodes: ['reward.cap-applied'], poolKey: key, poolAfter: prior }
     const basis = capBasis(tier, transaction)
     if (basis.estimated) assumptions.push('assumption.cap-reference-fx')
     if (basis.minor === null || prior?.verification === 'missing-fx') {
-      poolMap.set(key, { key, ownerId, shared: Boolean(card.pool), tier, period, capMinor: rule.capMinor, usedMinor: null, remainingMinor: null, verification: 'missing-fx' })
-      return { tier, rateBasisPoints, eligibleMinor: null, cappedMinor: null, capBasisMinor: basis.minor, microRc: null, reasonCodes: ['fx.required-for-cap'], poolKey: key }
+      const pool: RewardPool = { key, ownerId, shared: Boolean(card.pool), tier, period, capMinor: rule.capMinor, usedMinor: null, remainingMinor: null, verification: 'missing-fx' }
+      poolMap.set(key, pool)
+      return { tier, rateBasisPoints, eligibleMinor: null, cappedMinor: null, capBasisMinor: basis.minor, microRc: null, reasonCodes: ['fx.required-for-cap'], poolKey: key, poolAfter: pool }
     }
     const remaining = prior?.remainingMinor ?? rule.capMinor
     const usedBasisMinor = Math.min(basis.minor, remaining)
     const eligibleMinor = basis.minor === 0 ? remaining > 0 ? transaction.account.minor : 0 : Number(BigInt(transaction.account.minor) * BigInt(usedBasisMinor) / BigInt(basis.minor))
     const cappedMinor = transaction.account.minor - eligibleMinor
     const usedMinor = safeInteger((prior?.usedMinor ?? 0) + usedBasisMinor)
-    poolMap.set(key, { key, ownerId, shared: Boolean(card.pool), tier, period, capMinor: rule.capMinor, usedMinor, remainingMinor: rule.capMinor - usedMinor, verification: 'complete' })
+    const pool: RewardPool = { key, ownerId, shared: Boolean(card.pool), tier, period, capMinor: rule.capMinor, usedMinor, remainingMinor: rule.capMinor - usedMinor, verification: 'complete' }
+    poolMap.set(key, pool)
     const microRc = basis.minor === 0 && remaining === 0 ? 0 : proportionalMicroRc(transaction.account.minor, rateBasisPoints, usedBasisMinor, basis.minor)
-    return { tier, rateBasisPoints, eligibleMinor, cappedMinor, capBasisMinor: basis.minor, microRc, reasonCodes: cappedMinor > 0 ? ['reward.cap-applied'] : ['reward.eligible'], poolKey: key }
+    return { tier, rateBasisPoints, eligibleMinor, cappedMinor, capBasisMinor: basis.minor, microRc, reasonCodes: cappedMinor > 0 ? ['reward.cap-applied'] : ['reward.eligible'], poolKey: key, poolAfter: pool }
   }
 
   for (const transaction of sorted) {
@@ -145,16 +150,6 @@ export function calculateRewards(input: readonly Transaction[], cards: readonly 
   }
 
   const byTransaction = new Map(transactions.map(result => [result.transactionId, result]))
-  const summaries: CardRewards[] = cards.map(card => {
-    const rows = transactions.filter(result => result.cardId === card.id)
-    const totalFor = (tier: RewardTier) => {
-      const amounts = rows.map(result => result.tiers.find(item => item.tier === tier)?.microRc ?? null)
-      return amounts.some(amount => amount === null) ? null : amounts.reduce<number>((sum, amount) => safeInteger(sum + (amount ?? 0)), 0)
-    }
-    const basicMicroRc = totalFor('basic') ?? 0, abroadMicroRc = totalFor('abroad'), pulseMicroRc = totalFor('pulse')
-    const knownMicroRc = rows.reduce((sum, result) => safeInteger(sum + result.knownMicroRc), 0)
-    const totalMicroRc = abroadMicroRc === null || pulseMicroRc === null ? null : safeInteger(basicMicroRc + abroadMicroRc + pulseMicroRc)
-    return { cardId: card.id, basicMicroRc, abroadMicroRc, pulseMicroRc, totalMicroRc, knownMicroRc, wholeRc: totalMicroRc === null ? null : Math.floor(totalMicroRc / 1_000_000), remainderMicroRc: totalMicroRc === null ? null : totalMicroRc % 1_000_000 }
-  })
+  const summaries = summarizeCardRewards(transactions, cards)
   return { ruleId: LATEST_RULES.id, transactions, byTransaction, cards: summaries, pools: [...poolMap.values()].sort((a, b) => a.key.localeCompare(b.key)) }
 }

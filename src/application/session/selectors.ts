@@ -1,12 +1,12 @@
-import { addMinor, microRcToCnyMinor } from '@/domain/money/money'
+import { addMinor } from '@/domain/money/money'
 import { reconcileStatement } from '@/domain/reconciliation/reconcile'
 import { calculateRewards } from '@/domain/rewards/calculate'
 import { LATEST_RULES } from '@/domain/rewards/rules'
 import type { SessionState } from './types'
 import type { Dataset } from '@/domain/model/types'
-import { deriveRewardDetails } from './reward-details'
-import { deriveRewardQuality } from './reward-quality'
-import { deriveRewardPoolViews } from './reward-pools'
+import { deriveRewardCardViews } from './reward-card-views'
+import { deriveRewardTotals } from './reward-totals'
+import { deriveRewardPeriods } from './reward-periods'
 
 function computeWorkspace(dataset: Dataset, hkdToCnyPpm: number | null) {
   const reports = dataset.statements.map((statement) => ({
@@ -19,51 +19,18 @@ function computeWorkspace(dataset: Dataset, hkdToCnyPpm: number | null) {
   const rewardResult = calculateRewards(dataset.transactions, dataset.cards, {
     hkdToCnyPpm,
   })
-  const totalRewardMicroRc = rewardResult.cards.some(
-    (card) => card.totalMicroRc === null,
-  )
-    ? null
-    : addMinor(rewardResult.cards.map((card) => card.totalMicroRc ?? 0))
-  const details = deriveRewardDetails(dataset, rewardResult)
-  const quality = deriveRewardQuality(dataset, rewardResult, reports)
-  const poolViews = deriveRewardPoolViews(dataset, rewardResult)
   return {
     reports,
     rewards: rewardResult,
     rules: LATEST_RULES,
-    quality: quality.total,
-    coverage: details.coverage,
+    ...deriveRewardCardViews(dataset, rewardResult, reports, hkdToCnyPpm),
+    ...deriveRewardTotals(rewardResult.transactions, hkdToCnyPpm),
+    periods: deriveRewardPeriods(dataset, rewardResult, reports, hkdToCnyPpm),
     periodInferred: dataset.statements.some((statement) =>
       statement.warnings.some(
         (warning) => warning.code === 'statement.period-inferred',
       ),
     ),
-    tierTotals: (['basic', 'abroad', 'pulse'] as const).map((tier) => {
-      const amounts = rewardResult.cards.map((card) => card[`${tier}MicroRc`])
-      return {
-        tier,
-        knownMicroRc: addMinor(
-          rewardResult.transactions.map(
-            (result) =>
-              result.tiers.find((item) => item.tier === tier)?.microRc ?? 0,
-          ),
-        ),
-        microRc: amounts.some((amount) => amount === null)
-          ? null
-          : addMinor(amounts.map((amount) => amount ?? 0)),
-      }
-    }),
-    rewardCards: rewardResult.cards.map((result) => ({
-      ...result,
-      ...details.cards.find((card) => card.cardId === result.cardId)!,
-      card: dataset.cards.find((card) => card.id === result.cardId)!,
-      quality: quality.byCard.get(result.cardId)!,
-      cnyMinor:
-        result.totalMicroRc === null
-          ? null
-          : microRcToCnyMinor(result.totalMicroRc, hkdToCnyPpm),
-      pools: poolViews.get(result.cardId) ?? [],
-    })),
     expenseCount: expenses.length,
     spendCnyMinor: addMinor(
       expenses
@@ -79,14 +46,6 @@ function computeWorkspace(dataset: Dataset, hkdToCnyPpm: number | null) {
       report.accounts.some((account) => account.status === 'mismatch'),
     ).length,
     reviewCount: dataset.transactions.filter((t) => t.confidence < 0.85).length,
-    totalRewardMicroRc,
-    knownRewardMicroRc: addMinor(
-      rewardResult.cards.map((card) => card.knownMicroRc),
-    ),
-    totalRewardCnyMinor:
-      totalRewardMicroRc === null
-        ? null
-        : microRcToCnyMinor(totalRewardMicroRc, hkdToCnyPpm),
   }
 }
 
