@@ -15,7 +15,7 @@ export function FxReference({
   return (
     <section
       data-fx-reference
-      className="space-y-3 border-t pt-4"
+      className="space-y-2 text-xs"
       aria-label={t('fx.title')}
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -83,8 +83,6 @@ export function FxReference({
       </div>
       <div className="space-y-1 text-muted-foreground">
         <p>{t('fx.dailyPolicy')}</p>
-        <p>{t('cashback.fxReference')}</p>
-        <p>{t('rewards.fxEffect')}</p>
       </div>
     </section>
   )

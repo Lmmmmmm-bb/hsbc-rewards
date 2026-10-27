@@ -1,6 +1,46 @@
 import type { MessageKey } from './zh'
 
 export const en = {
+  'rules.dialogTitle': 'Reward rules & calculation',
+  'rules.exampleTitle': 'One purchase, three reward tiers',
+  'rules.exampleBody':
+    'A qualifying CNY 250 mainland UnionPay QR purchase earns 1 basic RC + 5 Spend Abroad RC + 5 PULSE RC = 11 RC, assuming enrollment, all 5X allocated to Spend Abroad and both caps available. CNY reference value is converted separately.',
+  'rules.assumptionsTitle': 'Estimation assumptions',
+  'rules.sourcesTitle': 'Official sources · read-only rules',
+  'precision.title': 'Decimals and rounding',
+  'precision.compute':
+    'Calculations use integer units of 0.000001 RC (six decimals). Ordinary rewards are not rounded per purchase. Proportional cap allocations discard only fractions below 0.000001 RC.',
+  'precision.display':
+    'Overview and card headline amounts round to two decimals; calculations retain full precision. Tier values show up to six decimals. CNY is rounded to cents after aggregation. Rounded period amounts may differ from the overall display by 0.01; totals use unrounded values.',
+  'precision.example':
+    'HKD 0.01 earns 0.00004 basic RC. One hundred such purchases accrue 0.004 RC rather than being rounded individually to zero.',
+  'precision.bank':
+    'The general, Your Choice and PULSE terms carry odd spending forward to the next purchase or statement. This tool estimates accrual, with unimported prior residuals unknown; an integer mathematical portion is not treated as an actual bank credit.',
+  'precision.exact': 'Including fractions: {amount}',
+  'period.rulesTitle': 'Half-year views preserve cap history',
+  'period.rulesBody':
+    'Purchase dates split each year into January–June and July–December. Spend Abroad continues across the whole year; PULSE resets each half-year. All imported purchases are calculated chronologically before grouping. A statement can belong to multiple periods.',
+  'period.h1': '{year} · H1',
+  'period.h2': '{year} · H2',
+  'period.all': 'All periods',
+  'period.results': 'Rewards by half-year',
+  'period.range': 'Reporting range',
+  'period.capHint':
+    'Rewards are grouped per period. Spend Abroad allowances show year-to-date use at the end of each period; PULSE shows that half-year. Do not add shared pools across cards.',
+  'card.reward': 'Estimated period reward',
+  'card.enrollmentIgnoredShort':
+    'Historical estimates ignore personal enrollment dates.',
+  'import.anywhere':
+    'Drop PDFs anywhere on this page. HSBC PULSE English text statements are supported; encrypted files unlock locally.',
+  'drop.title': 'Drop PDFs to calculate rewards',
+  'drop.hint': 'Add multiple statements. Files are processed on this device.',
+  'drop.busy': 'The current batch is still processing',
+  'drop.busyHint':
+    'Finish unlocking or cancel this batch before adding more files.',
+  'pdf.batchCount': 'Selected files · {count}',
+  'pdf.needsAttention': '{count} need attention',
+  'pdf.showFiles': 'Show file status',
+  'pdf.hideFiles': 'Hide file details',
   'app.title': 'Your rewards companion',
   'cashback.title': 'Your rewards',
   'cashback.subtitle': 'HSBC PULSE UnionPay Dual Currency Diamond Card',
@@ -169,7 +209,6 @@ export const en = {
     'Shared ownership is unconfirmed. Cap pools are calculated separately for now.',
   'rewards.fxDemo': 'Example reference rate: 1 HKD = {rate} CNY',
   'fx.title': 'HKD → CNY reference rate',
-  'fx.refresh': 'Refresh rate',
   'fx.loading': 'Fetching…',
   'fx.available': 'Reference available',
   'fx.cachedToday': 'Cached today',

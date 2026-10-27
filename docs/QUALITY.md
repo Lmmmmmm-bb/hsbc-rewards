@@ -47,3 +47,12 @@ node scripts/benchmark-import.mjs /tmp/pulse-audit-tools/node_modules /tmp/pulse
 计时从选择文件开始，直到完整 RC / CNY 结果渲染；浏览器缓存关闭，CPU 不节流，页面已加载。长任务按与处理区间有交集的任务统计，PerformanceObserver 阈值为 50ms，并保留 Lighthouse timespan 以交叉验证。报告中的 0 表示未观察到超阈值任务；耗时达到 5 秒或有超阈值任务时返回非零状态。
 
 真实业务数据不能用于上述会输出页面快照的 Lighthouse 流程。首版结果、设备条件和已确认的范围见 [最终验收](ACCEPTANCE-S6-2.md)。
+
+## 半年、全页拖放和批量文件
+
+```sh
+python3 scripts/create-synthetic-interactions.py /tmp/pulse-interactions
+node scripts/audit-reward-interactions.mjs /tmp/pulse-audit-tools/node_modules /tmp/pulse-interactions
+```
+
+固定生成 22 份虚构文件，验证年度封顶跨半年、半年重置、跨年分组、五种宽度、刷新清空、当日缓存只请求一次、20 份列表限高及文本拖动不拦截。使用 Lighthouse 快照检查无障碍并生成合成截图；拖放通过测试浏览器文件拖放协议触发，不等同于访达原生拖放。脚本不接收真实结单文件入口。

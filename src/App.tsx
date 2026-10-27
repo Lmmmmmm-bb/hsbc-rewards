@@ -8,21 +8,34 @@ import { useSession } from '@/store/use-session'
 import { pdfImport } from '@/application/import/runtime'
 import { usePdfImport } from '@/store/use-pdf-import'
 import { useFx } from '@/store/use-fx'
+import { PageFileDrop } from '@/features/import/components/PageFileDrop'
+import { RulesDialog } from '@/features/cashback/RulesDialog'
 
 function App() {
   const { session, view, loadDemo, clear } = useSession(),
     { t } = useI18n(),
     { batch } = usePdfImport()
-  const [dialog, setDialog] = useState<'privacy' | 'clear' | null>(null)
+  const [dialog, setDialog] = useState<'privacy' | 'clear' | 'rules' | null>(
+    null,
+  )
   const fx = useFx()
   const restart = () => {
     pdfImport.cancel()
     clear()
     setDialog(null)
   }
+  const importFiles = (files: readonly File[]) => {
+    if (!files.length) return
+    if (!pdfImport.getSnapshot().active) {
+      if (session.mode === 'demo') clear()
+      setDialog(null)
+    }
+    pdfImport.start(files)
+  }
   return (
-    <>
+    <PageFileDrop onFiles={importFiles} busy={batch.active}>
       <CashbackPage
+        key={session.mode}
         session={session}
         view={view}
         fxRequest={fx.request}
@@ -32,12 +45,14 @@ function App() {
           pdfImport.cancel()
           loadDemo()
         }}
-        beforeRead={() => {
-          if (session.mode === 'demo') clear()
-        }}
+        onFiles={importFiles}
+        onRules={() => setDialog('rules')}
         onClear={() => setDialog('clear')}
         onPrivacy={() => setDialog('privacy')}
       />
+      {dialog === 'rules' && (
+        <RulesDialog rules={view.rules} onClose={() => setDialog(null)} />
+      )}
       {dialog === 'privacy' && (
         <PrivacyDialog onClose={() => setDialog(null)} />
       )}
@@ -57,7 +72,7 @@ function App() {
           <p>{t('clear.body')}</p>
         </Dialog>
       )}
-    </>
+    </PageFileDrop>
   )
 }
 export default App

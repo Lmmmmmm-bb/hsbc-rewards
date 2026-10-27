@@ -1,19 +1,11 @@
-import { RiCloseLine } from '@remixicon/react'
+import { useState } from 'react'
+import { RiCloseLine, RiArrowDownSLine, RiArrowUpSLine } from '@remixicon/react'
 import type {
   ImportSnapshot,
   PdfImportController,
 } from '@/application/import/types'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardAction,
-  CardContent,
-} from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { ErrorNotice } from '@/components/workspace/ErrorNotice'
 import { Progress } from '@/components/ui/progress'
 import { useI18n } from '@/i18n/use-i18n'
@@ -27,172 +19,178 @@ export function ImportBatch({
   controller: PdfImportController
 }) {
   const { t, number } = useI18n()
-  if (batch.items.length === 0) return null
+  const [expanded, setExpanded] = useState<boolean | null>(null)
+  if (!batch.items.length) return null
   const committed = batch.outcome.status === 'committed'
   const editable = !committed && batch.outcome.status !== 'failed'
+  const items = batch.items.filter((item) => item.status !== 'removed')
+  const finished = items.filter((item) =>
+    ['extracted', 'parsed', 'imported', 'error', 'duplicate'].includes(
+      item.status,
+    ),
+  ).length
+  const problems = items.filter((item) =>
+    ['locked', 'error'].includes(item.status),
+  ).length
+  const open = expanded ?? (batch.active || problems > 0)
   return (
-    <Card data-batch aria-label={t('pdf.batchTitle')}>
-      <CardHeader>
-        <CardTitle>{t('pdf.batchTitle')}</CardTitle>
-        <CardDescription>
-          {t(committed ? 'pdf.committedHint' : 'pdf.batchHint')}
-        </CardDescription>
-        <CardAction>
-          <Button variant="ghost" size="sm" onClick={() => controller.cancel()}>
-            {t(committed ? 'pdf.closeBatch' : 'pdf.cancelBatch')}
-          </Button>
-        </CardAction>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {committed && (
-          <Alert role="status">
-            <AlertDescription>
-              {t('pdf.committed', batch.outcome)}
-            </AlertDescription>
-          </Alert>
-        )}
-        {batch.outcome.status === 'empty' && (
-          <p role="status" className="text-muted-foreground">
-            {t('pdf.emptyBatch')}
-          </p>
-        )}
-        {batch.outcome.status === 'failed' && (
-          <ErrorNotice>
-            {t(`pdf.failed.${batch.outcome.problem ?? 'commit-failed'}`)}
-          </ErrorNotice>
-        )}
-        <p className="sr-only" role="status">
-          {t('pdf.batchProgress', {
-            completed: batch.items.filter((item) =>
-              [
-                'extracted',
-                'parsed',
-                'imported',
-                'error',
-                'duplicate',
-                'removed',
-              ].includes(item.status),
-            ).length,
-            total: batch.items.length,
-          })}
+    <section data-batch aria-label={t('pdf.batchTitle')} className="space-y-2">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-xs font-medium">
+          {t('pdf.batchCount', { count: items.length })}
+          {problems > 0 && (
+            <Badge className="ml-2" variant="secondary">
+              {t('pdf.needsAttention', { count: problems })}
+            </Badge>
+          )}
         </p>
-        <ul className="divide-y">
-          {batch.items
-            .filter((item) => item.status !== 'removed')
-            .map((item) => (
-              <li
-                data-batch-item
-                key={item.id}
-                className="space-y-4 py-5 first:pt-0 last:pb-0"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 space-y-2">
-                    <p className="break-all text-sm font-medium">{item.name}</p>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge
-                        variant={
-                          item.status === 'error' ? 'default' : 'secondary'
-                        }
-                      >
-                        {t(`pdf.status.${item.status}`)}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        {number(item.size / 1024, 0)} KB
-                      </span>
-                    </div>
-                  </div>
-                  {editable && (
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      aria-label={t('pdf.remove', { name: item.name })}
-                      onClick={() => controller.remove(item.id)}
-                    >
-                      <RiCloseLine aria-hidden="true" />
-                    </Button>
-                  )}
-                </div>
-                {(item.status === 'reading' || item.status === 'parsing') && (
-                  <div role="status" className="space-y-2">
-                    <Progress
-                      value={
-                        item.status === 'parsing' || !item.totalPages
-                          ? null
-                          : (item.completedPages / item.totalPages) * 100
-                      }
-                      aria-label={t(
-                        item.status === 'parsing'
-                          ? 'pdf.parsing'
-                          : 'pdf.opening',
-                      )}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {item.status === 'parsing'
-                        ? t('pdf.parsing')
-                        : item.totalPages
-                          ? t('pdf.pageProgress', {
-                              completed: item.completedPages,
-                              total: item.totalPages,
-                            })
-                          : t('pdf.opening')}
-                    </p>
-                  </div>
-                )}
-                {item.status === 'locked' && (
-                  <PasswordForm
-                    item={item}
-                    onUnlock={(password) =>
-                      controller.unlock(item.id, password)
-                    }
-                  />
-                )}
-                {item.status === 'error' && (
-                  <ErrorNotice
-                    title={
-                      item.problem ? t(`pdf.error.${item.problem}`) : undefined
-                    }
+        <Button variant="ghost" size="sm" onClick={() => controller.cancel()}>
+          {t(committed ? 'pdf.closeBatch' : 'pdf.cancelBatch')}
+        </Button>
+      </div>
+      {batch.active && (
+        <Progress
+          value={items.length ? (finished / items.length) * 100 : 0}
+          aria-label={t('pdf.batchProgress', {
+            completed: finished,
+            total: items.length,
+          })}
+        />
+      )}
+      {committed && (
+        <p role="status" className="text-xs font-medium">
+          {t('pdf.committed', batch.outcome)}
+        </p>
+      )}
+      {batch.outcome.status === 'empty' && (
+        <p role="status" className="text-xs text-muted-foreground">
+          {t('pdf.emptyBatch')}
+        </p>
+      )}
+      {batch.outcome.status === 'failed' && (
+        <ErrorNotice>
+          {t(`pdf.failed.${batch.outcome.problem ?? 'commit-failed'}`)}
+        </ErrorNotice>
+      )}
+      <Button
+        variant="ghost"
+        size="sm"
+        className="w-full justify-between"
+        aria-expanded={open}
+        onClick={() => setExpanded(!open)}
+      >
+        {t(open ? 'pdf.hideFiles' : 'pdf.showFiles')}
+        {open ? (
+          <RiArrowUpSLine aria-hidden="true" />
+        ) : (
+          <RiArrowDownSLine aria-hidden="true" />
+        )}
+      </Button>
+      {open && (
+        <ul
+          data-file-list
+          className="max-h-64 space-y-3 overflow-y-auto overscroll-contain"
+          aria-label={t('pdf.batchTitle')}
+        >
+          {items.map((item) => (
+            <li data-batch-item key={item.id} className="space-y-2">
+              <div className="flex items-center gap-2">
+                <p
+                  className="min-w-0 flex-1 truncate text-xs font-medium"
+                  title={item.name}
+                >
+                  {item.name}
+                </p>
+                <Badge
+                  variant={item.status === 'error' ? 'default' : 'secondary'}
+                >
+                  {t(`pdf.status.${item.status}`)}
+                </Badge>
+                {editable && (
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label={t('pdf.remove', { name: item.name })}
+                    onClick={() => controller.remove(item.id)}
                   >
-                    {editable &&
-                      [
-                        'read-failed',
-                        'invalid-pdf',
-                        'engine-unavailable',
-                      ].includes(item.problem ?? '') && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => controller.retry(item.id)}
-                        >
-                          {t('pdf.retry')}
-                        </Button>
-                      )}
-                  </ErrorNotice>
+                    <RiCloseLine aria-hidden="true" />
+                  </Button>
                 )}
-                {(item.status === 'parsed' || item.status === 'imported') && (
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {number(item.size / 1024, 0)} KB
+                {(item.status === 'parsed' || item.status === 'imported') &&
+                  ` · ${t('pdf.parsedSummary', { pages: item.totalPages ?? 0, transactions: item.transactions })}`}
+              </p>
+              {(item.status === 'reading' || item.status === 'parsing') && (
+                <div role="status" className="space-y-1">
+                  <Progress
+                    value={
+                      item.status === 'parsing' || !item.totalPages
+                        ? null
+                        : (item.completedPages / item.totalPages) * 100
+                    }
+                    aria-label={t(
+                      item.status === 'parsing' ? 'pdf.parsing' : 'pdf.opening',
+                    )}
+                  />
                   <p className="text-xs text-muted-foreground">
-                    {t('pdf.parsedSummary', {
-                      pages: item.totalPages ?? 0,
-                      transactions: item.transactions,
-                    })}
+                    {item.status === 'parsing'
+                      ? t('pdf.parsing')
+                      : item.totalPages
+                        ? t('pdf.pageProgress', {
+                            completed: item.completedPages,
+                            total: item.totalPages,
+                          })
+                        : t('pdf.opening')}
                   </p>
-                )}
-                {item.status === 'extracted' && (
-                  <p className="text-xs text-muted-foreground">
-                    {t('pdf.extractedSummary', {
-                      pages: item.totalPages ?? 0,
-                      rows: item.textRows,
-                    })}
-                  </p>
-                )}
-                {item.status === 'duplicate' && (
-                  <p className="text-xs text-muted-foreground">
-                    {t('pdf.error.duplicate')}
-                  </p>
-                )}
-              </li>
-            ))}
+                </div>
+              )}
+              {item.status === 'locked' && (
+                <PasswordForm
+                  item={item}
+                  onUnlock={(password) => controller.unlock(item.id, password)}
+                />
+              )}
+              {item.status === 'error' && (
+                <ErrorNotice
+                  title={
+                    item.problem ? t(`pdf.error.${item.problem}`) : undefined
+                  }
+                >
+                  {editable &&
+                    [
+                      'read-failed',
+                      'invalid-pdf',
+                      'engine-unavailable',
+                    ].includes(item.problem ?? '') && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => controller.retry(item.id)}
+                      >
+                        {t('pdf.retry')}
+                      </Button>
+                    )}
+                </ErrorNotice>
+              )}
+              {item.status === 'extracted' && (
+                <p className="text-xs text-muted-foreground">
+                  {t('pdf.extractedSummary', {
+                    pages: item.totalPages ?? 0,
+                    rows: item.textRows,
+                  })}
+                </p>
+              )}
+              {item.status === 'duplicate' && (
+                <p className="text-xs text-muted-foreground">
+                  {t('pdf.error.duplicate')}
+                </p>
+              )}
+            </li>
+          ))}
         </ul>
-      </CardContent>
-    </Card>
+      )}
+    </section>
   )
 }

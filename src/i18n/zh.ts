@@ -1,4 +1,42 @@
 export const zh = {
+  'rules.dialogTitle': '返现规则与算法',
+  'rules.exampleTitle': '一笔消费，三档叠加',
+  'rules.exampleBody':
+    '例如入账 CNY 250 的合资格内地银联二维码消费：基础 1 RC + 赏世界 5 RC + PULSE 专属 5 RC = 11 RC。假设赏世界已登记并分配全部 5X，且两档额度均未耗尽；RC 的人民币参考价值另按汇率折算。',
+  'rules.assumptionsTitle': '本次估算的边界',
+  'rules.sourcesTitle': '官方依据 · 只读规则',
+  'precision.title': '小数如何计算？会舍弃吗？',
+  'precision.compute':
+    '内部以整数记录到 0.000001 RC（6 位小数）。普通计奖不逐笔取整；跨封顶按比例分配时，仅舍去低于 0.000001 RC 的部分。',
+  'precision.display':
+    '总览与卡片主金额四舍五入显示两位小数，计算继续使用原始精度；各档显示最多 6 位。人民币参考价值在合计后换算到分。分期显示值相加可能与总览相差 0.01，合计以未舍入值为准。',
+  'precision.example':
+    '例如 HKD 0.01 的基础奖励为 0.00004 RC；100 笔合计 0.004 RC，不会逐笔舍弃成零。',
+  'precision.bank':
+    '官方一般条款、最红自主奖赏和 PULSE 条款均说明零头消费会继续累计到下笔消费或下期结单。本工具展示累计估算，未导入的历史零头未知；不会把数学上的整数部分视为银行已发放金额。',
+  'precision.exact': '含零头 {amount}',
+  'period.rulesTitle': '按自然半年拆分，额度仍连续累计',
+  'period.rulesBody':
+    '按消费日期分为每年 1–6 月与 7–12 月，跨年自动分开。赏世界全年累计，7 月不重置；PULSE 每半年重置。先对全部已导入交易按时间计算，再分期汇总；同一份结单可涉及两个周期。',
+  'period.h1': '{year} 年 · 上半年',
+  'period.h2': '{year} 年 · 下半年',
+  'period.all': '全部周期',
+  'period.results': '按自然半年查看返现',
+  'period.range': '统计范围',
+  'period.capHint':
+    '各期金额单独汇总；赏世界额度显示年度截至本期的累计占用，PULSE 显示本半年占用。共享额度不要跨卡相加。',
+  'card.reward': '本期预计返现',
+  'card.enrollmentIgnoredShort': '历史回算已忽略个人登记生效期。',
+  'import.anywhere':
+    'PDF 拖到页面任意位置即可解析。支持 HSBC PULSE 英文文本结单；加密文件可本机解锁。',
+  'drop.title': '松开 PDF，开始计算返现',
+  'drop.hint': '可一次加入多份结单，文件只在本机处理。',
+  'drop.busy': '当前批次仍在处理',
+  'drop.busyHint': '请先完成解锁或取消当前批次，再加入新文件。',
+  'pdf.batchCount': '本次文件 · {count} 份',
+  'pdf.needsAttention': '{count} 份需处理',
+  'pdf.showFiles': '展开文件状态',
+  'pdf.hideFiles': '收起文件明细',
   'app.title': '个人返现助手',
   'cashback.title': '返现总览',
   'cashback.subtitle': 'HSBC PULSE 银联双币钻石卡',
@@ -146,7 +184,6 @@ export const zh = {
   'rewards.poolUnconfirmed': '主副卡共享关系未确认，暂按卡分别计算额度。',
   'rewards.fxDemo': '示例参考汇率：1 HKD = {rate} CNY',
   'fx.title': '港币 → 人民币参考汇率',
-  'fx.refresh': '刷新汇率',
   'fx.loading': '获取中…',
   'fx.available': '已获取参考值',
   'fx.cachedToday': '今日缓存',

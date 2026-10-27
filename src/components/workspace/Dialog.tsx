@@ -10,17 +10,20 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { useI18n } from '@/i18n/use-i18n'
+import { cn } from '@/lib/utils'
 
 export function Dialog({
   title,
   children,
   footer,
   onClose,
+  className,
 }: {
   title: string
   children: ReactNode
   footer?: ReactNode
   onClose: () => void
+  className?: string
 }) {
   const { t } = useI18n()
   return (
@@ -33,7 +36,10 @@ export function Dialog({
       <DialogContent
         showCloseButton={false}
         aria-describedby={undefined}
-        className="max-h-[90svh] overflow-y-auto sm:max-w-xl"
+        className={cn(
+          'flex max-h-[90svh] flex-col overflow-hidden sm:max-w-xl',
+          className,
+        )}
       >
         <DialogHeader className="pr-8">
           <DialogTitle>{title}</DialogTitle>
@@ -50,7 +56,14 @@ export function Dialog({
         >
           <RiCloseLine aria-hidden="true" />
         </DialogClose>
-        <div className="space-y-4 text-sm leading-relaxed">{children}</div>
+        <div
+          role="region"
+          aria-label={title}
+          tabIndex={0}
+          className="min-h-0 space-y-4 overflow-y-auto text-sm leading-relaxed outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          {children}
+        </div>
         {footer && <DialogFooter>{footer}</DialogFooter>}
       </DialogContent>
     </ShadcnDialog>

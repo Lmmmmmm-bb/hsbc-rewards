@@ -4,13 +4,15 @@ import { useI18n } from '@/i18n/use-i18n'
 
 export function RewardQuality({
   quality,
+  compact = false,
 }: {
   quality: WorkspaceView['quality']
+  compact?: boolean
 }) {
   const { t } = useI18n()
   return (
     <section className="space-y-2" aria-label={t('quality.title')}>
-      <p className="font-medium">{t('quality.title')}</p>
+      {!compact && <p className="font-medium">{t('quality.title')}</p>}
       <div className="flex flex-wrap gap-2">
         {quality.matchedAccounts > 0 && (
           <Badge variant="outline">

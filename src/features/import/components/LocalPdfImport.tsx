@@ -1,97 +1,54 @@
-import { useRef, useState } from 'react'
-import { RiFileUploadLine, RiInformationLine } from '@remixicon/react'
+import { useRef } from 'react'
+import { RiFileUploadLine } from '@remixicon/react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent } from '@/components/ui/card'
-import {
-  Empty,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-  EmptyDescription,
-  EmptyContent,
-} from '@/components/ui/empty'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { usePdfImport } from '@/store/use-pdf-import'
 import { useI18n } from '@/i18n/use-i18n'
-import { ImportBatch } from './ImportBatch'
 import { ErrorNotice } from '@/components/workspace/ErrorNotice'
+import { ImportBatch } from './ImportBatch'
 
-export function LocalPdfImport({ beforeRead }: { beforeRead: () => void }) {
-  const { t } = useI18n()
+export function LocalPdfImport({
+  onFiles,
+}: {
+  onFiles: (files: readonly File[]) => void
+}) {
   const input = useRef<HTMLInputElement>(null)
   const { batch, controller } = usePdfImport()
-  const [dragging, setDragging] = useState(false)
-  const start = (files: FileList | null) => {
-    if (files?.length && !batch.active) {
-      beforeRead()
-      controller.start(Array.from(files))
-    }
-  }
+  const { t } = useI18n()
   return (
-    <div className="space-y-6">
-      <Card
-        data-import-drop
-        className={dragging ? 'border-primary' : undefined}
-        onDragOver={(event) => {
-          event.preventDefault()
-          setDragging(true)
-        }}
-        onDragLeave={(event) => {
-          if (!event.currentTarget.contains(event.relatedTarget as Node))
-            setDragging(false)
-        }}
-        onDrop={(event) => {
-          event.preventDefault()
-          setDragging(false)
-          start(event.dataTransfer.files)
-        }}
-      >
-        <CardContent>
-          <Empty className="px-0 py-5">
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <RiFileUploadLine aria-hidden="true" />
-              </EmptyMedia>
-              <EmptyTitle>{t('import.dropTitle')}</EmptyTitle>
-              <EmptyDescription>{t('pdf.dropBody')}</EmptyDescription>
-            </EmptyHeader>
-            <EmptyContent>
-              <Input
-                ref={input}
-                className="hidden"
-                type="file"
-                multiple
-                accept="application/pdf,.pdf"
-                aria-label={t('pdf.choose')}
-                onChange={(event) => {
-                  start(event.target.files)
-                  event.target.value = ''
-                }}
-              />
-              <Button
-                size="lg"
-                onClick={() => input.current?.click()}
-                disabled={batch.active}
-              >
-                <RiFileUploadLine aria-hidden="true" />
-                {t('pdf.choose')}
-              </Button>
-              <p className="text-xs text-muted-foreground">
-                {t('import.limit')}
-              </p>
-            </EmptyContent>
-          </Empty>
-          <Alert>
-            <RiInformationLine aria-hidden="true" />
-            <AlertDescription>{t('pdf.stageHint')}</AlertDescription>
-          </Alert>
-        </CardContent>
-      </Card>
+    <div data-import-drop className="space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <RiFileUploadLine
+            className="size-5 text-primary"
+            aria-hidden="true"
+          />
+          <h2 className="text-sm font-semibold">{t('import.dropTitle')}</h2>
+        </div>
+        <Input
+          ref={input}
+          type="file"
+          accept="application/pdf,.pdf"
+          multiple
+          className="hidden"
+          aria-label={t('pdf.choose')}
+          onChange={(event) => {
+            const files = Array.from(event.target.files ?? [])
+            event.target.value = ''
+            onFiles(files)
+          }}
+        />
+        <Button onClick={() => input.current?.click()} disabled={batch.active}>
+          <RiFileUploadLine aria-hidden="true" />
+          {t('pdf.choose')}
+        </Button>
+      </div>
+      <p className="text-xs text-muted-foreground">{t('import.anywhere')}</p>
+      <p className="text-xs text-muted-foreground">{t('import.limit')}</p>
       {batch.rejected && (
         <ErrorNotice>{t(`pdf.error.${batch.rejected}`)}</ErrorNotice>
       )}
-      <ImportBatch batch={batch} controller={controller} />
+      <ImportBatch key={batch.batch} batch={batch} controller={controller} />
     </div>
   )
 }

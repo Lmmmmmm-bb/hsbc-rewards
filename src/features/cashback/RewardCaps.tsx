@@ -9,7 +9,7 @@ export function RewardCaps({
 }) {
   const { t, number } = useI18n()
   return (
-    <section className="space-y-4 border-t pt-4" aria-label={t('card.caps')}>
+    <section className="space-y-2" aria-label={t('card.caps')}>
       <h4 className="font-medium">{t('card.caps')}</h4>
       {pools.length === 0 && (
         <p className="text-muted-foreground">{t('rewards.noPool')}</p>
@@ -17,7 +17,7 @@ export function RewardCaps({
       {pools.some((pool) => pool.shared) && (
         <p className="text-muted-foreground">{t('card.sharedPool')}</p>
       )}
-      <div className="grid grid-cols-1 gap-5 @2xl/reward:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 @lg/reward:grid-cols-2">
         {pools.map((pool) => (
           <section key={pool.key} className="space-y-2">
             <div className="flex flex-wrap justify-between gap-2">
@@ -59,7 +59,6 @@ export function RewardCaps({
           </section>
         ))}
       </div>
-      <p className="text-muted-foreground">{t('rewards.imported')}</p>
     </section>
   )
 }

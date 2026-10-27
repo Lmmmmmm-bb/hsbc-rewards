@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type { WorkspaceView } from '@/application/session/selectors'
 import type { MessageKey } from '@/i18n/zh'
 import {
@@ -34,7 +35,13 @@ const common = (code: string) =>
   code === 'reward.transaction-excluded'
 type TierDetails = WorkspaceView['rewardCards'][number]['tiers']
 
-export function RewardReasons({ tiers }: { tiers: TierDetails }) {
+export function RewardReasons({
+  tiers,
+  children,
+}: {
+  tiers: TierDetails
+  children?: ReactNode
+}) {
   const { t } = useI18n()
   const shared = tiers[0]?.reasons.filter((reason) => common(reason.code)) ?? []
   const list = (reasons: TierDetails[number]['reasons']) => (
@@ -54,7 +61,8 @@ export function RewardReasons({ tiers }: { tiers: TierDetails }) {
       <AccordionItem value="reasons">
         <AccordionTrigger>{t('reasons.title')}</AccordionTrigger>
         <AccordionContent>
-          <div className="space-y-5">
+          <div className="space-y-3">
+            {children}
             {shared.length > 0 && (
               <section className="space-y-3">
                 <h4 className="font-medium">{t('reasons.common')}</h4>
@@ -64,7 +72,7 @@ export function RewardReasons({ tiers }: { tiers: TierDetails }) {
             {tiers.map(({ tier, reasons }) => {
               const specific = reasons.filter((reason) => !common(reason.code))
               return (
-                <section key={tier} className="space-y-3 border-t pt-4">
+                <section key={tier} className="space-y-2">
                   <h4 className="font-medium">{t(`rewards.${tier}`)}</h4>
                   {specific.length ? (
                     list(specific)
