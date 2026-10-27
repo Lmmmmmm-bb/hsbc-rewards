@@ -26,9 +26,6 @@ function App() {
         session={session}
         view={view}
         fxRequest={fx.request}
-        onRefreshFx={() => {
-          void fx.refresh()
-        }}
         hasPendingFiles={batch.items.length > 0}
         onDemo={() => {
           if (session.mode === 'real') return

@@ -172,6 +172,9 @@ export const en = {
   'fx.refresh': 'Refresh rate',
   'fx.loading': 'Fetching…',
   'fx.available': 'Reference available',
+  'fx.cachedToday': 'Cached today',
+  'fx.dailyPolicy':
+    'A successful public quote is reused for the Hong Kong calendar day and updates automatically the next day.',
   'fx.stale': 'Older reference',
   'fx.rateDate': 'Rate date {date}',
   'fx.retrievedAt': 'Retrieved {time}',
@@ -180,17 +183,18 @@ export const en = {
   'fx.loadingHint':
     'Fetching a public reference rate. Calculations will update automatically.',
   'fx.refreshingHint':
-    'Refreshing. Calculations continue using the current reference until it completes.',
-  'fx.failed': 'Could not fetch a reference rate. Try again later.',
-  'fx.timeout': 'The rate request timed out. Try again later.',
+    'Updating automatically. Calculations continue using the labelled older reference until it completes.',
+  'fx.failed':
+    'A reference rate is not available yet. An automatic retry is scheduled.',
+  'fx.timeout': 'The rate request timed out. An automatic retry is scheduled.',
   'fx.invalid':
     'The rate response was incomplete or had an invalid date. It was not used.',
   'fx.calculation':
     'This reference would exceed the safe calculation range. It was not used.',
   'fx.staleHint':
-    'An older rate from this session is still used. A successful refresh recalculates all historical results.',
+    'An older reference is still used. A successful automatic update recalculates all results.',
   'rewards.fxEffect':
-    'The reference rate converts CNY displays and estimates Spend Abroad caps when bank HKD equivalents are missing. Refreshing may change extra rewards.',
+    'The reference rate converts CNY displays and estimates caps when bank HKD equivalents are missing. A daily update may change extra rewards.',
   'rewards.readonly': 'Read-only · {version}',
   'rewards.date': 'Verified {date}',
   'rewards.latest':
@@ -258,7 +262,7 @@ export const en = {
     'PDFs, passwords and parsed records are handled locally. The current version uses memory and does not persist business data in browser storage.',
   'privacy.networkTitle': 'External requests',
   'privacy.networkBody':
-    'After import, only the fixed Frankfurter HKD→CNY endpoint is used to fetch ECB reference rates. PDFs, passwords, card numbers, merchants and amounts are never sent. Requests omit cookies and referrers. There is no telemetry. The demo requests no rates.',
+    'After import, only the fixed Frankfurter HKD→CNY endpoint is used for ECB reference rates. Only the public rate and its dates are cached across reloads; statements and results still clear. PDFs, passwords, card numbers, merchants and amounts are never sent. Requests omit cookies and referrers. There is no telemetry. The demo requests no rates.',
   'privacy.independentTitle': 'An independent product',
   'privacy.independentBody':
     'Pulse Rewards is not affiliated with, authorised or endorsed by HSBC. Rewards are estimates; actual bank credits prevail.',

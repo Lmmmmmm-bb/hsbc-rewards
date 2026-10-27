@@ -1,29 +1,40 @@
-import { FxError, type FxProblem, type FxProvider } from '@/ports/fx'
-import type { SessionStore } from '@/application/session/types'
-import { FX_MAX_AGE_MS, isFxStale } from './freshness'
+import {
+  FxError,
+  type FxProblem,
+  type FxProvider,
+  type FxCache,
+  type CachedFxQuote,
+} from '@/ports/fx'
+import type { FxSnapshot, SessionStore } from '@/application/session/types'
+import { isDailyFx, isFxStale, msUntilNextFxDay } from './freshness'
 import { validateSessionDataset } from '@/application/session/validate'
 
 export interface FxRequestState {
   readonly status: 'idle' | 'loading' | 'ready' | 'error'
   readonly problem: FxProblem | null
 }
+export const FX_RETRY_DELAYS = [30_000, 120_000, 600_000, 1_800_000] as const
 
 export function createFxController({
   store,
   provider,
+  cache,
   now = Date.now,
 }: {
   store: SessionStore
   provider: FxProvider
+  cache: FxCache
   now?: () => number
 }) {
   let state: FxRequestState = { status: 'idle', problem: null }
   const listeners = new Set<() => void>()
   let generation = 0
   let request: AbortController | undefined
-  let attempted = false
-  let expiry: ReturnType<typeof setTimeout> | undefined
+  let timer: ReturnType<typeof setTimeout> | undefined
+  let retryAt = 0
+  let failures = 0
   const publish = (next: FxRequestState) => {
+    if (next.status === state.status && next.problem === state.problem) return
     state = next
     listeners.forEach((listener) => listener())
   }
@@ -31,75 +42,121 @@ export function createFxController({
     const session = store.getSnapshot()
     return session.mode === 'real' && session.dataset.statements.length > 0
   }
-  const clearExpiry = () => {
-    clearTimeout(expiry)
-    expiry = undefined
+  const clearTimer = () => {
+    clearTimeout(timer)
+    timer = undefined
   }
+  const available = (
+    fx: FxSnapshot,
+  ): fx is Extract<FxSnapshot, { source: 'live' | 'cache' }> =>
+    fx.source === 'live' || fx.source === 'cache'
   function reset() {
     generation++
     request?.abort()
     request = undefined
-    attempted = false
-    clearExpiry()
-    if (state.status !== 'idle') publish({ status: 'idle', problem: null })
+    clearTimer()
+    retryAt = 0
+    failures = 0
+    publish({ status: 'idle', problem: null })
   }
-  async function refresh() {
+  function schedule(delay: number) {
+    clearTimer()
+    timer = setTimeout(() => {
+      timer = undefined
+      void ensure()
+    }, delay)
+  }
+  function adopt(
+    quote: CachedFxQuote,
+    source: 'live' | 'cache',
+    forceStale = false,
+  ) {
+    const fx = {
+      ...quote,
+      source,
+      stale: forceStale || isFxStale(quote, now()),
+    }
+    try {
+      validateSessionDataset(store.getSnapshot().dataset, fx)
+    } catch {
+      throw new FxError('calculation')
+    }
+    store.setFx(fx)
+  }
+  async function ensure() {
     if (!isReal() || request) return
-    attempted = true
+    const currentFx = store.getSnapshot().fx
+    if (available(currentFx) && isDailyFx(currentFx, now())) {
+      if (!timer) schedule(msUntilNextFxDay(now()))
+      publish({ status: 'ready', problem: null })
+      return
+    }
+    if (now() < retryAt) return
+    const stored = cache.read()
+    const cached =
+      stored &&
+      stored.retrievedAt <= now() &&
+      stored.rateDate <= new Date(now()).toISOString().slice(0, 10)
+        ? stored
+        : null
+    if (
+      cached &&
+      isDailyFx(cached, now()) &&
+      cached.rateDate <= new Date(now()).toISOString().slice(0, 10)
+    ) {
+      try {
+        adopt(cached, 'cache')
+        failures = 0
+        publish({ status: 'ready', problem: null })
+        schedule(msUntilNextFxDay(now()))
+        return
+      } catch {
+        /* Fetch again if a cached quote cannot be used with this dataset. */
+      }
+    }
     const token = ++generation
     const active = new AbortController()
     request = active
-    clearExpiry()
     publish({ status: 'loading', problem: null })
     const current = () =>
       token === generation && !active.signal.aborted && isReal()
+    const fallback = available(currentFx) ? currentFx : cached
+    if (fallback) {
+      try {
+        adopt(fallback, 'cache', true)
+      } catch {
+        /* Keep unknown values if the old rate cannot be used safely. */
+      }
+    }
     try {
       const quote = await provider.latest(active.signal)
       if (!current()) return
-      const previous = store.getSnapshot().fx
-      if (
-        (previous.source === 'live' || previous.source === 'cache') &&
-        quote.rateDate < previous.rateDate
-      )
+      if (fallback && quote.rateDate < fallback.rateDate)
         throw new FxError('invalid-response')
-      const retrievedAt = now()
-      const fx = {
-        ...quote,
-        retrievedAt,
-        source: 'live' as const,
-        stale: isFxStale({ ...quote, retrievedAt }, retrievedAt),
-      }
-      try {
-        validateSessionDataset(store.getSnapshot().dataset, fx)
-      } catch {
-        throw new FxError('calculation')
-      }
-      store.setFx(fx)
+      const next = { ...quote, retrievedAt: now() }
+      adopt(next, 'live')
+      cache.write(next)
+      failures = 0
+      retryAt = 0
       publish({ status: 'ready', problem: null })
-      if (!fx.stale)
-        expiry = setTimeout(() => {
-          if (!current() || store.getSnapshot().fx !== fx) return
-          store.setFx({ ...fx, source: 'cache', stale: true })
-        }, FX_MAX_AGE_MS)
+      schedule(msUntilNextFxDay(now()))
     } catch (error) {
       if (!current()) return
-      const fx = store.getSnapshot().fx
-      if (fx.source === 'live' || fx.source === 'cache')
-        store.setFx({ ...fx, source: 'cache', stale: true })
+      const delay =
+        FX_RETRY_DELAYS[Math.min(failures++, FX_RETRY_DELAYS.length - 1)]
+      retryAt = now() + delay
       publish({
         status: 'error',
         problem: error instanceof FxError ? error.code : 'network',
       })
+      schedule(delay)
     } finally {
       if (token === generation) request = undefined
     }
   }
   function sync() {
-    if (!isReal()) {
-      reset()
-      return
-    }
-    if (!attempted) void refresh()
+    if (!isReal()) reset()
+    else void ensure()
   }
   return {
     getSnapshot: () => state,
@@ -117,6 +174,6 @@ export function createFxController({
         reset()
       }
     },
-    refresh,
+    ensure,
   }
 }

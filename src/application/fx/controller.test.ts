@@ -1,30 +1,46 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { FxError, type FxQuote } from '@/ports/fx'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import {
+  FxError,
+  type CachedFxQuote,
+  type FxCache,
+  type FxQuote,
+} from '@/ports/fx'
 import { createMemorySession } from '@/store/memory-session'
 import { loadDemoSession } from '@/application/session/actions'
 import { commitImportedBatch } from '@/application/import/commit'
 import { deriveWorkspace } from '@/application/session/selectors'
 import { statement, testCard, transaction } from '@/test-support/fixtures'
-import { createFxController } from './controller'
-import { FX_MAX_AGE_MS } from './freshness'
+import { createFxController, FX_RETRY_DELAYS } from './controller'
+import { msUntilNextFxDay } from './freshness'
 
 const timestamp = Date.parse('2026-10-27T10:00:00Z')
 const quote: FxQuote = { hkdToCnyPpm: 850000, rateDate: '2026-10-26' }
-function deferred<T>() {
-  let resolve!: (value: T) => void
-  let reject!: (reason: unknown) => void
-  const promise = new Promise<T>((yes, no) => {
-    resolve = yes
-    reject = no
-  })
-  return { promise, resolve, reject }
-}
-const dataset = () => ({
+const data = () => ({
   cards: [testCard],
   statements: [statement()],
   transactions: [transaction()],
 })
-function setup() {
+const flush = async () => {
+  await Promise.resolve()
+  await Promise.resolve()
+}
+function deferred<T>() {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>((yes) => {
+    resolve = yes
+  })
+  return { promise, resolve }
+}
+function memoryCache(initial: CachedFxQuote | null = null): FxCache {
+  let value = initial
+  return {
+    read: () => value,
+    write: (quote) => {
+      value = quote
+    },
+  }
+}
+function setup(cache = memoryCache()) {
   const store = createMemorySession()
   const latest = vi
     .fn<(signal: AbortSignal) => Promise<FxQuote>>()
@@ -32,16 +48,192 @@ function setup() {
   const controller = createFxController({
     store,
     provider: { latest },
-    now: () => Date.now(),
+    cache,
+    now: Date.now,
   })
-  return { store, latest, controller }
+  return { store, latest, controller, cache }
 }
+beforeEach(() => {
+  vi.useFakeTimers()
+  vi.setSystemTime(timestamp)
+})
 afterEach(() => vi.useRealTimers())
 
-describe('session reference-rate lifecycle', () => {
-  it('keeps the last computable quote when a well-formed new quote would overflow the displayed result', async () => {
-    vi.useFakeTimers()
-    vi.setSystemTime(timestamp)
+describe('automatic daily reference lifecycle', () => {
+  it('uses today’s persisted public quote without issuing a network request', async () => {
+    const { store, latest, controller } = setup(
+      memoryCache({ ...quote, retrievedAt: timestamp - 1000 }),
+    )
+    store.replace(data(), 'real')
+    await controller.ensure()
+    expect(latest).not.toHaveBeenCalled()
+    expect(store.getSnapshot().fx).toMatchObject({
+      source: 'cache',
+      stale: false,
+      hkdToCnyPpm: 850000,
+    })
+    expect(
+      deriveWorkspace(store.getSnapshot()).totalRewardMicroRc,
+    ).not.toBeNull()
+  })
+  it('never fetches or applies the persisted quote to an empty or demonstration session', async () => {
+    const { store, latest, controller } = setup()
+    const disconnect = controller.connect()
+    loadDemoSession(store)
+    expect(latest).not.toHaveBeenCalled()
+    expect(store.getSnapshot().fx).toMatchObject({
+      source: 'demo',
+      hkdToCnyPpm: 900000,
+    })
+    commitImportedBatch(store, [data()], store.getSnapshot().revision)
+    await flush()
+    expect(store.getSnapshot().fx).toMatchObject({
+      source: 'live',
+      hkdToCnyPpm: 850000,
+    })
+    disconnect()
+  })
+  it('reuses the quote across repeated checks, clear/reimport and a new controller instance', async () => {
+    const first = setup(),
+      disconnect = first.controller.connect()
+    first.store.replace(data(), 'real')
+    await flush()
+    await first.controller.ensure()
+    await first.controller.ensure()
+    first.store.clear()
+    first.store.replace(data(), 'real')
+    await flush()
+    expect(first.latest).toHaveBeenCalledTimes(1)
+    const second = setup(first.cache)
+    second.store.replace(data(), 'real')
+    await second.controller.ensure()
+    expect(second.latest).not.toHaveBeenCalled()
+    disconnect()
+  })
+  it('automatically fetches once at Hong Kong midnight and does not refetch during that day', async () => {
+    vi.setSystemTime(Date.parse('2026-10-27T15:59:59Z'))
+    const { store, latest, controller } = setup(),
+      disconnect = controller.connect()
+    store.replace(data(), 'real')
+    await flush()
+    latest.mockResolvedValueOnce({ ...quote, hkdToCnyPpm: 870000 })
+    await vi.advanceTimersByTimeAsync(1000)
+    expect(latest).toHaveBeenCalledTimes(2)
+    expect(store.getSnapshot().fx.hkdToCnyPpm).toBe(870000)
+    await controller.ensure()
+    expect(latest).toHaveBeenCalledTimes(2)
+    disconnect()
+  })
+  it('keeps missing values pending and automatically retries with backoff', async () => {
+    const { store, latest, controller } = setup()
+    latest.mockRejectedValueOnce(new FxError('timeout'))
+    store.replace(data(), 'real')
+    await controller.ensure()
+    expect(controller.getSnapshot()).toEqual({
+      status: 'error',
+      problem: 'timeout',
+    })
+    expect(store.getSnapshot().fx.hkdToCnyPpm).toBeNull()
+    await controller.ensure()
+    expect(latest).toHaveBeenCalledTimes(1)
+    await vi.advanceTimersByTimeAsync(FX_RETRY_DELAYS[0])
+    expect(latest).toHaveBeenCalledTimes(2)
+    expect(controller.getSnapshot().status).toBe('ready')
+  })
+  it('retains yesterday’s quote during an automatic update failure and recovers on retry', async () => {
+    const cached = { ...quote, retrievedAt: timestamp - 86400000 }
+    const { store, latest, controller } = setup(memoryCache(cached))
+    latest.mockRejectedValueOnce(new FxError('http'))
+    store.replace(data(), 'real')
+    await controller.ensure()
+    expect(store.getSnapshot().fx).toMatchObject({
+      source: 'cache',
+      stale: true,
+      retrievedAt: cached.retrievedAt,
+    })
+    await vi.advanceTimersByTimeAsync(FX_RETRY_DELAYS[0])
+    expect(store.getSnapshot().fx).toMatchObject({
+      source: 'live',
+      stale: false,
+      retrievedAt: timestamp + FX_RETRY_DELAYS[0],
+    })
+  })
+  it('does not adopt future cached timestamps or publication dates', async () => {
+    for (const cached of [
+      { ...quote, retrievedAt: timestamp + 1000 },
+      { ...quote, rateDate: '2026-10-28', retrievedAt: timestamp },
+    ]) {
+      const { store, latest, controller } = setup(memoryCache(cached))
+      store.replace(data(), 'real')
+      await controller.ensure()
+      expect(latest).toHaveBeenCalledTimes(1)
+      expect(store.getSnapshot().fx).toMatchObject({
+        source: 'live',
+        hkdToCnyPpm: 850000,
+      })
+    }
+  })
+  it('isolates cancelled late responses from the replacement session and the public cache', async () => {
+    const old = deferred<FxQuote>(),
+      fresh = deferred<FxQuote>()
+    const { store, latest, controller, cache } = setup(),
+      disconnect = controller.connect()
+    latest.mockReturnValueOnce(old.promise).mockReturnValueOnce(fresh.promise)
+    store.replace(data(), 'real')
+    const oldSignal = latest.mock.calls[0][0]
+    store.clear()
+    store.replace(data(), 'real')
+    old.resolve({ ...quote, hkdToCnyPpm: 700000 })
+    await flush()
+    expect(oldSignal.aborted).toBe(true)
+    expect(cache.read()).toBeNull()
+    expect(store.getSnapshot().fx.hkdToCnyPpm).toBeNull()
+    fresh.resolve(quote)
+    await flush()
+    expect(cache.read()?.hkdToCnyPpm).toBe(850000)
+    disconnect()
+  })
+  it('coalesces checks and preserves an in-flight import revision when the quote arrives', async () => {
+    const pending = deferred<FxQuote>(),
+      { store, latest, controller } = setup()
+    latest.mockReturnValueOnce(pending.promise)
+    const disconnect = controller.connect()
+    store.replace(data(), 'real')
+    const revision = store.getSnapshot().revision
+    await controller.ensure()
+    pending.resolve(quote)
+    await flush()
+    expect(store.getSnapshot().revision).toBe(revision)
+    commitImportedBatch(
+      store,
+      [
+        {
+          cards: [],
+          statements: [statement({ id: 'next', fileHash: 'hash-next' })],
+          transactions: [],
+        },
+      ],
+      revision,
+    )
+    expect(latest).toHaveBeenCalledTimes(1)
+    expect(store.getSnapshot().fx.hkdToCnyPpm).toBe(850000)
+    disconnect()
+  })
+  it('refuses a publication-date regression and keeps the known older-day quote', async () => {
+    const { store, latest, controller } = setup(
+      memoryCache({ ...quote, retrievedAt: timestamp - 86400000 }),
+    )
+    latest.mockResolvedValueOnce({ ...quote, rateDate: '2026-10-25' })
+    store.replace(data(), 'real')
+    await controller.ensure()
+    expect(controller.getSnapshot().problem).toBe('invalid-response')
+    expect(store.getSnapshot().fx).toMatchObject({
+      hkdToCnyPpm: 850000,
+      source: 'cache',
+      stale: true,
+    })
+  })
+  it('retains the last safe quote if a new daily value would overflow the result', async () => {
     const { store, latest, controller } = setup()
     const amount = 1000000000000
     store.replace(
@@ -69,206 +261,24 @@ describe('session reference-rate lifecycle', () => {
       },
       'real',
     )
-    await controller.refresh()
-    const before = deriveWorkspace(store.getSnapshot())
+    await controller.ensure()
+    const before = deriveWorkspace(store.getSnapshot()).totalRewardCnyMinor
+    vi.setSystemTime(timestamp + 86400000)
     latest.mockResolvedValueOnce({
       ...quote,
       hkdToCnyPpm: Number.MAX_SAFE_INTEGER,
     })
-    await controller.refresh()
-    expect(controller.getSnapshot()).toEqual({
-      status: 'error',
-      problem: 'calculation',
-    })
-    expect(store.getSnapshot().fx).toMatchObject({
-      hkdToCnyPpm: 850000,
-      source: 'cache',
-      stale: true,
-    })
+    await controller.ensure()
+    expect(controller.getSnapshot().problem).toBe('calculation')
+    expect(store.getSnapshot().fx.hkdToCnyPpm).toBe(850000)
     expect(deriveWorkspace(store.getSnapshot()).totalRewardCnyMinor).toBe(
-      before.totalRewardCnyMinor,
+      before,
     )
   })
-  it('starts only after real import and never uses a demonstration quote for real data', async () => {
-    vi.useFakeTimers()
-    vi.setSystemTime(timestamp)
-    const { store, latest, controller } = setup()
-    const pending = deferred<FxQuote>()
-    latest.mockReturnValueOnce(pending.promise)
-    const disconnect = controller.connect()
-    loadDemoSession(store)
-    expect(latest).not.toHaveBeenCalled()
-    commitImportedBatch(store, [dataset()], store.getSnapshot().revision)
-    expect(store.getSnapshot().fx.source).toBe('unavailable')
-    expect(controller.getSnapshot().status).toBe('loading')
-    pending.resolve(quote)
-    await pending.promise
-    await Promise.resolve()
-    expect(store.getSnapshot().fx).toEqual({
-      ...quote,
-      source: 'live',
-      retrievedAt: timestamp,
-      stale: false,
-    })
-    expect(
-      deriveWorkspace(store.getSnapshot()).totalRewardMicroRc,
-    ).not.toBeNull()
-    disconnect()
-  })
-  it('keeps the dataset revision stable for quote changes and preserves the newest quote when the next batch commits', async () => {
-    vi.useFakeTimers()
-    vi.setSystemTime(timestamp)
-    const { store, controller } = setup()
-    store.replace(dataset(), 'real')
-    const expectedRevision = store.getSnapshot().revision
-    const unchangedDataset = store.getSnapshot().dataset
-    await controller.refresh()
-    expect(store.getSnapshot().revision).toBe(expectedRevision)
-    expect(store.getSnapshot().dataset).toBe(unchangedDataset)
-    const next = statement({ id: 'next', fileHash: 'hash-next' })
-    commitImportedBatch(
-      store,
-      [{ cards: [], statements: [next], transactions: [] }],
-      expectedRevision,
-    )
-    expect(store.getSnapshot().dataset.statements).toHaveLength(2)
-    expect(store.getSnapshot().fx.hkdToCnyPpm).toBe(850000)
-  })
-  it('does not let a late request restore a cleared session or overwrite a new session', async () => {
-    vi.useFakeTimers()
-    vi.setSystemTime(timestamp)
-    const { store, latest, controller } = setup()
-    const old = deferred<FxQuote>(),
-      fresh = deferred<FxQuote>()
-    latest.mockReturnValueOnce(old.promise).mockReturnValueOnce(fresh.promise)
-    const disconnect = controller.connect()
-    store.replace(dataset(), 'real')
-    const oldSignal = latest.mock.calls[0][0]
-    store.clear()
-    expect(oldSignal.aborted).toBe(true)
-    expect(controller.getSnapshot().status).toBe('idle')
-    store.replace(dataset(), 'real')
-    old.resolve({ ...quote, hkdToCnyPpm: 700000 })
-    await old.promise
-    await Promise.resolve()
-    expect(store.getSnapshot().fx.source).toBe('unavailable')
-    fresh.resolve(quote)
-    await fresh.promise
-    await Promise.resolve()
-    expect(store.getSnapshot().fx.hkdToCnyPpm).toBe(850000)
-    disconnect()
-  })
-  it('leaves missing rates pending on first failure and never silently supplies an example value', async () => {
-    const { store, latest, controller } = setup()
-    store.replace(dataset(), 'real')
-    latest.mockRejectedValueOnce(new FxError('timeout'))
-    await controller.refresh()
-    expect(controller.getSnapshot()).toEqual({
-      status: 'error',
-      problem: 'timeout',
-    })
-    expect(store.getSnapshot().fx.hkdToCnyPpm).toBeNull()
-    expect(deriveWorkspace(store.getSnapshot()).totalRewardMicroRc).toBeNull()
-  })
-  it('retains an older session rate on refresh failure and recovers without altering transaction amounts', async () => {
-    vi.useFakeTimers()
-    vi.setSystemTime(timestamp)
-    const { store, latest, controller } = setup()
-    store.replace(dataset(), 'real')
-    const original = store.getSnapshot().dataset
-    await controller.refresh()
-    latest.mockRejectedValueOnce(new FxError('http'))
-    await controller.refresh()
-    expect(store.getSnapshot().fx).toMatchObject({
-      source: 'cache',
-      hkdToCnyPpm: 850000,
-      stale: true,
-      retrievedAt: timestamp,
-    })
-    expect(controller.getSnapshot().problem).toBe('http')
-    await controller.refresh()
-    expect(store.getSnapshot().fx).toMatchObject({
-      source: 'live',
-      stale: false,
-    })
-    expect(store.getSnapshot().dataset).toBe(original)
-  })
-  it('coalesces concurrent refresh attempts and does not refetch just because a batch appended', async () => {
-    vi.useFakeTimers()
-    vi.setSystemTime(timestamp)
-    const { store, latest, controller } = setup()
-    const pending = deferred<FxQuote>()
-    latest.mockReturnValueOnce(pending.promise)
-    const disconnect = controller.connect()
-    store.replace(dataset(), 'real')
-    await controller.refresh()
-    commitImportedBatch(
-      store,
-      [
-        {
-          cards: [],
-          statements: [statement({ id: 'next', fileHash: 'hash-next' })],
-          transactions: [],
-        },
-      ],
-      store.getSnapshot().revision,
-    )
-    expect(latest).toHaveBeenCalledTimes(1)
-    pending.resolve(quote)
-    await pending.promise
-    await Promise.resolve()
-    expect(store.getSnapshot().dataset.statements).toHaveLength(2)
-    expect(store.getSnapshot().fx.hkdToCnyPpm).toBe(850000)
-    disconnect()
-  })
-  it('marks a day-old in-memory rate stale without background polling and releases its timer on clear', async () => {
-    vi.useFakeTimers()
-    vi.setSystemTime(timestamp)
-    const { store, latest, controller } = setup()
-    const disconnect = controller.connect()
-    store.replace(dataset(), 'real')
-    await Promise.resolve()
-    await Promise.resolve()
-    await vi.advanceTimersByTimeAsync(FX_MAX_AGE_MS)
-    expect(store.getSnapshot().fx).toMatchObject({
-      source: 'cache',
-      stale: true,
-    })
-    expect(latest).toHaveBeenCalledTimes(1)
-    await controller.refresh()
-    store.clear()
-    expect(vi.getTimerCount()).toBe(0)
-    disconnect()
-  })
-  it('labels old publication dates stale and never replaces a newer quote with an older publication', async () => {
-    vi.useFakeTimers()
-    vi.setSystemTime(timestamp)
-    const { store, latest, controller } = setup()
-    store.replace(dataset(), 'real')
-    latest.mockResolvedValueOnce({ ...quote, rateDate: '2026-10-10' })
-    await controller.refresh()
-    expect(store.getSnapshot().fx.stale).toBe(true)
-    await controller.refresh()
-    latest.mockResolvedValueOnce({
-      ...quote,
-      rateDate: '2026-10-25',
-      hkdToCnyPpm: 860000,
-    })
-    await controller.refresh()
-    expect(store.getSnapshot().fx).toMatchObject({
-      rateDate: '2026-10-26',
-      hkdToCnyPpm: 850000,
-      source: 'cache',
-      stale: true,
-    })
-    expect(controller.getSnapshot().problem).toBe('invalid-response')
-  })
-  it('recomputes historical cap rewards and reference values together while basic RC and input money remain fixed', async () => {
-    vi.useFakeTimers()
-    vi.setSystemTime(timestamp)
+  it('recalculates historical caps on the next daily value without changing basic rewards or source money', async () => {
     const { store, latest, controller } = setup()
     const input = {
-      ...dataset(),
+      ...data(),
       transactions: [
         transaction({
           account: { currency: 'CNY', minor: 9000000 },
@@ -276,32 +286,42 @@ describe('session reference-rate lifecycle', () => {
         }),
       ],
     }
-    store.replace(input, 'real')
     latest.mockResolvedValueOnce({ ...quote, hkdToCnyPpm: 800000 })
-    await controller.refresh()
+    store.replace(input, 'real')
+    await controller.ensure()
     const before = deriveWorkspace(store.getSnapshot())
+    vi.setSystemTime(timestamp + 86400000)
     latest.mockResolvedValueOnce({ ...quote, hkdToCnyPpm: 900000 })
-    await controller.refresh()
+    await controller.ensure()
     const after = deriveWorkspace(store.getSnapshot())
     expect(before.rewardCards[0].abroadMicroRc).toBe(1600000000)
     expect(after.rewardCards[0].abroadMicroRc).toBe(1800000000)
-    expect(before.rewardCards[0].basicMicroRc).toBe(
-      after.rewardCards[0].basicMicroRc,
+    expect(after.rewardCards[0].basicMicroRc).toBe(
+      before.rewardCards[0].basicMicroRc,
     )
-    expect(before.totalRewardCnyMinor).not.toBe(after.totalRewardCnyMinor)
     expect(store.getSnapshot().dataset).toBe(input)
   })
-  it('releases pending work on disconnect and ignores late completion', async () => {
+  it('marks an old publication stale while still reusing the successful quote for that day', async () => {
     const { store, latest, controller } = setup()
-    const pending = deferred<FxQuote>()
+    latest.mockResolvedValueOnce({ ...quote, rateDate: '2026-10-10' })
+    store.replace(data(), 'real')
+    await controller.ensure()
+    await controller.ensure()
+    expect(store.getSnapshot().fx.stale).toBe(true)
+    expect(latest).toHaveBeenCalledTimes(1)
+  })
+  it('releases pending requests and daily timers on disconnect', async () => {
+    const { store, latest, controller } = setup(),
+      pending = deferred<FxQuote>()
     latest.mockReturnValueOnce(pending.promise)
-    store.replace(dataset(), 'real')
+    store.replace(data(), 'real')
     const disconnect = controller.connect()
     disconnect()
     pending.resolve(quote)
-    await pending.promise
-    await Promise.resolve()
-    expect(store.getSnapshot().fx.source).toBe('unavailable')
+    await flush()
+    expect(store.getSnapshot().fx.hkdToCnyPpm).toBeNull()
     expect(controller.getSnapshot().status).toBe('idle')
+    expect(vi.getTimerCount()).toBe(0)
+    expect(msUntilNextFxDay(timestamp)).toBeGreaterThan(0)
   })
 })

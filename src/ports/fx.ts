@@ -7,6 +7,15 @@ export interface FxProvider {
   latest(signal: AbortSignal): Promise<FxQuote>
 }
 
+export interface CachedFxQuote extends FxQuote {
+  readonly retrievedAt: number
+}
+
+export interface FxCache {
+  read(): CachedFxQuote | null
+  write(quote: CachedFxQuote): void
+}
+
 export type FxProblem =
   | 'network'
   | 'http'

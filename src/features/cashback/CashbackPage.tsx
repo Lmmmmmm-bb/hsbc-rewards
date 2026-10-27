@@ -29,7 +29,6 @@ export function CashbackPage({
   session,
   view,
   fxRequest,
-  onRefreshFx,
   hasPendingFiles,
   onDemo,
   beforeRead,
@@ -39,7 +38,6 @@ export function CashbackPage({
   session: SessionState
   view: WorkspaceView
   fxRequest: FxRequestState
-  onRefreshFx: () => void
   hasPendingFiles: boolean
   onDemo: () => void
   beforeRead: () => void
@@ -223,11 +221,7 @@ export function CashbackPage({
                   )}
                 </div>
                 {hasResults && (
-                  <FxReference
-                    fx={session.fx}
-                    request={fxRequest}
-                    onRefresh={onRefreshFx}
-                  />
+                  <FxReference fx={session.fx} request={fxRequest} />
                 )}
               </CardContent>
             </Card>

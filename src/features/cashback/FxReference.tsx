@@ -1,18 +1,14 @@
-import { RiRefreshLine } from '@remixicon/react'
 import type { FxSnapshot } from '@/application/session/types'
 import type { FxRequestState } from '@/application/fx/controller'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { useI18n } from '@/i18n/use-i18n'
 
 export function FxReference({
   fx,
   request,
-  onRefresh,
 }: {
   fx: FxSnapshot
   request: FxRequestState
-  onRefresh: () => void
 }) {
   const { t, number, date, dateTime } = useI18n()
   const available = fx.source === 'live' || fx.source === 'cache'
@@ -24,16 +20,8 @@ export function FxReference({
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="font-medium">{t('fx.title')}</p>
-        {fx.source !== 'demo' && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onRefresh}
-            disabled={request.status === 'loading'}
-          >
-            <RiRefreshLine aria-hidden="true" />
-            {t(request.status === 'loading' ? 'fx.loading' : 'fx.refresh')}
-          </Button>
+        {request.status === 'loading' && (
+          <Badge variant="secondary">{t('fx.loading')}</Badge>
         )}
       </div>
       {fx.source === 'demo' ? (
@@ -47,7 +35,13 @@ export function FxReference({
               1 HKD = {number(fx.hkdToCnyPpm / 1_000_000, 6)} CNY
             </span>
             <Badge variant={fx.stale ? 'secondary' : 'outline'}>
-              {t(fx.stale ? 'fx.stale' : 'fx.available')}
+              {t(
+                fx.stale
+                  ? 'fx.stale'
+                  : fx.source === 'cache'
+                    ? 'fx.cachedToday'
+                    : 'fx.available',
+              )}
             </Badge>
           </p>
           <p className="text-muted-foreground">
@@ -88,6 +82,7 @@ export function FxReference({
         {available && fx.stale && <p>{t('fx.staleHint')}</p>}
       </div>
       <div className="space-y-1 text-muted-foreground">
+        <p>{t('fx.dailyPolicy')}</p>
         <p>{t('cashback.fxReference')}</p>
         <p>{t('rewards.fxEffect')}</p>
       </div>
