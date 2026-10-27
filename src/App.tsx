@@ -7,12 +7,14 @@ import { useI18n } from '@/i18n/use-i18n'
 import { useSession } from '@/store/use-session'
 import { pdfImport } from '@/application/import/runtime'
 import { usePdfImport } from '@/store/use-pdf-import'
+import { useFx } from '@/store/use-fx'
 
 function App() {
   const { session, view, loadDemo, clear } = useSession(),
     { t } = useI18n(),
     { batch } = usePdfImport()
   const [dialog, setDialog] = useState<'privacy' | 'clear' | null>(null)
+  const fx = useFx()
   const restart = () => {
     pdfImport.cancel()
     clear()
@@ -23,6 +25,10 @@ function App() {
       <CashbackPage
         session={session}
         view={view}
+        fxRequest={fx.request}
+        onRefreshFx={() => {
+          void fx.refresh()
+        }}
         hasPendingFiles={batch.items.length > 0}
         onDemo={() => {
           if (session.mode === 'real') return
@@ -35,7 +41,9 @@ function App() {
         onClear={() => setDialog('clear')}
         onPrivacy={() => setDialog('privacy')}
       />
-      {dialog === 'privacy' && <PrivacyDialog onClose={() => setDialog(null)} />}
+      {dialog === 'privacy' && (
+        <PrivacyDialog onClose={() => setDialog(null)} />
+      )}
       {dialog === 'clear' && (
         <Dialog
           title={t('clear.title')}

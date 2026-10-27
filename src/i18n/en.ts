@@ -167,6 +167,25 @@ export const en = {
   'rewards.poolUnconfirmed':
     'Shared ownership is unconfirmed. Cap pools are calculated separately for now.',
   'rewards.fxDemo': 'Example reference rate: 1 HKD = {rate} CNY',
+  'fx.title': 'HKD → CNY reference rate',
+  'fx.refresh': 'Refresh rate',
+  'fx.loading': 'Fetching…',
+  'fx.available': 'Reference available',
+  'fx.stale': 'Older reference',
+  'fx.rateDate': 'Rate date {date}',
+  'fx.retrievedAt': 'Retrieved {time}',
+  'fx.unavailable':
+    'No reference rate yet. CNY values and rewards that require it remain pending.',
+  'fx.loadingHint':
+    'Fetching a public reference rate. Calculations will update automatically.',
+  'fx.refreshingHint':
+    'Refreshing. Calculations continue using the current reference until it completes.',
+  'fx.failed': 'Could not fetch a reference rate. Try again later.',
+  'fx.timeout': 'The rate request timed out. Try again later.',
+  'fx.invalid':
+    'The rate response was incomplete or had an invalid date. It was not used.',
+  'fx.staleHint':
+    'An older rate from this session is still used. A successful refresh recalculates all historical results.',
   'rewards.fxEffect':
     'The reference rate converts CNY displays and estimates Spend Abroad caps when bank HKD equivalents are missing. Refreshing may change extra rewards.',
   'rewards.readonly': 'Read-only · {version}',
@@ -236,7 +255,7 @@ export const en = {
     'PDFs, passwords and parsed records are handled locally. The current version uses memory and does not persist business data in browser storage.',
   'privacy.networkTitle': 'External requests',
   'privacy.networkBody':
-    'The demo requests no external business services. Live exchange rates will use a public allowlist without card numbers, merchants or amounts.',
+    'After import, only the fixed Frankfurter HKD→CNY endpoint is used to fetch ECB reference rates. PDFs, passwords, card numbers, merchants and amounts are never sent. Requests omit cookies and referrers. There is no telemetry. The demo requests no rates.',
   'privacy.independentTitle': 'An independent product',
   'privacy.independentBody':
     'Pulse Rewards is not affiliated with, authorised or endorsed by HSBC. Rewards are estimates; actual bank credits prevail.',

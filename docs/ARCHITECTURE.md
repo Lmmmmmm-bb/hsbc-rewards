@@ -73,5 +73,7 @@ PDF API 依据：[官方示例](https://mozilla.github.io/pdf.js/examples/)、[�
 - `application/session/reward-details.ts` 汇总卡片来源、覆盖期、消费笔数和分币种金额；逐档计奖金额直接读取引擎的封顶结果，不在 UI 重写资格或封顶逻辑。未知金额按币种传播 null，保留其他档已知结果；去重交易的多份来源不重复累计消费。
 - `reward-quality.ts` 统计来源核对与交易警告，`reward-pools.ts` 仅为视图补全已观察周期的未使用额度，不修改计算引擎的活动池。全局质量直接来自完整会话，不对各卡重复引用的来源核对再求和。
 - `RewardCaps`、`RewardReasons`、`RewardQuality` 只负责展示；已知奖励、原因计数和资格均来自应用查询，组件不重新计算。
+- `ports/fx.ts` 定义只含百万分率与参考日期的报价端口；`adapters/fx` 校验固定来源的响应并处理超时，不能接收结单参数。`application/fx` 管理自动获取、过期、旧值回退与取消；UI 只读快照并触发刷新。
+- `SessionState.revision` 是数据版本。`setFx` 发布新快照但不推进该版本；批次提交读取当时最新的 FX。清空 / 示例切换推进数据版本，同时 FX 控制器取消自身请求；两个异步流程分别防止迟到写回。
 - `ports/statements.ts` 定义文本页到结构化结单的异步端口，`adapters/statements` 仅准备本机不透明标识后调用纯模板；`application/import/merge.ts` 先完整合并 / 校验 / 去重，`commit.ts` 通过版本检查后仅写会话一次。
 - 批次控制器保管尚未提交的解析数据；读取 / 识别 / 待解锁结束前不发布业务会话。成功提交后清理临时数据，关闭状态列表不撤销已提交消费；取消和过期回调不触发提交。

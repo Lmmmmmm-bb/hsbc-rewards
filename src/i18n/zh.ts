@@ -144,6 +144,21 @@ export const zh = {
   'rewards.noPool': '当前数据尚未占用该档额度',
   'rewards.poolUnconfirmed': '主副卡共享关系未确认，暂按卡分别计算额度。',
   'rewards.fxDemo': '示例参考汇率：1 HKD = {rate} CNY',
+  'fx.title': '港币 → 人民币参考汇率',
+  'fx.refresh': '刷新汇率',
+  'fx.loading': '获取中…',
+  'fx.available': '已获取参考值',
+  'fx.stale': '旧参考值',
+  'fx.rateDate': '参考日期 {date}',
+  'fx.retrievedAt': '获取于 {time}',
+  'fx.unavailable':
+    '尚无参考汇率，人民币价值待换算；依赖汇率的奖励标为待计算。',
+  'fx.loadingHint': '正在获取公开参考汇率，成功后会自动补全计算。',
+  'fx.refreshingHint': '正在刷新；完成前继续按当前参考值计算。',
+  'fx.failed': '未能获取参考汇率，可稍后重试。',
+  'fx.timeout': '汇率请求超时，可稍后重试。',
+  'fx.invalid': '汇率来源返回的数据不完整或日期异常，未采用本次结果。',
+  'fx.staleHint': '本次会话的旧值仍用于估算，刷新成功后统一重算所有历史结果。',
   'rewards.fxEffect':
     '参考汇率用于 CNY 展示及缺少银行港币等值的赏世界封顶估算，刷新可能改变附加奖励。',
   'rewards.readonly': '只读 · {version}',
@@ -205,7 +220,7 @@ export const zh = {
     'PDF、密码和解析结果仅在本机处理。当前版本使用内存会话，不将业务数据写入浏览器持久存储。',
   'privacy.networkTitle': '外部请求',
   'privacy.networkBody':
-    '演示会话不请求外部业务服务。真实汇率接入后，仅访问公开汇率白名单，不携带卡号、商户或金额。',
+    '导入成功后，仅向 Frankfurter 的固定 HKD→CNY 接口获取 ECB 参考汇率。不发送 PDF、密码、卡号、商户或金额，不使用 Cookie 或发送页面来源；无埋点。示例不请求汇率。',
   'privacy.independentTitle': '独立产品',
   'privacy.independentBody':
     'Pulse Rewards 与 HSBC 无隶属、授权或背书关系。返现为估算，以银行实际发放为准。',

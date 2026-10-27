@@ -20,11 +20,15 @@ import { LocalPdfImport } from '@/features/import/components/LocalPdfImport'
 import { RewardBreakdown } from './RewardBreakdown'
 import { RewardRules } from './RewardRules'
 import { RewardQualityAlerts } from './RewardQualityAlerts'
+import type { FxRequestState } from '@/application/fx/controller'
+import { FxReference } from './FxReference'
 import { useI18n } from '@/i18n/use-i18n'
 
 export function CashbackPage({
   session,
   view,
+  fxRequest,
+  onRefreshFx,
   hasPendingFiles,
   onDemo,
   beforeRead,
@@ -33,6 +37,8 @@ export function CashbackPage({
 }: {
   session: SessionState
   view: WorkspaceView
+  fxRequest: FxRequestState
+  onRefreshFx: () => void
   hasPendingFiles: boolean
   onDemo: () => void
   beforeRead: () => void
@@ -214,19 +220,14 @@ export function CashbackPage({
                       })}
                     </p>
                   )}
-                  <p>{t('cashback.fxReference')}</p>
-                  {hasResults && (
-                    <p>
-                      {session.fx.source === 'demo'
-                        ? t('rewards.fxDemo', {
-                            rate: number(
-                              (session.fx.hkdToCnyPpm ?? 0) / 1_000_000,
-                            ),
-                          })
-                        : t('rewards.fxUnavailableHint')}
-                    </p>
-                  )}
                 </div>
+                {hasResults && (
+                  <FxReference
+                    fx={session.fx}
+                    request={fxRequest}
+                    onRefresh={onRefreshFx}
+                  />
+                )}
               </CardContent>
             </Card>
             {session.mode === 'demo' && (

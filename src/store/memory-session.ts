@@ -24,8 +24,15 @@ export function createMemorySession(): SessionStore {
         listeners.delete(listener)
       }
     },
-    replace(dataset, mode, fx = { hkdToCnyPpm: null, source: 'unavailable', stale: false }) {
+    replace(
+      dataset,
+      mode,
+      fx = { hkdToCnyPpm: null, source: 'unavailable', stale: false },
+    ) {
       publish({ revision: snapshot.revision + 1, dataset, mode, fx })
+    },
+    setFx(fx) {
+      if (snapshot.mode === 'real') publish({ ...snapshot, fx })
     },
     clear() {
       publish(emptyState(snapshot.revision + 1))

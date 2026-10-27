@@ -28,5 +28,15 @@ export function useI18n() {
     microRc === null
       ? value.t('rewards.pending')
       : `${number(microRc / 1_000_000, 6)} RC`
-  return { ...value, money, number, date, rc }
+  const dateTime = (timestamp: number) =>
+    new Intl.DateTimeFormat(value.locale, {
+      year: 'numeric',
+      month: 'short',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'Asia/Hong_Kong',
+      timeZoneName: 'short',
+    }).format(timestamp)
+  return { ...value, money, number, date, rc, dateTime }
 }
