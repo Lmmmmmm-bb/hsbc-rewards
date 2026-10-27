@@ -352,7 +352,7 @@ export const en = {
     'Real imports automatically request Frankfurter’s ECB HKD→CNY reference. Only the public quote, rate date and retrieval time are cached. Statements, passwords, card numbers, merchants and amounts are not sent. There is no telemetry. The example requests no public FX.',
   'privacy.independentTitle': 'Independence and brand identification',
   'privacy.independentBody':
-    'Pulse Rewards is an independent personal reward estimator, with no HSBC affiliation, authorisation or endorsement. HSBC names and logos identify supported cards and rule sources; trademarks belong to their owners. Actual rewards follow bank records.',
+    'Rewards is an independent personal reward estimator, with no HSBC affiliation, authorisation or endorsement. HSBC names and logos identify supported cards and rule sources; trademarks belong to their owners. Actual rewards follow bank records.',
   'clear.title': 'Clear this session?',
   'clear.body':
     'Clear current file status and rewards. The public FX cache remains. You can then choose PDFs again or view the example.',

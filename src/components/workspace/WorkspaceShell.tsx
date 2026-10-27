@@ -52,7 +52,7 @@ export function WorkspaceShell({
           >
             <HsbcLogo />
             <span data-brand-title className="font-brand text-lg font-medium">
-              Pulse Rewards
+              Rewards
             </span>
           </a>
           <div className="flex flex-wrap items-center gap-1">

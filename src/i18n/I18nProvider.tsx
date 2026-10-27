@@ -17,7 +17,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   }, [locale])
   useEffect(() => {
     document.documentElement.lang = locale
-    document.title = `Pulse Rewards · ${value.t('app.title')}`
+    document.title = `Rewards · ${value.t('app.title')}`
   }, [locale, value])
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>
 }

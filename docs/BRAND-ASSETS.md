@@ -12,7 +12,7 @@
 
 ## 标题字体
 
-HSBC 的公开[品牌介绍](https://create.hsbc/content/dam/brandhub/newsfeed-public/brand-identity/HSBC_Brand_identity_video_transcript.pdf)说明字体设计以 Univers 为基础。本轮采用用户允许的相近替代：**Roboto，500 字重，仅 Latin 子集**，用于页首 Pulse Rewards 标题，正文继续使用原 shadcn preset 的 Inter。
+HSBC 的公开[品牌介绍](https://create.hsbc/content/dam/brandhub/newsfeed-public/brand-identity/HSBC_Brand_identity_video_transcript.pdf)说明字体设计以 Univers 为基础。本轮采用用户允许的相近替代：**Roboto，500 字重，仅 Latin 子集**，用于页首 Rewards 标题，正文继续使用原 shadcn preset 的 Inter。
 
 - 来源：[Fontsource Roboto](https://fontsource.org/fonts/roboto)，依赖版本 `@fontsource/roboto@5.3.0`。
 - 使用其原始 `latin-500.css`，字体随应用提供；字体授权为 SIL OFL 1.1，授权文本同时提供于 `public/licenses/roboto-OFL.txt`。

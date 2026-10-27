@@ -1,8 +1,8 @@
-# Pulse Rewards
+# Rewards
 
 基于 Vite、React、TypeScript、Tailwind CSS 和 shadcn/ui 的项目，使用 shadcn preset `b4hZZS5Uu`。
 
-Pulse Rewards 是面向个人的返现工具：上传 HSBC Pulse 英文 PDF，在同一页查看采用当前已核实规则的三档返现估算。只保留本次临时结果，刷新后清空；不提供账单页、设置或保存功能。首版已按用户确认的 4 份正式样本与 Chromium 范围完成分阶段验收。
+Rewards 是面向个人的返现工具：上传 HSBC Pulse 英文 PDF，在同一页查看采用当前已核实规则的三档返现估算。只保留本次临时结果，刷新后清空；不提供账单页、设置或保存功能。首版已按用户确认的 4 份正式样本与 Chromium 范围完成分阶段验收。
 
 ## 产品与开发文档
 
