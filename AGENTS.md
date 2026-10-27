@@ -11,16 +11,11 @@ Rewards 是面向个人的 HSBC PULSE 银联双币钻石卡返现估算工具。
 | 文档 | 用途 |
 | --- | --- |
 | [README.md](README.md) | 面向用户的介绍、操作步骤、隐私和限制 |
-| [docs/PRODUCT.md](docs/PRODUCT.md) | 当前产品范围与已确认行为 |
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | 模块边界、数据流与不变量 |
-| [docs/RULES.md](docs/RULES.md) | 返现资格、封顶、精度及参考换算口径 |
-| [docs/COPY.md](docs/COPY.md) | 中英文界面文案口径 |
-| [docs/BRAND-ASSETS.md](docs/BRAND-ASSETS.md) | 品牌素材、字体与授权来源 |
-| [docs/QUALITY.md](docs/QUALITY.md) | 浏览器、无障碍与性能验收方法 |
-| [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | 阶段进度及历史验收记录 |
 | [CHANGELOG.md](CHANGELOG.md) | 已完成变更 |
+| [public/licenses/shadcn-ui.txt](public/licenses/shadcn-ui.txt) | shadcn/ui 版权与授权声明 |
+| [public/licenses/roboto-OFL.txt](public/licenses/roboto-OFL.txt) | Roboto 字体授权声明 |
 
-当前范围以 `PRODUCT.md` 为准。历史验收文档保留当时的事实；其中的四页工作台、设置、CSV、加密档、vault、备份和跨会话历史均不属于当前实现目标。不要仅因旧架构表或历史阶段提到这些能力就创建对应模块。
+当前范围以本文、README 和现有实现为准。四页工作台、设置、CSV、加密档、vault、备份和跨会话历史均不属于当前实现目标；未经新的范围确认，不创建对应模块。
 
 ## 本地运行
 
@@ -98,19 +93,19 @@ pnpm dev
 
 - 沿用 shadcn `b4hZZS5Uu` preset、Base UI 控件及 Remix Icon。优先组合已有 `components/ui` 组件与 Tailwind 工具类，不新增业务样式表、行内视觉样式或额外主题。
 - 需要新 shadcn 控件时使用 `pnpm exec shadcn add <component>`，检查生成差异并保留授权文本。
-- 保持当前品牌规范：主色 `#D90012`、HSBC 六边形、正文 Inter、标题 Roboto 500 及系统字体回退。素材来源见 `BRAND-ASSETS.md`。
+- 保持当前品牌规范：主色 `#D90012`、HSBC 六边形、正文 Inter、标题 Roboto 500 及系统字体回退。六边形来源记录在 `src/assets/hsbc/hsbc-hexagon.svg` 注释中；第三方授权声明保留在 `public/licenses/`。
 - 新增和修改文案同步更新 `src/i18n/zh.ts` 与 `src/i18n/en.ts`，避免组件内硬编码用户文案。
 - 金额称“预计返现（RewardCash）”，单位 RC；人民币金额称参考价值。消费额度与返现上限要区分，部分待计算时不能暗示结果完整。
 - 保持键盘焦点、弹窗关闭行为、减少动态效果支持和窄屏可用性。文件状态弹窗关闭后继续处理；本批结束后才能补充文件。
-- README 始终面向使用者。开发命令、目录说明和验收细节放在本文或 `docs/`，不要把技术栈和阶段报告放回用户指南。
+- README 始终面向使用者。开发命令、目录说明和验证要求放在本文，不要把技术栈和阶段报告放回用户指南。
 
 ## 验证与交付
 
 - 代码变更完成后运行 `pnpm typecheck`、`pnpm lint`、`pnpm test`、`pnpm build`，并检查 `git diff --check`。仅文档变更检查事实、链接和 diff 即可。
 - Vitest 仅收集 `src/**/*.test.{ts,tsx}`，在 Node 环境运行；测试与被测模块相邻，显式从 `vitest` 导入 API。重点测试金额、封顶、去重、缺失数据及异步取消等业务边界，不写复刻实现的测试或无意义快照。
 - UI 变更实际走查相关流程及 320 / 360 / 768 / 1280 / 1440 宽度，检查键盘与错误状态；不能把类型检查当作浏览器验收。
-- 涉及性能、无障碍或导入资源生命周期时，按 `docs/QUALITY.md` 使用独立工具验收。输出截图或页面快照的流程只使用合成数据。
+- 涉及性能、无障碍或导入资源生命周期时，使用 `scripts/audit-workspace.mjs`、`scripts/benchmark-import.mjs` 或 `scripts/audit-reward-interactions.mjs` 验收，先检查对应脚本的入口参数。输出截图或页面快照的流程只使用合成数据。
 - 真实样本验证可使用 `node scripts/verify-pulse-samples.mjs /path/to/statement.pdf`；仅在已获授权时运行，只记录匿名计数与状态。
-- 按变更同步相关产品、规则、架构或文案文档及 CHANGELOG；多阶段工作参照 `DEVELOPMENT.md`，每个阶段完成验证并记录证据后再推进。
+- 按变更同步 README、本文和 CHANGELOG 中的相关说明；多阶段工作每个阶段完成验证并记录证据后再推进。
 - 当前已验收范围为 4 份真实样本与 Chromium；扩展样本、Safari / Firefox、OCR 仍待补齐。不要把历史测试数量、性能分数或样本结果当作本次验证结论。
 - 交付时说明实际改动、已执行验证与尚未验证项，不编造测试结果或提前标记验收通过。
