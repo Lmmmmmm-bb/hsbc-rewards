@@ -1,7 +1,7 @@
 import type { WorkspaceView } from '@/application/session/selectors'
 import { Dialog } from '@/components/workspace/Dialog'
 import { useI18n } from '@/i18n/use-i18n'
-import { RewardRules } from './RewardRules'
+import { DeferredDialogContent } from '@/components/workspace/DeferredDialogContent'
 
 export function RulesDialog({
   rules,
@@ -17,7 +17,9 @@ export function RulesDialog({
       onClose={onClose}
       className="sm:max-w-4xl"
     >
-      <RewardRules rules={rules} />
+      <DeferredDialogContent>
+        {({ RewardRules }) => <RewardRules rules={rules} />}
+      </DeferredDialogContent>
     </Dialog>
   )
 }

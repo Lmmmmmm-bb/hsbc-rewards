@@ -1,6 +1,10 @@
 import type { MessageKey } from './zh'
 
 export const en = {
+  'dialogContent.loading': 'Loading content…',
+  'dialogContent.failed': 'Dialog content could not be loaded',
+  'dialogContent.retained': 'Your imported statements are still available. Retry, or close the dialog and open it again later.',
+  'dialogContent.retry': 'Reload content',
   'rules.tabRewards': 'Reward rules',
   'rules.tabCalculation': 'Calculation policy',
   'rules.tabSources': 'Official sources',

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { ErrorNotice } from '@/components/workspace/ErrorNotice'
 import { useI18n } from '@/i18n/use-i18n'
-import { FileStatusRow } from './FileStatusRow'
+import { DeferredDialogContent } from '@/components/workspace/DeferredDialogContent'
 import { PdfFilePicker } from './PdfFilePicker'
 
 export function FileStatusDialog({
@@ -132,20 +132,15 @@ export function FileStatusDialog({
             {t('pdf.failedFilesHint')}
           </p>
         )}
-        <ul
-          data-file-list
-          className="space-y-3"
-          aria-label={t('pdf.batchTitle')}
-        >
-          {items.map((item) => (
-            <FileStatusRow
-              key={item.id}
-              item={item}
+        <DeferredDialogContent>
+          {({ FileStatusList }) => (
+            <FileStatusList
+              items={items}
               controller={controller}
               editable={editable}
             />
-          ))}
-        </ul>
+          )}
+        </DeferredDialogContent>
       </div>
     </Dialog>
   )

@@ -1,4 +1,8 @@
 export const zh = {
+  'dialogContent.loading': '正在加载内容…',
+  'dialogContent.failed': '暂时无法加载弹窗内容',
+  'dialogContent.retained': '已导入的结单仍然保留。可以重试，或关闭弹窗稍后再打开。',
+  'dialogContent.retry': '重新加载内容',
   'rules.tabRewards': '奖励规则',
   'rules.tabCalculation': '计算口径',
   'rules.tabSources': '官方依据',

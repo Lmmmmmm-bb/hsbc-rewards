@@ -53,7 +53,9 @@ async function snapshot(name, probe = false) {
   visit(entry.fileName)
   const runtime = chunks.find(chunk => chunk.name === 'react-runtime')
   const engine = chunks.find(chunk => chunk.name === 'pdf-engine')
+  const dialogs = chunks.find(chunk => chunk.name === 'DialogContents')
   assert.ok(runtime && engine, 'Both stable dependency chunks must exist.')
+  assert.ok(dialogs && !initial.has(dialogs.fileName), 'Dialog content must stay lazy.')
   assert.ok(initial.has(runtime.fileName), 'React must be available on initial navigation.')
   assert.ok(!initial.has(engine.fileName), 'PDF.js must stay lazy.')
   assert.equal(engine.imports.length, 0, 'The PDF engine must not depend on the app entry.')
@@ -62,6 +64,7 @@ async function snapshot(name, probe = false) {
   }
   for (const file of initial) {
     assert.ok(!Object.keys(byFile.get(file).modules).some(id => /[\\/]pdfjs-dist[\\/]/.test(id)), 'No PDF.js module may enter the initial graph.')
+    assert.ok(!Object.keys(byFile.get(file).modules).some(id => /[\\/](?:PrivacyDetails|RewardRules|FileStatusList|FileStatusRow|PasswordForm)\.tsx$/.test(id)), 'Deferred dialog bodies must not enter the initial graph.')
   }
   const files = {}
   async function collect(folder) {
@@ -108,7 +111,7 @@ const resources = Object.keys(baseline.files).filter(file => file.startsWith('as
 for (const file of resources) assert.deepEqual(baseline.files[file], probe.files[file], `${file} must remain byte-identical.`)
 const report = {
   probe: 'In-memory edit to app.title in zh.ts; source files are untouched.',
-  checks: { pdfStaysLazy: true, stableDependenciesUnchanged: true, unchangedResources: resources.length },
+  checks: { pdfStaysLazy: true, dialogsStayLazy: true, stableDependenciesUnchanged: true, unchangedResources: resources.length },
   baseline,
   copyEdit: { entry: probe.entry, stable: probe.stable, directory: probe.directory },
 }
