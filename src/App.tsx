@@ -1,36 +1,40 @@
 import { useState } from 'react'
-import { navigate, useRoute } from '@/app/routes'
-import { AppShell } from '@/components/workspace/AppShell'
-import { ActionButton } from '@/components/workspace/ActionButton'
+import { Button } from '@/components/ui/button'
 import { Dialog } from '@/components/workspace/Dialog'
 import { PrivacyDialog } from '@/components/workspace/PrivacyDialog'
-import { ImportPage } from '@/features/import/ImportPage'
-import { LedgerPage } from '@/features/ledger/LedgerPage'
-import { RewardsPage } from '@/features/rewards/RewardsPage'
-import { SettingsPage } from '@/features/settings/SettingsPage'
+import { CashbackPage } from '@/features/cashback/CashbackPage'
 import { useI18n } from '@/i18n/use-i18n'
 import { useSession } from '@/store/use-session'
+import { pdfImport } from '@/application/import/runtime'
+import { usePdfImport } from '@/store/use-pdf-import'
 
 function App() {
-  const page = useRoute(),
-    { session, view, loadDemo, clear } = useSession(),
-    { t } = useI18n()
+  const { session, view, loadDemo, clear } = useSession(),
+    { t } = useI18n(),
+    { batch } = usePdfImport()
   const [dialog, setDialog] = useState<'privacy' | 'clear' | null>(null)
-  const onDemo = () => {
-    if (session.mode === 'real') return
-    loadDemo()
-    navigate('ledger')
+  const restart = () => {
+    pdfImport.cancel()
+    clear()
+    setDialog(null)
   }
-  const onClear = () => setDialog('clear'),
-    onPrivacy = () => setDialog('privacy')
   return (
-    <AppShell page={page} session={session} onDemo={onDemo} onClear={onClear} onPrivacy={onPrivacy}>
-      {page === 'import' && <ImportPage session={session} view={view} onDemo={onDemo} />}
-      {page === 'ledger' && <LedgerPage session={session} view={view} onDemo={onDemo} />}
-      {page === 'rewards' && <RewardsPage session={session} view={view} onDemo={onDemo} />}
-      {page === 'settings' && (
-        <SettingsPage session={session} onClear={onClear} onPrivacy={onPrivacy} />
-      )}
+    <>
+      <CashbackPage
+        session={session}
+        view={view}
+        hasPendingFiles={batch.items.length > 0}
+        onDemo={() => {
+          if (session.mode === 'real') return
+          pdfImport.cancel()
+          loadDemo()
+        }}
+        beforeRead={() => {
+          if (session.mode === 'demo') clear()
+        }}
+        onClear={() => setDialog('clear')}
+        onPrivacy={() => setDialog('privacy')}
+      />
       {dialog === 'privacy' && <PrivacyDialog onClose={() => setDialog(null)} />}
       {dialog === 'clear' && (
         <Dialog
@@ -38,31 +42,19 @@ function App() {
           onClose={() => setDialog(null)}
           footer={
             <>
-              <ActionButton variant="outline" onClick={() => setDialog(null)}>
+              <Button variant="outline" onClick={() => setDialog(null)}>
                 {t('action.cancel')}
-              </ActionButton>
-              <ActionButton
-                onClick={() => {
-                  clear()
-                  setDialog(null)
-                  navigate('import')
-                }}
-              >
+              </Button>
+              <Button variant="destructive" onClick={restart}>
                 {t('action.confirmClear')}
-              </ActionButton>
+              </Button>
             </>
           }
         >
-          <p>
-            {t('clear.body', {
-              files: session.dataset.statements.length,
-              transactions: session.dataset.transactions.length,
-            })}
-          </p>
+          <p>{t('clear.body')}</p>
         </Dialog>
       )}
-    </AppShell>
+    </>
   )
 }
-
 export default App

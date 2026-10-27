@@ -1,8 +1,15 @@
-import { useEffect, useId, useRef } from 'react'
 import type { ReactNode } from 'react'
 import { RiCloseLine } from '@remixicon/react'
+import {
+  Dialog as ShadcnDialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
 import { useI18n } from '@/i18n/use-i18n'
-import { ActionButton } from './ActionButton'
 
 export function Dialog({
   title,
@@ -15,34 +22,37 @@ export function Dialog({
   footer?: ReactNode
   onClose: () => void
 }) {
-  const ref = useRef<HTMLDialogElement>(null),
-    titleId = useId()
   const { t } = useI18n()
-  useEffect(() => {
-    const dialog = ref.current
-    if (dialog && !dialog.open) dialog.showModal()
-    return () => {
-      if (dialog?.open) dialog.close()
-    }
-  }, [])
   return (
-    <dialog
-      ref={ref}
-      className="app-dialog"
-      aria-labelledby={titleId}
-      onCancel={(event) => {
-        event.preventDefault()
-        onClose()
+    <ShadcnDialog
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose()
       }}
     >
-      <div className="dialog-heading">
-        <h2 id={titleId}>{title}</h2>
-        <ActionButton variant="ghost" size="icon" onClick={onClose} aria-label={t('action.close')}>
+      <DialogContent
+        showCloseButton={false}
+        aria-describedby={undefined}
+        className="max-h-[90svh] overflow-y-auto sm:max-w-xl"
+      >
+        <DialogHeader className="pr-8">
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
+        <DialogClose
+          render={
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="absolute top-3 right-3"
+              aria-label={t('action.close')}
+            />
+          }
+        >
           <RiCloseLine aria-hidden="true" />
-        </ActionButton>
-      </div>
-      <div className="dialog-body">{children}</div>
-      {footer && <div className="dialog-footer">{footer}</div>}
-    </dialog>
+        </DialogClose>
+        <div className="space-y-4 text-sm leading-relaxed">{children}</div>
+        {footer && <DialogFooter>{footer}</DialogFooter>}
+      </DialogContent>
+    </ShadcnDialog>
   )
 }

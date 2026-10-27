@@ -13,14 +13,20 @@ export function useI18n() {
           currencyDisplay: 'code',
         }).format(minor / 100)
   const number = (amount: number, maximumFractionDigits = 2) =>
-    new Intl.NumberFormat(value.locale, { maximumFractionDigits, minimumFractionDigits: 2 }).format(
-      amount,
-    )
+    new Intl.NumberFormat(value.locale, {
+      maximumFractionDigits,
+      minimumFractionDigits: Math.min(2, maximumFractionDigits),
+    }).format(amount)
   const date = (iso: string) =>
     new Intl.DateTimeFormat(value.locale, {
+      year: 'numeric',
       month: 'short',
       day: '2-digit',
       timeZone: 'Asia/Hong_Kong',
     }).format(new Date(`${iso}T00:00:00Z`))
-  return { ...value, money, number, date }
+  const rc = (microRc: number | null) =>
+    microRc === null
+      ? value.t('rewards.pending')
+      : `${number(microRc / 1_000_000, 6)} RC`
+  return { ...value, money, number, date, rc }
 }

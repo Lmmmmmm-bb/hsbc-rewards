@@ -1,6 +1,6 @@
 # Pulse Rewards 架构与模块边界
 
-按职责组织业务能力，使用纯函数处理金额与规则，通过应用服务编排异步解析、会话事务和外部适配器。UI 不导入 PDF 库、存储底座或汇率请求实现。
+按职责组织业务能力，使用纯函数处理金额与规则，通过应用服务编排异步解析、会话事务和外部适配器。UI 不导入 PDF 库或汇率请求实现。当前为上传与返现融合的个人单页，不包含账单页、设置、路由或持久化模块。
 
 ## 依赖规则
 
@@ -28,7 +28,7 @@ pages / components → application / store → domain
 | src/ports | PDF、汇率、加密档等接口 | 具体库 |
 | src/adapters | Worker PDF、固定白名单 FX、本地 vault 等端口实现 | 页面组件 |
 | src/store | 可订阅内存会话与事务状态、页面查询入口 | 业务规则重写 |
-| src/features | 按导入、明细、返现、设置组织的 UI 模块 | 适配器底座 |
+| src/features | cashback 单页与 import 文件输入 / 解锁模块 | 适配器底座 |
 | src/components | 无业务计算的通用控件 | 具体业务场景 |
 | src/i18n | 文案 key、语言和格式化 | 业务推断 |
 
@@ -59,7 +59,15 @@ Vitest 保持 Node 单元测试，不引入组件快照或复刻实现的测试�
 - 支持资源只按构建时白名单映射读取，不把结单内容拼进请求 URL。PDF 以本地字节输入，不启用表单脚本或 XFA，也不跟随结单中的链接。
 - 坐标统一为页面左上角坐标系；纯文本布局函数按基线与横坐标重排行，保留原片段、行号和合并边界，后续交易模板不依赖 PDF.js 对象。
 - 应用控制器独占尚未提交的批次，指纹、文件引用和已打开文档不进入公开 UI 状态；密码仅在单次解锁调用中传递，不进状态、日志或存储。
-- 删除文件、替换预览、整批取消和清除会话会释放文档 / Worker。异步结果需同时匹配批次、条目引用和未取消信号，过期结果只能释放自身资源。
-- S3.1 的文本预览不能写入交易会话；S3.2 完成模板及统一入账后，才能把它作为真实导入使用。
+- 提取成功时立即释放 PDF 文档、Worker 和原文件引用，只保留内存文本页供模板解析；移除、取消和清除会话删除其临时文本。异步结果需同时匹配批次、条目引用和未取消信号，过期结果只能释放自身资源。
+- 文本提取状态不能写入返现会话；S3.2 完成模板及统一入账后，才能把它作为真实导入使用。不提供原 PDF / 文本预览页面或持久保存。
 
 PDF API 依据：[官方示例](https://mozilla.github.io/pdf.js/examples/)、[官方 API 定义](https://mozilla.github.io/pdf.js/api/draft/api.js.html)。
+
+## UI 约束
+
+- 使用 shadcn `b4hZZS5Uu` preset：Mira、Red / Neutral、Inter、Remix Icon、无圆角。通过项目已安装的 `shadcn/preset` 解码核实。
+- 通用交互只使用 `components/ui` 中的官方组件；业务层只组合组件与 Tailwind 布局工具类，不维护自定义 CSS、行内视觉样式或额外主题。
+- UI 源码来自 shadcn 官方 Base UI registry 与 Mira 样式，仅展开官方样式占位符、适配路径别名和图标；版权文本保留在 docs/licenses/shadcn-ui.txt。
+- `CashbackPage` 负责单页编排；`LocalPdfImport` 只负责输入与批次状态；`RewardBreakdown` 与 `RewardRules` 分别负责收益解释和只读来源。数据计算仍由应用查询接口调用纯领域函数。
+- `application/session/reward-details.ts` 汇总卡片来源、覆盖期、消费笔数和分币种金额；逐档计奖金额直接读取引擎的封顶结果，不在 UI 重写资格或封顶逻辑。未知金额按币种传播 null，保留其他档已知结果；去重交易的多份来源不重复累计消费。

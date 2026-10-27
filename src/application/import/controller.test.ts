@@ -42,6 +42,18 @@ function setup(reader: PdfReader, hashes: string[] = []) {
 }
 
 describe('provisional PDF batch', () => {
+  it('releases the PDF document immediately after extraction, retaining only temporary text', async () => {
+    const extracted = document()
+    const { controller } = setup({ read: async () => extracted })
+    controller.start([source()])
+    await vi.waitFor(() => expect(controller.getSnapshot().items[0].status).toBe('extracted'))
+    expect(extracted.dispose).toHaveBeenCalledTimes(1)
+    const id = controller.getSnapshot().items[0].id
+    expect(controller.preview(id)).toEqual(extracted.pages)
+    controller.cancel()
+    expect(controller.preview(id)).toBeNull()
+    expect(extracted.dispose).toHaveBeenCalledTimes(1)
+  })
   it('finishes other files while one is locked, then unlocks without retaining the password in snapshots', async () => {
     const read = vi.fn<PdfReader['read']>(async (bytes, options) => {
       if (

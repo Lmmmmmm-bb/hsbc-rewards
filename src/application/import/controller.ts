@@ -1,5 +1,5 @@
 import { PdfReadError } from '@/ports/pdf'
-import type { LocalPdfDocument, PdfSource } from '@/ports/pdf'
+import type { PdfSource, PdfTextPage } from '@/ports/pdf'
 import {
   EMPTY_GATE,
   hasPdfHeader,
@@ -11,9 +11,9 @@ import {
 import type { ImportDependencies, ImportItem, ImportSnapshot, PdfImportController } from './types'
 
 interface PendingFile {
-  file: PdfSource
+  file?: PdfSource
   hash?: string
-  document?: LocalPdfDocument
+  pages?: readonly PdfTextPage[]
   abort?: AbortController
   running: boolean
 }
@@ -39,15 +39,15 @@ export function createPdfImportController(dependencies: ImportDependencies): Pdf
   }
   const release = (entry: PendingFile) => {
     entry.abort?.abort()
-    if (entry.document) void entry.document.dispose().catch(() => {})
-    entry.document = undefined
+    entry.pages = undefined
+    entry.file = undefined
   }
   const current = (batch: number, id: string, entry: PendingFile) =>
     snapshot.batch === batch && pending.get(id) === entry && !entry.abort?.signal.aborted
 
   const run = async (id: string, password?: string) => {
     const entry = pending.get(id)
-    if (!entry || entry.running) return
+    if (!entry || !entry.file || entry.running) return
     entry.running = true
     entry.abort = new AbortController()
     const batch = snapshot.batch
@@ -81,12 +81,17 @@ export function createPdfImportController(dependencies: ImportDependencies): Pdf
         await document.dispose()
         return
       }
-      entry.document = document
+      // The original document and Worker are not retained after extraction.
+      const pages = document.pages
+      await document.dispose()
+      if (!current(batch, id, entry)) return
+      entry.pages = pages
+      entry.file = undefined
       update(id, {
         status: 'extracted',
-        totalPages: document.pages.length,
-        completedPages: document.pages.length,
-        textRows: document.pages.reduce((sum, page) => sum + page.rows.length, 0),
+        totalPages: pages.length,
+        completedPages: pages.length,
+        textRows: pages.reduce((sum, page) => sum + page.rows.length, 0),
         gate: EMPTY_GATE,
       })
     } catch (error) {
@@ -182,6 +187,6 @@ export function createPdfImportController(dependencies: ImportDependencies): Pdf
       pump()
     },
     cancel,
-    preview: (id) => pending.get(id)?.document?.pages ?? null,
+    preview: (id) => pending.get(id)?.pages ?? null,
   }
 }
