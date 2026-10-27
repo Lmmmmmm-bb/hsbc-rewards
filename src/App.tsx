@@ -10,14 +10,15 @@ import { usePdfImport } from '@/store/use-pdf-import'
 import { useFx } from '@/store/use-fx'
 import { PageFileDrop } from '@/features/import/components/PageFileDrop'
 import { RulesDialog } from '@/features/cashback/RulesDialog'
+import { FileStatusDialog } from '@/features/import/components/FileStatusDialog'
 
 function App() {
   const { session, view, loadDemo, clear } = useSession(),
     { t } = useI18n(),
     { batch } = usePdfImport()
-  const [dialog, setDialog] = useState<'privacy' | 'clear' | 'rules' | null>(
-    null,
-  )
+  const [dialog, setDialog] = useState<
+    'privacy' | 'clear' | 'rules' | 'files' | null
+  >(null)
   const fx = useFx()
   const restart = () => {
     pdfImport.cancel()
@@ -31,6 +32,7 @@ function App() {
       setDialog(null)
     }
     pdfImport.start(files)
+    if (pdfImport.getSnapshot().items.length) setDialog('files')
   }
   return (
     <PageFileDrop onFiles={importFiles} busy={batch.active}>
@@ -47,6 +49,7 @@ function App() {
         }}
         onFiles={importFiles}
         onRules={() => setDialog('rules')}
+        onFileStatus={() => setDialog('files')}
         onClear={() => setDialog('clear')}
         onPrivacy={() => setDialog('privacy')}
       />
@@ -55,6 +58,15 @@ function App() {
       )}
       {dialog === 'privacy' && (
         <PrivacyDialog onClose={() => setDialog(null)} />
+      )}
+      {dialog === 'files' && (
+        <FileStatusDialog
+          onClose={() => setDialog(null)}
+          onCancel={() => {
+            pdfImport.cancel()
+            setDialog(null)
+          }}
+        />
       )}
       {dialog === 'clear' && (
         <Dialog

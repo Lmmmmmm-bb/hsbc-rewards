@@ -31,6 +31,7 @@ export function CashbackPage({
   onClear,
   onPrivacy,
   onRules,
+  onFileStatus,
 }: {
   session: SessionState
   view: WorkspaceView
@@ -41,6 +42,7 @@ export function CashbackPage({
   onClear: () => void
   onPrivacy: () => void
   onRules: () => void
+  onFileStatus: () => void
 }) {
   const { t } = useI18n()
   const [periodId, setPeriodId] = useState('all')
@@ -106,13 +108,9 @@ export function CashbackPage({
               {t('cashback.title')}
             </h1>
           </div>
-          <Badge variant="outline">
-            {t(
-              session.mode === 'demo'
-                ? 'cashback.example'
-                : 'cashback.currentRules',
-            )}
-          </Badge>
+          {session.mode === 'demo' && (
+            <Badge variant="outline">{t('cashback.example')}</Badge>
+          )}
         </div>
         {view.periods.length > 1 && (
           <RewardPeriods
@@ -140,7 +138,7 @@ export function CashbackPage({
           >
             <Card size="sm">
               <CardContent>
-                <LocalPdfImport onFiles={onFiles} />
+                <LocalPdfImport onFiles={onFiles} onStatus={onFileStatus} />
               </CardContent>
             </Card>
             {hasResults && (

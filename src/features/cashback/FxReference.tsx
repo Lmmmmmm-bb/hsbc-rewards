@@ -82,7 +82,7 @@ export function FxReference({
         {available && fx.stale && <p>{t('fx.staleHint')}</p>}
       </div>
       <div className="space-y-1 text-muted-foreground">
-        <p>{t('fx.dailyPolicy')}</p>
+        <p>{t(fx.source === 'demo' ? 'fx.demoHint' : 'fx.dailyPolicy')}</p>
       </div>
     </section>
   )

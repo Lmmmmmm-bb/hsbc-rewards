@@ -1,10 +1,11 @@
-import type { ReactNode } from 'react'
+import { useId, type ReactNode } from 'react'
 import { RiCloseLine } from '@remixicon/react'
 import {
   Dialog as ShadcnDialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog'
@@ -18,14 +19,17 @@ export function Dialog({
   footer,
   onClose,
   className,
+  description,
 }: {
   title: string
   children: ReactNode
   footer?: ReactNode
   onClose: () => void
   className?: string
+  description?: string
 }) {
   const { t } = useI18n()
+  const descriptionId = useId()
   return (
     <ShadcnDialog
       open
@@ -35,14 +39,19 @@ export function Dialog({
     >
       <DialogContent
         showCloseButton={false}
-        aria-describedby={undefined}
+        aria-describedby={description ? descriptionId : undefined}
         className={cn(
           'flex max-h-[90svh] flex-col overflow-hidden sm:max-w-xl',
           className,
         )}
       >
         <DialogHeader className="pr-8">
-          <DialogTitle>{title}</DialogTitle>
+          <DialogTitle className="text-lg font-semibold">{title}</DialogTitle>
+          {description && (
+            <DialogDescription id={descriptionId} className="text-sm">
+              {description}
+            </DialogDescription>
+          )}
         </DialogHeader>
         <DialogClose
           render={

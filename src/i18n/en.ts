@@ -1,21 +1,74 @@
 import type { MessageKey } from './zh'
 
 export const en = {
+  'rules.tabRewards': 'Reward rules',
+  'rules.tabCalculation': 'Calculation policy',
+  'rules.tabSources': 'Official sources',
+  'rules.maxExtra': 'Up to {rate}% extra',
+  'rules.eligibilityLabel': 'Eligible purchases',
+  'rules.capLabel': 'Spending cap',
+  'rules.excludedTitle': 'Exclusions and refunds',
+  'rules.scopeTitle': 'Rules and imported scope',
+  'rules.sharingBody':
+    'Caps are shared only with explicit ownership evidence. Unconfirmed sharing is estimated separately by card and labelled.',
+  'rules.enrollmentTitle': 'Enrollment and allocation',
+  'rules.fxTitle': 'Reference FX and CNY values',
+  'rules.sourcesHint':
+    'Rule documents come from HSBC’s official website. This is an independent estimator; actual credits follow bank records.',
+  'rules.versionLabel': 'Rule version',
+  'rules.verifiedLabel': 'Verified date',
+  'rules.sourceHint.0': 'Basic RewardCash and carry-forward of odd spending.',
+  'rules.sourceHint.1': 'Rewards of Your Choice and Spend Abroad allocation.',
+  'rules.sourceHint.2': 'Spend Abroad eligibility, multipliers and annual cap.',
+  'rules.sourceHint.3': 'PULSE payment methods and half-year spending cap.',
+  'precision.computeLabel': 'Calculation precision',
+  'precision.displayLabel': 'Page display',
+  'precision.bankLabel': 'Bank credits',
+  'fx.publicationHint':
+    'The latest published rate date can be earlier than the retrieval date.',
+  'fx.demoHint':
+    'Example FX is fictional. No public rate is requested or cached.',
+  'privacy.subtitle':
+    'Statements are processed locally. Public FX is cached separately.',
+  'privacy.pdfLabel': 'PDFs and passwords',
+  'privacy.pdfValue':
+    'Used only for local processing and released afterwards. Originals are not uploaded or saved.',
+  'privacy.resultsLabel': 'Statement data and rewards',
+  'privacy.resultsValue':
+    'Stay on this page and clear on reload, close or starting again.',
+  'privacy.cacheLabel': 'Public FX',
+  'privacy.cacheValue':
+    'The quote, rate date and retrieval time are cached by Hong Kong calendar day. Clearing reward results keeps this cache.',
+  'pdf.dialogTitle': 'File status',
+  'pdf.dialogHint':
+    'Review progress, unlock files and check failures in this batch.',
+  'pdf.inProgressHint':
+    'Closing this dialog keeps processing. Cancelling discards this batch while keeping earlier results.',
+  'pdf.failedFilesHint':
+    'Failed files were not included. Choose those files again to retry.',
+  'pdf.viewRewards': 'View reward results',
+  'pdf.backToRewards': 'Back to reward overview',
+  'pdf.summary.imported': 'Included in rewards',
+  'pdf.summary.locked': 'Awaiting password',
+  'pdf.summary.error': 'Processing failed',
+  'pdf.summary.duplicate': 'Duplicates skipped',
+  'pdf.detailsHint':
+    'Successful files are included together when this batch finishes.',
   'rules.dialogTitle': 'Reward rules & calculation',
   'rules.exampleTitle': 'One purchase, three reward tiers',
   'rules.exampleBody':
     'A qualifying CNY 250 mainland UnionPay QR purchase earns 1 basic RC + 5 Spend Abroad RC + 5 PULSE RC = 11 RC, assuming enrollment, all 5X allocated to Spend Abroad and both caps available. CNY reference value is converted separately.',
-  'rules.assumptionsTitle': 'Estimation assumptions',
-  'rules.sourcesTitle': 'Official sources · read-only rules',
+  'rules.assumptionsTitle': 'Estimation policy',
+  'rules.sourcesTitle': 'Official rule sources',
   'precision.title': 'Decimals and rounding',
   'precision.compute':
-    'Calculations use integer units of 0.000001 RC (six decimals). Ordinary rewards are not rounded per purchase. Proportional cap allocations discard only fractions below 0.000001 RC.',
+    'Calculations retain six RC decimals without per-purchase integer rounding. Proportional allocations across spending caps discard only fractions below 0.000001 RC.',
   'precision.display':
-    'Overview and card headline amounts round to two decimals; calculations retain full precision. Tier values show up to six decimals. CNY is rounded to cents after aggregation. Rounded period amounts may differ from the overall display by 0.01; totals use unrounded values.',
+    'Overview and card headline amounts round to two decimals; tiers show up to six. CNY is converted to cents after aggregation. Display rounding never feeds back into calculations; rounded period values can differ from the overview by 0.01.',
   'precision.example':
     'HKD 0.01 earns 0.00004 basic RC. One hundred such purchases accrue 0.004 RC rather than being rounded individually to zero.',
   'precision.bank':
-    'The general, Your Choice and PULSE terms carry odd spending forward to the next purchase or statement. This tool estimates accrual, with unimported prior residuals unknown; an integer mathematical portion is not treated as an actual bank credit.',
+    'Official terms carry odd spending to the next purchase or statement. This tool estimates accrued rewards; unimported prior residuals are unknown. Actual credits follow bank records.',
   'precision.exact': 'Including fractions: {amount}',
   'period.rulesTitle': 'Half-year views preserve cap history',
   'period.rulesBody':
@@ -39,30 +92,27 @@ export const en = {
     'Finish unlocking or cancel this batch before adding more files.',
   'pdf.batchCount': 'Selected files · {count}',
   'pdf.needsAttention': '{count} need attention',
-  'pdf.showFiles': 'Show file status',
-  'pdf.hideFiles': 'Hide file details',
+  'pdf.showFiles': 'View file status',
   'app.title': 'Your rewards companion',
   'cashback.title': 'Your rewards',
   'cashback.subtitle': 'HSBC PULSE UnionPay Dual Currency Diamond Card',
-  'cashback.currentRules': 'Current-rule estimate',
-  'cashback.total': 'Estimated RewardCash',
-  'cashback.knownHeading': 'Known RewardCash',
+  'cashback.total': 'Estimated rewards (RewardCash)',
+  'cashback.knownHeading': 'Calculated reward estimate',
   'cashback.knownHint':
-    'Confirmed portions only; other rewards remain pending. Displayed to two decimals; calculations retain fractional RC.',
+    'Some tiers remain pending. This amount includes only calculated portions.',
   'cashback.pendingRewards': 'Total still pending',
   'cashback.reference': 'Reference value in CNY',
   'cashback.totalHint':
-    'All three tiers, displayed to two decimals; calculations retain fractional RC. Actual bank credits follow your statement.',
+    'Three tiers combined. Two decimals displayed; calculations retain fractions.',
   'cashback.emptyHint':
     'Choose English PDF statements to see rewards, cards and allowances here.',
-  'cashback.statements': 'Statements',
+  'cashback.statements': 'Source statements',
   'cashback.cards': 'Cards',
   'cashback.purchases': 'Purchases',
   'cashback.coverage': 'Statement coverage',
   'cashback.fxReference':
-    'Converted using 1 RC ≈ HKD 1 as a reference value; this is not a CNY bank credit.',
-  'cashback.known':
-    'Known portion: {amount}; other rewards await the missing calculation basis.',
+    'Converted using 1 RC ≈ HKD 1 and reference FX. CNY values are for reference only.',
+  'cashback.known': 'Calculated: {amount}; other rewards remain pending.',
   'card.product': 'PULSE · UnionPay Dual Currency Diamond',
   'card.empty': 'Your card rewards',
   'card.emptyBody':
@@ -70,24 +120,24 @@ export const en = {
   'card.coverage': '{count} statements · {from} — {to}',
   'card.transactions': '{count} transactions · {purchases} purchases',
   'card.spend': 'Purchase spending',
-  'card.eligible': 'Rewarded spending (after caps)',
+  'card.eligible': 'Rewarded spending',
   'card.caps': 'Extra reward spending allowances',
   'card.capAbroad': 'HKD equivalent',
   'card.capPulse': 'HKD / CNY; MOP in HKD equivalent',
   'card.sharedPool':
     'Confirmed shared allowance. Usage below is for the whole pool; do not add it across cards.',
   'card.enrollmentAssumed':
-    'Assumes registered with all 5X assigned to Spend Abroad.',
+    'Missing enrollment or multiplier assumes registration with all 5X assigned to Spend Abroad.',
   'card.fxAssumed':
     'Some Spend Abroad allowance usage requires reference FX for its estimated HKD equivalent.',
   'rules.title': 'How rewards are calculated',
   'rules.subtitle':
-    'Three independently assessed tiers can combine. Rates calculate RC; CNY value is converted separately.',
+    'Each tier is assessed separately. Eligible rewards can combine.',
   'rules.basic.body':
-    'Each eligible HKD / CNY 250 earns 1 RC, calculated in the posted sub-account currency.',
-  'rules.basic.cap': 'No additional spending cap in this tool',
+    'Eligible spending earns 1 RC per HKD / CNY 250 in the posted account currency.',
+  'rules.basic.cap': 'No spending cap for this tier',
   'rules.abroad.body':
-    'A merchant outside Hong Kong and an original currency other than HKD. Assumes registered with all extra 5X assigned to Spend Abroad.',
+    'The merchant is outside Hong Kong and the original currency is not HKD. Extra multipliers follow statement evidence, defaulting to 5X when unknown.',
   'rules.abroad.cap':
     'First HKD 100,000 equivalent of eligible spending each year',
   'rules.pulse.body':
@@ -99,7 +149,7 @@ export const en = {
   'rules.formula':
     'Eligible posted amount × tier rate → RC; a cap affects only that extra tier.',
   'rules.exclusions':
-    'Payments, fees, cash advances and stored-value reloads are excluded. This tool ignores refunds without clawback or cap release, which may differ from the bank.',
+    'Repayments, fees, cash advances and stored-value reloads are excluded. Refunds neither earn rewards, reverse this estimate nor restore cap capacity. The bank may handle them differently.',
   'rules.details': 'Full assumptions and official terms',
   'rules.source.0': 'RewardCash general terms',
   'rules.source.1': 'Rewards of Your Choice overview',
@@ -108,42 +158,40 @@ export const en = {
   'cashback.tryExample': 'View example',
   'cashback.example': 'Example · Fictional data',
   'cashback.demoNotice':
-    'This is a synthetic example. Selecting your PDF clears it and reads your file locally.',
+    'This is a fictional example. Choosing PDFs replaces it with your statement estimates.',
   'cashback.checkWarning':
-    '{count} statements have a balance mismatch and remain included in this estimate.',
+    '{count} statements have mismatched balance checks. Read transactions remain included in the estimate.',
   'cashback.checkWarningTitle': 'Balance reconciliation differs',
   'cashback.memory':
-    'Results are temporary. The PDF is released after processing; refreshing or closing clears the results too.',
+    'PDFs are processed locally. Results stay on this page and clear when you reload or close it.',
   'cashback.restart': 'Start again',
-  'cashback.breakdown': 'Every card, every reward tier',
+  'cashback.breakdown': 'Estimated rewards by card',
   'cashback.breakdownHint':
-    'Spending is separated by posted currency. Each tier and allowance is calculated independently.',
+    'Rewards are grouped by card; spending caps follow confirmed sharing relationships.',
   'action.cancel': 'Cancel',
   'action.confirmClear': 'Clear session',
   'action.close': 'Close',
   'action.privacy': 'Privacy and independence',
   'action.skip': 'Skip to main content',
   'import.dropTitle': 'Add statements to calculate rewards',
-  'import.limit': 'Each ≤ 25 MB / 200 pages · Session ≤ 20 files / 100 MB',
+  'import.limit': 'Each ≤ 25 MB / 200 pages · Page total ≤ 20 files / 100 MB',
   'pdf.choose': 'Choose PDF files',
   'pdf.dropBody':
     'Drop multiple PDFs here or choose files. Unlock encrypted statements locally.',
   'pdf.stageHint':
-    'Supports text-based English HSBC Pulse statements; scans are not supported. Files are recognised locally and successful files are added together when the batch finishes.',
+    'Supports English text-based HSBC PULSE statements, not scans. Successful files are included together when the batch finishes.',
   'pdf.batchTitle': 'Your selected files',
   'pdf.batchHint':
-    'Temporary results stay in memory. Cancelling clears this batch.',
-  'pdf.cancelBatch': 'Cancel batch',
-  'pdf.closeBatch': 'Hide file status',
+    'Successful files are included together when this batch finishes. Cancelling discards this batch and keeps earlier results.',
+  'pdf.cancelBatch': 'Cancel this import',
   'pdf.committed':
     'Added {files} statements and {transactions} new transactions.',
-  'pdf.committedHint': 'Hiding file status keeps the rewards already included.',
   'pdf.emptyBatch':
     'No new statements in this batch. Existing results are unchanged.',
   'pdf.failed.session-changed':
-    'The session changed during processing. This batch was not added. Existing results are intact; select these files again.',
+    'The current results changed during processing. This batch was not added. Earlier results remain; select these files again.',
   'pdf.failed.commit-failed':
-    'This batch could not be merged reliably and was not added. Existing results are intact; select files again to check.',
+    'This batch could not be merged reliably and was not added. Earlier results remain; select the files again to check.',
   'pdf.parsedSummary': '{pages} pages · {transactions} transactions recognised',
   'pdf.parsing': 'Identifying cards and transactions…',
   'pdf.batchProgress': 'Processed {completed} of {total} files',
@@ -152,9 +200,9 @@ export const en = {
   'pdf.status.locked': 'Password required',
   'pdf.status.extracted': 'Text extracted',
   'pdf.status.parsing': 'Recognising',
-  'pdf.status.parsed': 'Recognised, awaiting batch',
+  'pdf.status.parsed': 'Recognised, waiting for batch',
   'pdf.status.imported': 'Included in rewards',
-  'pdf.status.error': 'Read failed',
+  'pdf.status.error': 'Processing failed',
   'pdf.status.duplicate': 'Duplicate skipped',
   'pdf.status.removed': 'Removed',
   'pdf.remove': 'Remove {name}',
@@ -169,38 +217,38 @@ export const en = {
   'pdf.unlock': 'Unlock this file',
   'pdf.retry': 'Retry',
   'pdf.extractedSummary':
-    '{pages} pages read · Transaction recognition is being connected; rewards not calculated',
+    'Text extracted from {pages} pages; not yet included in rewards.',
   'pdf.error.unsupported-statement':
-    'Not a supported English HSBC Pulse statement. It was not included in rewards.',
+    'Not a supported English HSBC PULSE statement. It was not included in rewards.',
   'pdf.error.invalid-statement':
     'Statement structure, required fields or amounts are invalid. It could not be calculated reliably and was not included in rewards.',
   'pdf.error.not-pdf': 'Choose a file with a PDF extension and type.',
   'pdf.error.empty-file': 'This file is empty. Choose another file.',
   'pdf.error.file-too-large': 'A file cannot exceed 25 MB.',
   'pdf.error.session-limit':
-    'The session limit is 20 files or 100 MB. Process fewer files.',
+    'This page allows up to 20 files or 100 MB in total. Choose fewer files, or start again before importing more.',
   'pdf.error.password-required': 'This PDF requires a password.',
   'pdf.error.password-incorrect': 'The PDF password is incorrect.',
   'pdf.error.invalid-pdf': 'This PDF is damaged or has an invalid structure.',
   'pdf.error.too-many-pages': 'A PDF cannot exceed 200 pages.',
   'pdf.error.no-text':
-    'No extractable text found. This may be a scan; OCR is not supported at this stage.',
+    'No readable text found. This may be a scan. Only text PDFs are currently supported.',
   'pdf.error.aborted': 'Reading was cancelled.',
   'pdf.error.read-failed':
     'Unable to read this file. Check its integrity and retry.',
   'pdf.error.engine-unavailable':
-    'The local PDF engine could not start. Refresh and retry, or use a browser that supports Workers.',
+    'PDF reading is temporarily unavailable. Reload and try again; reloading clears current results.',
   'pdf.error.duplicate':
-    'Its fingerprint matches this batch or an imported file. The duplicate was skipped.',
+    'This file is already in the batch or current results. It was skipped.',
   'pdf.error.batch-busy':
-    'Finish or remove locked files, or cancel the current batch, before selecting more files.',
+    'Unlock or remove locked files, or cancel this import, before choosing more files.',
   'card.primary': 'Primary',
   'card.additional': 'Additional',
   'card.unknown': 'Card',
   'rewards.basic': 'Basic',
   'rewards.abroad': 'Spend Abroad',
   'rewards.pulse': 'PULSE exclusive',
-  'rewards.remaining': 'Remaining cap',
+  'rewards.remaining': 'Remaining spending cap',
   'rewards.used': '{used} used / {cap}',
   'rewards.annual': 'Annual · {period}',
   'rewards.half': 'Half-year · {period}',
@@ -210,15 +258,15 @@ export const en = {
   'rewards.fxDemo': 'Example reference rate: 1 HKD = {rate} CNY',
   'fx.title': 'HKD → CNY reference rate',
   'fx.loading': 'Fetching…',
-  'fx.available': 'Reference available',
+  'fx.available': 'Reference rate available',
   'fx.cachedToday': 'Cached today',
   'fx.dailyPolicy':
-    'A successful public quote is reused for the Hong Kong calendar day and updates automatically the next day.',
-  'fx.stale': 'Older reference',
+    'Reference FX is cached by Hong Kong calendar day and updates automatically the next day.',
+  'fx.stale': 'Older reference rate',
   'fx.rateDate': 'Rate date {date}',
   'fx.retrievedAt': 'Retrieved {time}',
   'fx.unavailable':
-    'No reference rate yet. CNY values and rewards that require it remain pending.',
+    'Reference FX is unavailable. CNY conversion and rewards that need FX remain pending.',
   'fx.loadingHint':
     'Fetching a public reference rate. Calculations will update automatically.',
   'fx.refreshingHint':
@@ -233,24 +281,24 @@ export const en = {
   'fx.staleHint':
     'An older reference is still used. A successful automatic update recalculates all results.',
   'rewards.fxEffect':
-    'The reference rate converts CNY displays and estimates caps when bank HKD equivalents are missing. A daily update may change extra rewards.',
+    'Spend Abroad uses bank HKD equivalents first, otherwise reference FX. Rate updates recalculate CNY values and may change capped extra rewards.',
   'rewards.readonly': 'Read-only · {version}',
   'rewards.date': 'Verified {date}',
   'rewards.latest':
-    'Apply current rules to each historical year and half-year; label them as current-rule estimates.',
+    'All purchases use the currently verified rates, eligibility and annual/half-year caps. Historical promotion rules are not reconstructed.',
   'rewards.imported':
-    'Only imported transactions consume caps; earlier usage starts at zero.',
+    'Only eligible purchases imported on this page consume caps; earlier usage starts at zero.',
   'rewards.enrollment':
-    'Unknown enrollment assumes registration with all 5X allocated to Spend Abroad.',
+    'Unknown enrollment or extra multipliers assume registration with all 5X allocated to Spend Abroad. Explicit allocations follow the statement.',
   'rewards.enrollmentPeriodIgnored':
-    'Historical estimates ignore personal enrollment dates; this does not establish actual bank entitlement.',
+    'Historical estimates ignore personal enrollment dates. Actual entitlement follows bank records.',
   'rewards.periodInferred':
     'The statement does not specify a full cycle. Its coverage start is inferred.',
   'rewards.roleConflict':
     'Card-role evidence conflicts; the card role remains unknown.',
   'rewards.poolConflict':
     'Shared-allowance evidence conflicts; allowances are estimated separately by card.',
-  'rewards.knownPortion': 'Known portion: {amount}',
+  'rewards.knownPortion': 'Calculated: {amount}',
   'quality.title': 'Source balance checks',
   'quality.matched': 'Matched checks: {count}',
   'quality.mismatch': 'Mismatched checks: {count}',
@@ -283,7 +331,7 @@ export const en = {
   'reason.currencyExcluded': 'Original currency is neither CNY nor MOP',
   'reason.payment': 'No qualifying mobile or QR payment marker was identified',
   'reason.enrollment': 'Not enrolled or no Spend Abroad multiplier assigned',
-  'reason.refund': 'Refund ignored under the agreed estimate policy',
+  'reason.refund': 'Refund excluded from this estimate',
   'reason.repayment': 'Repayment excluded',
   'reason.fee': 'Fee excluded',
   'reason.cash': 'Cash advance or cash instalment excluded',
@@ -295,18 +343,18 @@ export const en = {
   'rewards.fxMissing': 'Conversion unavailable',
   'rewards.fxUnavailableHint':
     'Reference FX is unavailable. CNY values and some capped rewards are pending.',
-  'privacy.title': 'Your files stay in your browser',
-  'privacy.localTitle': 'Processing and storage',
+  'privacy.title': 'Privacy and independence',
+  'privacy.localTitle': 'Local processing and temporary results',
   'privacy.localBody':
-    'PDFs, passwords and parsed records are handled locally. The current version uses memory and does not persist business data in browser storage.',
-  'privacy.networkTitle': 'External requests',
+    'PDFs, passwords and statement data are processed locally. Parsed records and rewards stay on this page and clear on reload, close or starting again.',
+  'privacy.networkTitle': 'Network access and public FX cache',
   'privacy.networkBody':
-    'After import, only the fixed Frankfurter HKD→CNY endpoint is used for ECB reference rates. Only the public rate and its dates are cached across reloads; statements and results still clear. PDFs, passwords, card numbers, merchants and amounts are never sent. Requests omit cookies and referrers. There is no telemetry. The demo requests no rates.',
-  'privacy.independentTitle': 'An independent product',
+    'Real imports automatically request Frankfurter’s ECB HKD→CNY reference. Only the public quote, rate date and retrieval time are cached. Statements, passwords, card numbers, merchants and amounts are not sent. There is no telemetry. The example requests no public FX.',
+  'privacy.independentTitle': 'Independence and brand identification',
   'privacy.independentBody':
-    'Pulse Rewards is not affiliated with, authorised or endorsed by HSBC. Rewards are estimates; actual bank credits prevail.',
+    'Pulse Rewards is an independent personal reward estimator, with no HSBC affiliation, authorisation or endorsement. HSBC names and logos identify supported cards and rule sources; trademarks belong to their owners. Actual rewards follow bank records.',
   'clear.title': 'Clear this session?',
   'clear.body':
-    'Clear the current files and rewards. You can then choose PDFs again or explore the example.',
+    'Clear current file status and rewards. The public FX cache remains. You can then choose PDFs again or view the example.',
   'footer.independent': 'Independent of HSBC · Rewards are estimates',
 } satisfies Record<MessageKey, string>

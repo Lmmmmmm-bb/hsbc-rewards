@@ -9,11 +9,13 @@ import { ImportBatch } from './ImportBatch'
 
 export function LocalPdfImport({
   onFiles,
+  onStatus,
 }: {
   onFiles: (files: readonly File[]) => void
+  onStatus: () => void
 }) {
   const input = useRef<HTMLInputElement>(null)
-  const { batch, controller } = usePdfImport()
+  const { batch } = usePdfImport()
   const { t } = useI18n()
   return (
     <div data-import-drop className="space-y-3">
@@ -48,7 +50,7 @@ export function LocalPdfImport({
       {batch.rejected && (
         <ErrorNotice>{t(`pdf.error.${batch.rejected}`)}</ErrorNotice>
       )}
-      <ImportBatch key={batch.batch} batch={batch} controller={controller} />
+      <ImportBatch batch={batch} onStatus={onStatus} />
     </div>
   )
 }
