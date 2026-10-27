@@ -16,6 +16,7 @@ HSBC 的公开[品牌介绍](https://create.hsbc/content/dam/brandhub/newsfeed-p
 
 - 来源：[Fontsource Roboto](https://fontsource.org/fonts/roboto)，依赖版本 `@fontsource/roboto@5.3.0`。
 - 使用其原始 `latin-500.css`，字体随应用提供；字体授权为 SIL OFL 1.1，授权文本同时提供于 `public/licenses/roboto-OFL.txt`。
+- 字体文件由网站同源加载，不要求设备预装。`font-display: swap` 在加载期间先显示回退字体；WOFF2 不可用时尝试 WOFF。下载失败时依次回退到随应用提供的 Inter Variable、系统 UI 字体、平台常见字体及 `sans-serif`，标题保持 500 字重。
 - Roboto 是替代选择，不把它标注为 HSBC 官方字体。
 
 界面主色、主要按钮与焦点环统一为用户要求的 `#D90012`；六边形素材使用用户文件原色。HSBC 名称和标识用于识别支持的卡片与规则来源，页尾及隐私保留独立产品声明。
