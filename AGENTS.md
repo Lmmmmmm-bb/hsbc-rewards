@@ -11,7 +11,6 @@ Rewards 是面向个人的 HSBC PULSE 银联双币钻石卡返现估算工具。
 | 文档 | 用途 |
 | --- | --- |
 | [README.md](README.md) | 面向用户的介绍、操作步骤、隐私和限制 |
-| [CHANGELOG.md](CHANGELOG.md) | 已完成变更 |
 | [public/licenses/shadcn-ui.txt](public/licenses/shadcn-ui.txt) | shadcn/ui 版权与授权声明 |
 | [public/licenses/roboto-OFL.txt](public/licenses/roboto-OFL.txt) | Roboto 字体授权声明 |
 
@@ -106,6 +105,6 @@ pnpm dev
 - UI 变更实际走查相关流程及 320 / 360 / 768 / 1280 / 1440 宽度，检查键盘与错误状态；不能把类型检查当作浏览器验收。
 - 涉及性能、无障碍或导入资源生命周期时，使用 `scripts/audit-workspace.mjs`、`scripts/benchmark-import.mjs` 或 `scripts/audit-reward-interactions.mjs` 验收，先检查对应脚本的入口参数。输出截图或页面快照的流程只使用合成数据。
 - 真实样本验证可使用 `node scripts/verify-pulse-samples.mjs /path/to/statement.pdf`；仅在已获授权时运行，只记录匿名计数与状态。
-- 按变更同步 README、本文和 CHANGELOG 中的相关说明；多阶段工作每个阶段完成验证并记录证据后再推进。
+- 按变更同步 README 和本文中的相关说明；多阶段工作每个阶段完成验证并记录证据后再推进。
 - 当前已验收范围为 4 份真实样本与 Chromium；扩展样本、Safari / Firefox、OCR 仍待补齐。不要把历史测试数量、性能分数或样本结果当作本次验证结论。
 - 交付时说明实际改动、已执行验证与尚未验证项，不编造测试结果或提前标记验收通过。
