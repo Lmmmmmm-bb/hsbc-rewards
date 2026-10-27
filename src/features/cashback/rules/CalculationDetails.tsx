@@ -4,8 +4,8 @@ import { useI18n } from '@/i18n/use-i18n'
 export function CalculationDetails() {
   const { t } = useI18n()
   return (
-    <div className="space-y-4">
-      <InfoSection title={t('rules.scopeTitle')}>
+    <div className="grid gap-3 md:grid-cols-2">
+      <InfoSection title={t('rules.scopeTitle')} className="md:col-span-2">
         <p className="text-muted-foreground">{t('rewards.latest')}</p>
         <p className="text-muted-foreground">{t('rewards.imported')}</p>
       </InfoSection>
@@ -13,7 +13,7 @@ export function CalculationDetails() {
         <p className="text-muted-foreground">{t('period.rulesBody')}</p>
         <p className="text-muted-foreground">{t('rules.sharingBody')}</p>
       </InfoSection>
-      <InfoSection title={t('precision.title')}>
+      <InfoSection title={t('precision.title')} className="md:row-span-2">
         <dl className="space-y-3">
           {(['compute', 'display', 'bank'] as const).map((kind) => (
             <div key={kind} className="space-y-1">
@@ -32,7 +32,7 @@ export function CalculationDetails() {
           {t('rewards.enrollmentPeriodIgnored')}
         </p>
       </InfoSection>
-      <InfoSection title={t('rules.fxTitle')}>
+      <InfoSection title={t('rules.fxTitle')} className="md:col-span-2">
         <p className="text-muted-foreground">{t('rewards.fxEffect')}</p>
         <p className="text-muted-foreground">{t('fx.dailyPolicy')}</p>
         <p className="text-xs text-muted-foreground">

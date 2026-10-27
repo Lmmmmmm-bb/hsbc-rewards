@@ -51,7 +51,9 @@ export function WorkspaceShell({
             className="flex items-center gap-2 font-semibold tracking-tight"
           >
             <HsbcLogo />
-            <span>Pulse Rewards</span>
+            <span data-brand-title className="font-brand text-lg font-medium">
+              Pulse Rewards
+            </span>
           </a>
           <div className="flex flex-wrap items-center gap-1">
             <Button variant="outline" size="sm" onClick={onRules}>

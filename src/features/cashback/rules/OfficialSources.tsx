@@ -1,6 +1,5 @@
 import { RiExternalLinkLine } from '@remixicon/react'
 import type { WorkspaceView } from '@/application/session/selectors'
-import { buttonVariants } from '@/components/ui/button'
 import { InfoSection } from '@/components/workspace/InfoSection'
 import { useI18n } from '@/i18n/use-i18n'
 import { HsbcLogo } from '@/components/workspace/HsbcLogo'
@@ -19,15 +18,13 @@ export function OfficialSources({ rules }: { rules: WorkspaceView['rules'] }) {
                 href={url}
                 target="_blank"
                 rel="noreferrer"
-                className={buttonVariants({
-                  variant: 'link',
-                  size: 'sm',
-                  className:
-                    'h-auto max-w-full justify-start px-0 whitespace-normal text-left',
-                })}
+                className="inline-flex max-w-full items-start gap-1 p-0 text-sm font-medium text-primary underline-offset-4 outline-none hover:underline focus-visible:underline focus-visible:ring-2 focus-visible:ring-ring"
               >
-                {t(`rules.source.${index as 0 | 1 | 2 | 3}`)}
-                <RiExternalLinkLine aria-hidden="true" />
+                <span>{t(`rules.source.${index as 0 | 1 | 2 | 3}`)}</span>
+                <RiExternalLinkLine
+                  className="mt-0.5 size-4 shrink-0"
+                  aria-hidden="true"
+                />
               </a>
               <p className="text-xs text-muted-foreground">
                 {t(`rules.sourceHint.${index as 0 | 1 | 2 | 3}`)}

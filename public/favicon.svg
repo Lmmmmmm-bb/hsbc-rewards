@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 170.1 85.1" width="170.1" height="85.1" role="img" aria-labelledby="title"><title id="title">HSBC Hexagon</title><!--Hexagon extracted from HSBC official website SVG; original geometry and colours preserved. Source: https://www.hsbc.com/-/files/hsbc/header/hsbc-logo-200x25.svg--><rect x="42.6" width="85" height="85" fill="#FFFFFF" />
+<polygon points="170.1,42.6 127.6,0 127.6,85.1 " fill="#DB0011" />
+<polygon points="85.1,42.6 127.6,0 42.6,0 " fill="#DB0011" />
+<polygon points="0,42.6 42.6,85.1 42.6,0 " fill="#DB0011" />
+<polygon points="85.1,42.6 42.6,85.1 127.6,85.1 " fill="#DB0011" />
+</svg>

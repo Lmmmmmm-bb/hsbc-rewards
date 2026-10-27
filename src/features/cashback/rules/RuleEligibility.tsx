@@ -18,8 +18,8 @@ export function RuleEligibility({ rules }: { rules: WorkspaceView['rules'] }) {
       <p className="text-sm text-muted-foreground">{t('rules.subtitle')}</p>
       <div className="grid gap-3 md:grid-cols-3">
         {tiers.map(({ tier, rate }) => (
-          <Card key={tier} size="sm">
-            <CardHeader>
+          <Card key={tier} size="sm" className="border ring-0">
+            <CardHeader className="gap-2">
               <CardTitle>
                 <h3>{t(`rewards.${tier}`)}</h3>
               </CardTitle>
