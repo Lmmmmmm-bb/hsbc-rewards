@@ -42,6 +42,7 @@ const parser: StatementParser = {
 function setup(
   reader: PdfReader = { read: async () => document() },
   processor = parser,
+  yieldTask?: () => Promise<void>,
 ) {
   const store = createMemorySession()
   const commit = vi.fn((files: readonly Dataset[], revision: number) =>
@@ -50,6 +51,7 @@ function setup(
   const controller = createPdfImportController({
     reader,
     parser: processor,
+    yieldTask,
     commit,
     fingerprint: async (bytes) => new TextDecoder().decode(bytes),
     now: () => 1000,
@@ -72,6 +74,32 @@ function setup(
 }
 
 describe('parsed PDF batch pipeline', () => {
+  it('ignores a cancelled result paused at a task boundary even after a replacement batch commits', async () => {
+    let resume!: () => void
+    const paused = new Promise<void>((resolve) => {
+      resume = resolve
+    })
+    const yieldTask = vi
+      .fn<() => Promise<void>>()
+      .mockReturnValueOnce(paused)
+      .mockResolvedValue(undefined)
+    const { store, controller } = setup(undefined, parser, yieldTask)
+    controller.start([source('old.pdf')])
+    await vi.waitFor(() => expect(yieldTask).toHaveBeenCalledTimes(1))
+    controller.cancel()
+    controller.start([source('replacement.pdf')])
+    await vi.waitFor(() =>
+      expect(controller.getSnapshot().outcome.status).toBe('committed'),
+    )
+    const current = store.getSnapshot()
+    resume()
+    await paused
+    await Promise.resolve()
+    expect(store.getSnapshot()).toBe(current)
+    expect(
+      current.dataset.statements.map((statement) => statement.fileName),
+    ).toEqual(['replacement.pdf'])
+  })
   it('rejects an individually parseable but uncomputable amount without blocking other files', async () => {
     const { store, controller } = setup({
       async read(bytes) {

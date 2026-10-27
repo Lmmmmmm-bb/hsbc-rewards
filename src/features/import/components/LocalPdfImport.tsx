@@ -15,6 +15,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { usePdfImport } from '@/store/use-pdf-import'
 import { useI18n } from '@/i18n/use-i18n'
 import { ImportBatch } from './ImportBatch'
+import { ErrorNotice } from '@/components/workspace/ErrorNotice'
 
 export function LocalPdfImport({ beforeRead }: { beforeRead: () => void }) {
   const { t } = useI18n()
@@ -88,11 +89,7 @@ export function LocalPdfImport({ beforeRead }: { beforeRead: () => void }) {
         </CardContent>
       </Card>
       {batch.rejected && (
-        <Alert variant="destructive">
-          <AlertDescription>
-            {t(`pdf.error.${batch.rejected}`)}
-          </AlertDescription>
-        </Alert>
+        <ErrorNotice>{t(`pdf.error.${batch.rejected}`)}</ErrorNotice>
       )}
       <ImportBatch batch={batch} controller={controller} />
     </div>

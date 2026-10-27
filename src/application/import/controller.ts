@@ -159,8 +159,11 @@ export function createPdfImportController(
           },
           entry.abort.signal,
         )
+        await dependencies.yieldTask?.()
         if (!current(batch, id, entry)) return
         validateSessionDataset(dataset)
+        await dependencies.yieldTask?.()
+        if (!current(batch, id, entry)) return
         entry.dataset = dataset
         entry.pages = undefined
         update(id, {

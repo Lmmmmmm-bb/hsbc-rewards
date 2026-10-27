@@ -13,7 +13,8 @@ import {
   CardAction,
   CardContent,
 } from '@/components/ui/card'
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { ErrorNotice } from '@/components/workspace/ErrorNotice'
 import { Progress } from '@/components/ui/progress'
 import { useI18n } from '@/i18n/use-i18n'
 import { PasswordForm } from './PasswordForm'
@@ -56,11 +57,9 @@ export function ImportBatch({
           </p>
         )}
         {batch.outcome.status === 'failed' && (
-          <Alert variant="destructive">
-            <AlertDescription>
-              {t(`pdf.failed.${batch.outcome.problem ?? 'commit-failed'}`)}
-            </AlertDescription>
-          </Alert>
+          <ErrorNotice>
+            {t(`pdf.failed.${batch.outcome.problem ?? 'commit-failed'}`)}
+          </ErrorNotice>
         )}
         <p className="sr-only" role="status">
           {t('pdf.batchProgress', {
@@ -92,7 +91,7 @@ export function ImportBatch({
                     <div className="flex flex-wrap items-center gap-2">
                       <Badge
                         variant={
-                          item.status === 'error' ? 'destructive' : 'secondary'
+                          item.status === 'error' ? 'default' : 'secondary'
                         }
                       >
                         {t(`pdf.status.${item.status}`)}
@@ -148,27 +147,26 @@ export function ImportBatch({
                   />
                 )}
                 {item.status === 'error' && (
-                  <Alert variant="destructive">
-                    <AlertTitle>
-                      {item.problem && t(`pdf.error.${item.problem}`)}
-                    </AlertTitle>
+                  <ErrorNotice
+                    title={
+                      item.problem ? t(`pdf.error.${item.problem}`) : undefined
+                    }
+                  >
                     {editable &&
                       [
                         'read-failed',
                         'invalid-pdf',
                         'engine-unavailable',
                       ].includes(item.problem ?? '') && (
-                        <AlertDescription>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => controller.retry(item.id)}
-                          >
-                            {t('pdf.retry')}
-                          </Button>
-                        </AlertDescription>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => controller.retry(item.id)}
+                        >
+                          {t('pdf.retry')}
+                        </Button>
                       )}
-                  </Alert>
+                  </ErrorNotice>
                 )}
                 {(item.status === 'parsed' || item.status === 'imported') && (
                   <p className="text-xs text-muted-foreground">

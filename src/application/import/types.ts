@@ -53,6 +53,7 @@ export interface ImportDependencies {
   readonly reader: PdfReader
   readonly fingerprint: (bytes: ArrayBuffer) => Promise<string>
   readonly now: () => number
+  readonly yieldTask?: () => Promise<void>
   readonly existing: () => {
     hashes: readonly string[]
     files: number

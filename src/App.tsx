@@ -53,9 +53,7 @@ function App() {
               <Button variant="outline" onClick={() => setDialog(null)}>
                 {t('action.cancel')}
               </Button>
-              <Button variant="destructive" onClick={restart}>
-                {t('action.confirmClear')}
-              </Button>
+              <Button onClick={restart}>{t('action.confirmClear')}</Button>
             </>
           }
         >

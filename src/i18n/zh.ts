@@ -61,6 +61,7 @@ export const zh = {
     '这是合成示例。选择你的 PDF 后，将清除示例并在本机读取文件。',
   'cashback.checkWarning':
     '有 {count} 份结单金额核对不一致，仍已计入本次估算。',
+  'cashback.checkWarningTitle': '结欠核对有差异',
   'cashback.memory':
     '只保留本次临时结果。处理完成即释放 PDF，刷新或关闭后结果也会消失。',
   'cashback.restart': '重新开始',

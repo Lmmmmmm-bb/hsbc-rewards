@@ -77,5 +77,8 @@ PDF API 依据：[官方示例](https://mozilla.github.io/pdf.js/examples/)、[�
 - `SessionState.revision` 是数据版本。`setFx` 发布新快照但不推进该版本；批次提交读取当时最新的 FX。清空 / 示例切换推进数据版本，同时 FX 控制器取消自身请求；两个异步流程分别防止迟到写回。
 - `application/session/validate.ts` 复用同一查询预检可计算性；解析后隔离单份异常，合并 / FX 发布前验证最终完整快照。安全整数的逐笔输入不被误认为安全的奖励或合计，失败不能先写入再等待 React 抛错。
 - 官方 Accordion 增加与本 preset Button 一致的可见键盘焦点修复，仅使用既有 token 的工具类；不新增业务 CSS。
+- 页面查询按不可变 Dataset 弱引用缓存最近一次汇率值对应的结果，发布复用已预检结果；新数据或新汇率重新计算。缓存不持久化，也不提供历史入口。识别 / 预检之间由运行时注入任务让出，恢复时重新验证批次与取消信号。
+- `ErrorNotice` 组合现有 shadcn 默认 Alert 与主色标题；错误 Badge / 清除 Button 选择本 preset 对比度达标的既有变体。没有重定义颜色或新增样式表。
+- `scripts/quality` 与显式 Lighthouse / 合成输入工具不进入应用包或 Vitest 配置；测试浏览器使用独立临时配置，仅对本地合成页面输出报告。
 - `ports/statements.ts` 定义文本页到结构化结单的异步端口，`adapters/statements` 仅准备本机不透明标识后调用纯模板；`application/import/merge.ts` 先完整合并 / 校验 / 去重，`commit.ts` 通过版本检查后仅写会话一次。
 - 批次控制器保管尚未提交的解析数据；读取 / 识别 / 待解锁结束前不发布业务会话。成功提交后清理临时数据，关闭状态列表不撤销已提交消费；取消和过期回调不触发提交。

@@ -22,6 +22,7 @@ import { RewardRules } from './RewardRules'
 import { RewardQualityAlerts } from './RewardQualityAlerts'
 import type { FxRequestState } from '@/application/fx/controller'
 import { FxReference } from './FxReference'
+import { ErrorNotice } from '@/components/workspace/ErrorNotice'
 import { useI18n } from '@/i18n/use-i18n'
 
 export function CashbackPage({
@@ -236,11 +237,12 @@ export function CashbackPage({
               </Alert>
             )}
             {hasResults && view.mismatchCount > 0 && (
-              <Alert variant="destructive" role="status">
-                <AlertDescription>
-                  {t('cashback.checkWarning', { count: view.mismatchCount })}
-                </AlertDescription>
-              </Alert>
+              <ErrorNotice
+                title={t('cashback.checkWarningTitle')}
+                role="status"
+              >
+                {t('cashback.checkWarning', { count: view.mismatchCount })}
+              </ErrorNotice>
             )}
             {hasResults && <RewardQualityAlerts quality={view.quality} />}
           </div>

@@ -3,12 +3,12 @@ import { reconcileStatement } from '@/domain/reconciliation/reconcile'
 import { calculateRewards } from '@/domain/rewards/calculate'
 import { LATEST_RULES } from '@/domain/rewards/rules'
 import type { SessionState } from './types'
+import type { Dataset } from '@/domain/model/types'
 import { deriveRewardDetails } from './reward-details'
 import { deriveRewardQuality } from './reward-quality'
 import { deriveRewardPoolViews } from './reward-pools'
 
-export function deriveWorkspace(session: SessionState) {
-  const { dataset } = session
+function computeWorkspace(dataset: Dataset, hkdToCnyPpm: number | null) {
   const reports = dataset.statements.map((statement) => ({
     statement,
     accounts: reconcileStatement(statement, dataset.transactions),
@@ -17,7 +17,7 @@ export function deriveWorkspace(session: SessionState) {
     (t) => t.classification.kind === 'purchase' && t.account.minor > 0,
   )
   const rewardResult = calculateRewards(dataset.transactions, dataset.cards, {
-    hkdToCnyPpm: session.fx.hkdToCnyPpm,
+    hkdToCnyPpm,
   })
   const totalRewardMicroRc = rewardResult.cards.some(
     (card) => card.totalMicroRc === null,
@@ -61,7 +61,7 @@ export function deriveWorkspace(session: SessionState) {
       cnyMinor:
         result.totalMicroRc === null
           ? null
-          : microRcToCnyMinor(result.totalMicroRc, session.fx.hkdToCnyPpm),
+          : microRcToCnyMinor(result.totalMicroRc, hkdToCnyPpm),
       pools: poolViews.get(result.cardId) ?? [],
     })),
     expenseCount: expenses.length,
@@ -86,8 +86,22 @@ export function deriveWorkspace(session: SessionState) {
     totalRewardCnyMinor:
       totalRewardMicroRc === null
         ? null
-        : microRcToCnyMinor(totalRewardMicroRc, session.fx.hkdToCnyPpm),
+        : microRcToCnyMinor(totalRewardMicroRc, hkdToCnyPpm),
   }
 }
 
-export type WorkspaceView = ReturnType<typeof deriveWorkspace>
+export type WorkspaceView = ReturnType<typeof computeWorkspace>
+const cache = new WeakMap<
+  Dataset,
+  { rate: number | null; view: WorkspaceView }
+>()
+
+/** Dataset inputs are immutable. Reuse the preflight result instead of calculating it again during publication. */
+export function deriveWorkspace(session: SessionState): WorkspaceView {
+  const rate = session.fx.hkdToCnyPpm
+  const previous = cache.get(session.dataset)
+  if (previous && previous.rate === rate) return previous.view
+  const view = computeWorkspace(session.dataset, rate)
+  cache.set(session.dataset, { rate, view })
+  return view
+}

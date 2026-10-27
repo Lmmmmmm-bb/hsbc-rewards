@@ -18,7 +18,7 @@ export function RewardQuality({
           </Badge>
         )}
         {quality.mismatchAccounts > 0 && (
-          <Badge variant="destructive">
+          <Badge>
             {t('quality.mismatch', { count: quality.mismatchAccounts })}
           </Badge>
         )}

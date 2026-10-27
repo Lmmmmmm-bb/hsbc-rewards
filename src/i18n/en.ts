@@ -71,6 +71,7 @@ export const en = {
     'This is a synthetic example. Selecting your PDF clears it and reads your file locally.',
   'cashback.checkWarning':
     '{count} statements have a balance mismatch and remain included in this estimate.',
+  'cashback.checkWarningTitle': 'Balance reconciliation differs',
   'cashback.memory':
     'Results are temporary. The PDF is released after processing; refreshing or closing clears the results too.',
   'cashback.restart': 'Start again',

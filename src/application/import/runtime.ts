@@ -25,6 +25,7 @@ export const pdfImport = createPdfImportController({
   commit: (files, revision) =>
     commitImportedBatch(sessionStore, files, revision),
   now: () => Date.now(),
+  yieldTask: () => new Promise((resolve) => setTimeout(resolve, 0)),
   existing: () => {
     const session = sessionStore.getSnapshot()
     return {
