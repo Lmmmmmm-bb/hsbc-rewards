@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Card, Dataset } from '@/domain/model/types'
-import { calculateRewards } from '@/domain/rewards/calculate'
-import { reconcileStatement } from '@/domain/reconciliation/reconcile'
-import { statement, testCard, transaction } from '@/test-support/fixtures'
+import { statement, testCard, transaction } from '@/test-support/fixtures/dataset'
+import { rewardContext } from '@/test-support/helpers/rewards'
 import { deriveRewardPeriods } from './reward-periods'
 
 const shared = {
@@ -17,13 +16,7 @@ const card = (id = testCard.id): Card => ({
   accountIds: ['account-cny'],
 })
 function inspect(dataset: Dataset, rate: number | null = 850000) {
-  const rewards = calculateRewards(dataset.transactions, dataset.cards, {
-    hkdToCnyPpm: rate,
-  })
-  const reports = dataset.statements.map((statement) => ({
-    statement,
-    accounts: reconcileStatement(statement, dataset.transactions),
-  }))
+  const { rewards, reports } = rewardContext(dataset, rate)
   return {
     rewards,
     periods: deriveRewardPeriods(dataset, rewards, reports, rate),

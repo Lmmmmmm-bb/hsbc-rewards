@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { statement, transaction } from '@/test-support/fixtures'
+import { statement, transaction } from '@/test-support/fixtures/dataset'
 import { reconcileStatement } from './reconcile'
 
 describe('sub-account balance reconciliation', () => {

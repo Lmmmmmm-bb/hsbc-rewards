@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { transaction } from '@/test-support/fixtures'
+import { transaction } from '@/test-support/fixtures/dataset'
 import { classifyTransaction, identifyPayment, identifyRegion } from './classify'
 
 describe('automatic transaction evidence', () => {

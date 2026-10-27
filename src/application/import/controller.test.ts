@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { PdfReadError } from '@/ports/pdf'
 import type { LocalPdfDocument, PdfReader } from '@/ports/pdf'
+import { deferred } from '@/test-support/helpers/deferred'
 import { createPdfImportController } from './controller'
 
 const source = (name = 'synthetic.pdf', body = '%PDF-synthetic') => {
@@ -119,21 +120,16 @@ describe('provisional PDF batch', () => {
   it('cancel disposes successful documents and rejects late results from abandoned work', async () => {
     const first = document(),
       late = document()
-    let resolveLate: (value: LocalPdfDocument) => void = () => {}
+    const pending = deferred<LocalPdfDocument>()
     const read = vi
       .fn<PdfReader['read']>()
       .mockResolvedValueOnce(first)
-      .mockImplementationOnce(
-        () =>
-          new Promise((resolve) => {
-            resolveLate = resolve
-          }),
-      )
+      .mockReturnValueOnce(pending.promise)
     const { controller } = setup({ read })
     controller.start([source('a.pdf', '%PDF-first'), source('b.pdf', '%PDF-second')])
     await vi.waitFor(() => expect(controller.getSnapshot().items[0].status).toBe('extracted'))
     controller.cancel()
-    resolveLate(late)
+    pending.resolve(late)
     await vi.waitFor(() => expect(late.dispose).toHaveBeenCalledTimes(1))
     expect(first.dispose).toHaveBeenCalledTimes(1)
     expect(controller.getSnapshot().items).toEqual([])

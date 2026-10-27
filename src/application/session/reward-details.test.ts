@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { calculateRewards } from '@/domain/rewards/calculate'
 import { createDemoDataset } from '@/application/demo/dataset'
-import { testCard, statement, transaction } from '@/test-support/fixtures'
+import { testCard, statement, transaction } from '@/test-support/fixtures/dataset'
 import { deriveRewardDetails } from './reward-details'
 
 describe('reward display aggregates', () => {

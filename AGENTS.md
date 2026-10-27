@@ -55,6 +55,8 @@ pnpm dev
 | `src/components/workspace/` | 工作区布局与共用展示组件 |
 | `src/i18n/` | 中英文消息与格式化 |
 | `src/index.css` | 全局主题、字体及既有样式入口 |
+| `src/test-support/fixtures/` | 单测共用的合成交易、结单及导入文件数据 |
+| `src/test-support/helpers/` | 单测共用的异步控制及奖励计算上下文 |
 | `scripts/` | 显式运行的本地验收工具，不进入应用包 |
 
 - 领域层不依赖 React、浏览器 API、PDF.js、网络或存储。
@@ -102,6 +104,8 @@ pnpm dev
 
 - 代码变更完成后运行 `pnpm typecheck`、`pnpm lint`、`pnpm test`、`pnpm build`，并检查 `git diff --check`。仅文档变更检查事实、链接和 diff 即可。
 - Vitest 仅收集 `src/**/*.test.{ts,tsx}`，在 Node 环境运行；测试与被测模块相邻，显式从 `vitest` 导入 API。重点测试金额、封顶、去重、缺失数据及异步取消等业务边界，不写复刻实现的测试或无意义快照。
+- 单测按被测模块命名为 `<module>.test.ts`；同一入口的独立场景可使用 `<module>.<scenario>.test.ts`（如 `controller.pipeline.test.ts`、`calculate.precision.test.ts`）。跨模块用例按主要验证的入口归属，避免集中到泛称的测试文件。
+- 共用合成数据放在 `src/test-support/fixtures/`，共用执行辅助函数放在 `src/test-support/helpers/`；只供一个测试文件使用的准备逻辑留在本文件。测试支持模块仅供单测导入，不进入业务代码；不要通过全局 setup 隐式注入数据或依赖。
 - UI 变更实际走查相关流程及 320 / 360 / 768 / 1280 / 1440 宽度，检查键盘与错误状态；不能把类型检查当作浏览器验收。
 - 涉及性能、无障碍或导入资源生命周期时，使用 `scripts/audit-workspace.mjs`、`scripts/benchmark-import.mjs` 或 `scripts/audit-reward-interactions.mjs` 验收，先检查对应脚本的入口参数。输出截图或页面快照的流程只使用合成数据。
 - 真实样本验证可使用 `node scripts/verify-pulse-samples.mjs /path/to/statement.pdf`；仅在已获授权时运行，只记录匿名计数与状态。

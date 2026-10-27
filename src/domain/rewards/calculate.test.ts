@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { testCard, transaction } from '@/test-support/fixtures'
+import { classifyTransaction } from '@/domain/classification/classify'
+import { testCard, transaction } from '@/test-support/fixtures/dataset'
 import { calculateRewards } from './calculate'
 import { LATEST_RULES } from './rules'
 
@@ -101,5 +102,42 @@ describe('three-tier reward accrual and independent cap pools', () => {
     const result = calculateRewards([prior, transaction()], [testCard])
     expect(result.byTransaction.get('transaction-a')?.tiers.find(t => t.tier === 'abroad')?.microRc).toBe(0)
     expect(result.pools.find(pool => pool.tier === 'abroad')?.remainingMinor).toBe(0)
+  })
+})
+
+describe('reward eligibility reasons', () => {
+  it('explains excluded reloads, nonpositive values and unknown regions without changing reward amounts', () => {
+    const reload = classifyTransaction(
+      transaction({ description: 'SYNTHETIC EWALLET TOP UP CN' }),
+    )
+    const result = calculateRewards([reload], [testCard])
+    expect(result.cards[0].totalMicroRc).toBe(0)
+    expect(
+      result.transactions[0].tiers.every((tier) =>
+        tier.reasonCodes.includes('eligibility.excluded-merchant'),
+      ),
+    ).toBe(true)
+    const zero = calculateRewards(
+      [transaction({ account: { currency: 'CNY', minor: 0 } })],
+      [testCard],
+    )
+    expect(
+      zero.transactions[0].tiers.every((tier) =>
+        tier.reasonCodes.includes('transaction.non-positive'),
+      ),
+    ).toBe(true)
+    const unknown = calculateRewards(
+      [
+        transaction({
+          classification: { ...transaction().classification, region: null },
+        }),
+      ],
+      [testCard],
+    )
+    expect(unknown.cards[0].totalMicroRc).toBe(1000000)
+    expect(
+      unknown.transactions[0].tiers.find((tier) => tier.tier === 'pulse')
+        ?.reasonCodes,
+    ).toEqual(['region.unknown'])
   })
 })

@@ -2,7 +2,8 @@ import { describe, expect, it, vi } from 'vitest'
 import { DomainError } from '@/domain/model/errors'
 import type { Dataset } from '@/domain/model/types'
 import { parsePulseStatement } from '@/domain/parsing/pulse/parse'
-import { pulsePage, purchase } from '@/test-support/pulse-statement'
+import { pulsePage, purchase } from '@/test-support/fixtures/pulse-statement'
+import { deferred } from '@/test-support/helpers/deferred'
 import { createMemorySession } from '@/store/memory-session'
 import { PdfReadError } from '@/ports/pdf'
 import type { LocalPdfDocument, PdfReader, PdfSource } from '@/ports/pdf'
@@ -75,13 +76,10 @@ function setup(
 
 describe('parsed PDF batch pipeline', () => {
   it('ignores a cancelled result paused at a task boundary even after a replacement batch commits', async () => {
-    let resume!: () => void
-    const paused = new Promise<void>((resolve) => {
-      resume = resolve
-    })
+    const paused = deferred<void>()
     const yieldTask = vi
       .fn<() => Promise<void>>()
-      .mockReturnValueOnce(paused)
+      .mockReturnValueOnce(paused.promise)
       .mockResolvedValue(undefined)
     const { store, controller } = setup(undefined, parser, yieldTask)
     controller.start([source('old.pdf')])
@@ -92,8 +90,8 @@ describe('parsed PDF batch pipeline', () => {
       expect(controller.getSnapshot().outcome.status).toBe('committed'),
     )
     const current = store.getSnapshot()
-    resume()
-    await paused
+    paused.resolve()
+    await paused.promise
     await Promise.resolve()
     expect(store.getSnapshot()).toBe(current)
     expect(
@@ -205,16 +203,14 @@ describe('parsed PDF batch pipeline', () => {
   })
 
   it('discards parsed and late work on cancel while preserving previously imported data', async () => {
-    let resolveLate: (dataset: Dataset) => void = () => {}
+    const pending = deferred<Dataset>()
     let lateDataset: Dataset | undefined
     const processor: StatementParser = {
       async parse(pages, file, signal) {
         const dataset = await parser.parse(pages, file, signal)
         if (file.fileName !== 'late.pdf') return dataset
         lateDataset = dataset
-        return new Promise((resolve) => {
-          resolveLate = resolve
-        })
+        return pending.promise
       },
     }
     const { store, controller, commit } = setup(undefined, processor)
@@ -231,7 +227,7 @@ describe('parsed PDF batch pipeline', () => {
     )
     controller.cancel()
     expect(store.getSnapshot()).toBe(previous)
-    resolveLate(lateDataset!)
+    pending.resolve(lateDataset!)
     controller.start([source('fresh.pdf')])
     await vi.waitFor(() =>
       expect(controller.getSnapshot().outcome.status).toBe('committed'),
@@ -321,12 +317,10 @@ describe('parsed PDF batch pipeline', () => {
   })
 
   it('reports a changed session without overwriting it or pretending that parsed files were imported', async () => {
-    let finish: () => void = () => {}
+    const pending = deferred<void>()
     const processor: StatementParser = {
       async parse(pages, file, signal) {
-        await new Promise<void>((resolve) => {
-          finish = resolve
-        })
+        await pending.promise
         return parser.parse(pages, file, signal)
       },
     }
@@ -337,7 +331,7 @@ describe('parsed PDF batch pipeline', () => {
     )
     store.clear()
     const current = store.getSnapshot()
-    finish()
+    pending.resolve()
     await vi.waitFor(() =>
       expect(controller.getSnapshot().outcome.status).toBe('failed'),
     )

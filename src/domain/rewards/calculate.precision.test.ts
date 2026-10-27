@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { testCard, transaction } from '@/test-support/fixtures'
+import { testCard, transaction } from '@/test-support/fixtures/dataset'
 import { calculateRewards } from './calculate'
 
 describe('accrued RC precision', () => {

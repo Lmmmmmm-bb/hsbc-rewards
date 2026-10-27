@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { cn } from '@/lib/utils'
+import { cn } from './utils'
 
 describe('cn', () => {
   it('合并条件类名并忽略空值', () => {

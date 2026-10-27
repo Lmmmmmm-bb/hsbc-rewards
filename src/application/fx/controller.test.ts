@@ -9,7 +9,8 @@ import { createMemorySession } from '@/store/memory-session'
 import { loadDemoSession } from '@/application/session/actions'
 import { commitImportedBatch } from '@/application/import/commit'
 import { deriveWorkspace } from '@/application/session/selectors'
-import { statement, testCard, transaction } from '@/test-support/fixtures'
+import { statement, testCard, transaction } from '@/test-support/fixtures/dataset'
+import { deferred } from '@/test-support/helpers/deferred'
 import { createFxController, FX_RETRY_DELAYS } from './controller'
 import { msUntilNextFxDay } from './freshness'
 
@@ -23,13 +24,6 @@ const data = () => ({
 const flush = async () => {
   await Promise.resolve()
   await Promise.resolve()
-}
-function deferred<T>() {
-  let resolve!: (value: T) => void
-  const promise = new Promise<T>((yes) => {
-    resolve = yes
-  })
-  return { promise, resolve }
 }
 function memoryCache(initial: CachedFxQuote | null = null): FxCache {
   let value = initial

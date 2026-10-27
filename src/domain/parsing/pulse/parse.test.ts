@@ -8,7 +8,7 @@ import {
   pulseFile,
   pulseIdentity,
   pulsePage,
-} from '@/test-support/pulse-statement'
+} from '@/test-support/fixtures/pulse-statement'
 import { reconcileStatement } from '@/domain/reconciliation/reconcile'
 import { calculateRewards } from '@/domain/rewards/calculate'
 

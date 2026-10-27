@@ -1,86 +1,12 @@
-import { describe, expect, it, vi } from 'vitest'
-import type { Card, Dataset } from '@/domain/model/types'
-import { statement, testCard, transaction } from '@/test-support/fixtures'
-import { createMemorySession } from '@/store/memory-session'
+import { describe, expect, it } from 'vitest'
+import type { Dataset } from '@/domain/model/types'
+import { importedFile as file } from '@/test-support/fixtures/imported-file'
+import { testCard } from '@/test-support/fixtures/dataset'
 import { mergeImportedDatasets } from './merge'
-import { commitImportedBatch } from './commit'
 
 const empty: Dataset = { cards: [], statements: [], transactions: [] }
-function file(
-  id = 'a',
-  date = '2026-10-20',
-  card: Partial<Card> = {},
-): Dataset {
-  const cardId = card.id ?? testCard.id
-  const accountId = `account-${cardId}`
-  return {
-    cards: [
-      { ...testCard, statementIds: [id], accountIds: [accountId], ...card },
-    ],
-    statements: [
-      statement({
-        id,
-        fileHash: `hash-${id}`,
-        date,
-        fileSizeBytes: 1000,
-        accounts: [
-          {
-            id: accountId,
-            currency: 'CNY',
-            openingMinor: 0,
-            closingMinor: 25000,
-          },
-        ],
-      }),
-    ],
-    transactions: [
-      transaction({
-        id: `transaction-${id}`,
-        cardId,
-        accountId,
-        sources: [
-          {
-            ...transaction().sources[0],
-            statementId: id,
-            fileHash: `hash-${id}`,
-          },
-        ],
-      }),
-    ],
-  }
-}
 
-describe('atomic statement merge', () => {
-  it('rejects a combined reward overflow before publishing and preserves the prior computable session', () => {
-    const localFile = (id: string): Dataset => {
-      const input = file(id)
-      const amount = 120000000000000
-      return {
-        ...input,
-        statements: input.statements.map((statement) => ({
-          ...statement,
-          accounts: statement.accounts.map((account) => ({
-            ...account,
-            currency: 'HKD',
-            closingMinor: amount,
-          })),
-        })),
-        transactions: input.transactions.map((row) => ({
-          ...row,
-          original: { currency: 'HKD', minor: amount },
-          account: { currency: 'HKD', minor: amount },
-          classification: { ...row.classification, region: 'HK' },
-        })),
-      }
-    }
-    const store = createMemorySession()
-    commitImportedBatch(store, [localFile('a')], store.getSnapshot().revision)
-    const previous = store.getSnapshot()
-    expect(() =>
-      commitImportedBatch(store, [localFile('b')], previous.revision),
-    ).toThrow('money.out-of-range')
-    expect(store.getSnapshot()).toBe(previous)
-  })
+describe('statement dataset merge', () => {
   it('merges repeated card identities and unions source metadata without changing input objects', () => {
     const prior = file(),
       next = file('b', '2026-11-20')
@@ -91,6 +17,7 @@ describe('atomic statement merge', () => {
     expect(dataset.transactions).toHaveLength(2)
     expect(JSON.stringify([prior, next])).toBe(before)
   })
+
   it('uses statement date instead of arrival order for latest explicit allocation', () => {
     const old = file('a', '2026-09-20', { abroadMultiplier: 2 }),
       latest = file('b', '2026-10-20', { abroadMultiplier: 5 })
@@ -101,6 +28,7 @@ describe('atomic statement merge', () => {
       5,
     )
   })
+
   it('does not combine cards or cap pools just because their suffixes match', () => {
     const dataset = mergeImportedDatasets(file(), [
       file('b', '2026-11-20', {
@@ -111,6 +39,7 @@ describe('atomic statement merge', () => {
     expect(dataset.cards).toHaveLength(2)
     expect(dataset.cards.every((card) => !card.pool)).toBe(true)
   })
+
   it('skips an already imported file hash without duplicating transactions', () => {
     const prior = file(),
       duplicate = file('different-id')
@@ -123,6 +52,7 @@ describe('atomic statement merge', () => {
     expect(mergeImportedDatasets(prior, [copy]).transactions).toHaveLength(1)
     expect(mergeImportedDatasets(prior, [copy]).statements).toHaveLength(1)
   })
+
   it('merges only proven bank references and preserves both source statements', () => {
     const first = file(),
       second = file('b')
@@ -141,6 +71,7 @@ describe('atomic statement merge', () => {
       dataset.transactions[0].sources.map((source) => source.statementId),
     ).toEqual(['a', 'b'])
   })
+
   it('keeps unproven lookalikes and does not accumulate duplicate warnings on later merges', () => {
     const dataset = mergeImportedDatasets(file(), [file('b')])
     expect(dataset.transactions).toHaveLength(2)
@@ -156,6 +87,7 @@ describe('atomic statement merge', () => {
       dataset.transactions.map((row) => row.warnings),
     )
   })
+
   it('drops contradictory shared-pool evidence and keeps that uncertainty on later imports', () => {
     const first = file('a', '2026-08-20', {
       pool: { id: 'one', evidence: 'statement-account' },
@@ -175,74 +107,5 @@ describe('atomic statement merge', () => {
         }),
       ]).cards[0].pool,
     ).toBeUndefined()
-  })
-  it('publishes a completed batch once, replacing demonstration FX without retaining its example rate', () => {
-    const store = createMemorySession(),
-      changed = vi.fn()
-    store.replace(empty, 'demo', {
-      source: 'demo',
-      hkdToCnyPpm: 900000,
-      stale: false,
-    })
-    store.subscribe(changed)
-    const outcome = commitImportedBatch(
-      store,
-      [file(), file('b')],
-      store.getSnapshot().revision,
-    )
-    expect(outcome).toEqual({ files: 2, transactions: 2 })
-    expect(changed).toHaveBeenCalledTimes(1)
-    expect(store.getSnapshot().mode).toBe('real')
-    expect(store.getSnapshot().fx.hkdToCnyPpm).toBeNull()
-  })
-  it('preserves prior data on revision changes, source conflicts and repeat-only batches', () => {
-    const store = createMemorySession()
-    store.replace(file(), 'real')
-    const snapshot = store.getSnapshot(),
-      changed = vi.fn()
-    store.subscribe(changed)
-    expect(() =>
-      commitImportedBatch(store, [file('b')], snapshot.revision - 1),
-    ).toThrow('import.session-changed')
-    const invalid = file('b')
-    expect(() =>
-      commitImportedBatch(
-        store,
-        [
-          {
-            ...invalid,
-            transactions: [{ ...invalid.transactions[0], sources: [] }],
-          },
-        ],
-        snapshot.revision,
-      ),
-    ).toThrow('import.invalid-source-association')
-    expect(store.getSnapshot()).toBe(snapshot)
-    const foreignAccount = {
-      ...invalid,
-      statements: [
-        {
-          ...invalid.statements[0],
-          accounts: [
-            {
-              id: 'unrelated-account',
-              currency: 'CNY' as const,
-              openingMinor: 0,
-              closingMinor: 0,
-            },
-          ],
-        },
-      ],
-    }
-    expect(() =>
-      commitImportedBatch(store, [foreignAccount], snapshot.revision),
-    ).toThrow('import.invalid-source-association')
-    expect(store.getSnapshot()).toBe(snapshot)
-    expect(changed).not.toHaveBeenCalled()
-    expect(commitImportedBatch(store, [file()], snapshot.revision)).toEqual({
-      files: 0,
-      transactions: 0,
-    })
-    expect(changed).not.toHaveBeenCalled()
   })
 })
