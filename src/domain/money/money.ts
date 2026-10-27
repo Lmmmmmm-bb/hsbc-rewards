@@ -40,6 +40,22 @@ export function convertMinor(amountMinor: number, ratePpm: number | null): numbe
   return roundedRatio(BigInt(amountMinor) * BigInt(ratePpm), 1_000_000n)
 }
 
+export function convertMinorInverse(amountMinor: number, ratePpm: number | null): number | null {
+  safeInteger(amountMinor)
+  if (ratePpm === null) return null
+  validateRate(ratePpm)
+  return roundedRatio(BigInt(amountMinor) * 1_000_000n, BigInt(ratePpm))
+}
+
+export function proportionalMicroRc(amountMinor: number, rateBasisPoints: number, usedBasisMinor: number, totalBasisMinor: number): number {
+  const full = microRcForSpend(amountMinor, rateBasisPoints)
+  safeInteger(usedBasisMinor)
+  safeInteger(totalBasisMinor)
+  if (usedBasisMinor < 0 || totalBasisMinor < 0 || usedBasisMinor > totalBasisMinor) throw new DomainError('rewards.invalid-basis')
+  if (totalBasisMinor === 0) return full
+  return safeInteger(Number(BigInt(full) * BigInt(usedBasisMinor) / BigInt(totalBasisMinor)))
+}
+
 export function microRcForSpend(amountMinor: number, rateBasisPoints: number): number {
   safeInteger(amountMinor)
   if (amountMinor < 0 || !Number.isInteger(rateBasisPoints) || rateBasisPoints < 0) throw new DomainError('rewards.invalid-basis')

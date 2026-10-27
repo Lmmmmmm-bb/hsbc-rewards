@@ -71,6 +71,7 @@ export interface NormalizedTransaction {
   readonly original: Money
   readonly account: Money & { readonly currency: AccountCurrency }
   readonly bankReference?: string
+  readonly bankHkdEquivalentMinor?: number
   readonly sources: readonly SourceReference[]
   readonly confidence: number
   readonly warnings: readonly DomainWarning[]

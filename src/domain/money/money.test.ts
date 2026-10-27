@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { addMinor, convertMinor, microRcForSpend, microRcToCnyMinor, parseMinor } from './money'
+import { addMinor, convertMinor, convertMinorInverse, microRcForSpend, microRcToCnyMinor, parseMinor, proportionalMicroRc } from './money'
 
 describe('integer money', () => {
   it.each([['1,234.56', 123456], ['0.01', 1], ['250', 25000], ['12.3', 1230], ['(123.45)', -12345], ['123.45CR', -12345], ['-123.45 CR', -12345], ['123.45 DR', 12345], ['-0.00', 0]])('parses %s without decimal arithmetic', (input, expected) => expect(parseMinor(input)).toBe(expected))
@@ -21,5 +21,16 @@ describe('integer money', () => {
     expect(microRcToCnyMinor(11000000, 900000)).toBe(990)
     expect(microRcToCnyMinor(11000000, null)).toBeNull()
     expect(() => microRcForSpend(-100, 40)).toThrow()
+  })
+  it('converts CNY to the HKD cap basis using the inverse quote', () => {
+    expect(convertMinorInverse(25000, 900000)).toBe(27778)
+    expect(convertMinorInverse(25000, 500000)).toBe(50000)
+    expect(convertMinorInverse(25000, null)).toBeNull()
+    expect(() => convertMinorInverse(25000, -1)).toThrow()
+  })
+  it('clips the reward proportion without rounding away eligible fractions of a cent', () => {
+    expect(proportionalMicroRc(25000, 200, 10000, 50000)).toBe(1000000)
+    expect(proportionalMicroRc(25000, 200, 10000, 27778)).toBe(1799985)
+    expect(() => proportionalMicroRc(25000, 200, 50001, 50000)).toThrow()
   })
 })

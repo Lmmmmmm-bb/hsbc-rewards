@@ -30,4 +30,9 @@ describe('unique-evidence transaction merging', () => {
     expect(deduplicateTransactions([a, b])).toEqual(deduplicateTransactions([b, a]))
     expect(a.warnings).toHaveLength(0)
   })
+  it('does not silently merge contradictory bank-provided HKD equivalents', () => {
+    const a = transaction({ bankReference: 'REF-A', bankHkdEquivalentMinor: 25000 })
+    const b = transaction({ id: 'transaction-b', bankReference: 'REF-A', bankHkdEquivalentMinor: 26000 })
+    expect(deduplicateTransactions([a, b]).conflictingReferenceIds).toHaveLength(2)
+  })
 })

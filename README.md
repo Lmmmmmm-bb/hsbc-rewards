@@ -8,6 +8,7 @@ Pulse Rewards 在浏览器本地分析 HSBC Pulse 英文 PDF 结单，提供交�
 
 - [产品基线与完整功能范围](docs/PRODUCT.md)
 - [架构、模块职责和数据不变量](docs/ARCHITECTURE.md)
+- [官方规则与参考换算口径](docs/RULES.md)
 - [阶段拆分、验收门槛和进度](docs/DEVELOPMENT.md)
 - [变更记录](CHANGELOG.md)
 

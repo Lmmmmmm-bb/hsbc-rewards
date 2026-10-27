@@ -5,7 +5,7 @@ function signature(transaction: Transaction): string {
 }
 
 function referenceKey(transaction: Transaction): string | null {
-  return transaction.bankReference ? JSON.stringify([transaction.cardId, transaction.accountId, transaction.bankReference, transaction.transactionDate, transaction.account.currency, transaction.account.minor, transaction.original.currency, transaction.original.minor, transaction.classification.kind, transaction.classification.region, transaction.classification.paymentMethod]) : null
+  return transaction.bankReference ? JSON.stringify([transaction.cardId, transaction.accountId, transaction.bankReference, transaction.transactionDate, transaction.account.currency, transaction.account.minor, transaction.original.currency, transaction.original.minor, transaction.bankHkdEquivalentMinor ?? null, transaction.classification.kind, transaction.classification.region, transaction.classification.paymentMethod]) : null
 }
 
 function mergeSources(a: readonly SourceReference[], b: readonly SourceReference[]) {
