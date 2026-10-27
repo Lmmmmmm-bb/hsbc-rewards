@@ -6,13 +6,16 @@ import { Progress } from '@/components/ui/progress'
 import { ErrorNotice } from '@/components/workspace/ErrorNotice'
 import { useI18n } from '@/i18n/use-i18n'
 import { FileStatusRow } from './FileStatusRow'
+import { PdfFilePicker } from './PdfFilePicker'
 
 export function FileStatusDialog({
   onClose,
   onCancel,
+  onFiles,
 }: {
   onClose: () => void
   onCancel: () => void
+  onFiles: (files: readonly File[]) => void
 }) {
   const { batch, controller } = usePdfImport()
   const cancelled = useRef(false)
@@ -40,6 +43,12 @@ export function FileStatusDialog({
       className="sm:max-w-3xl"
       footer={
         <>
+          <PdfFilePicker
+            label={t('pdf.addFiles')}
+            onFiles={onFiles}
+            disabled={batch.active}
+            variant="outline"
+          />
           {batch.active && (
             <Button
               variant="outline"
@@ -90,11 +99,19 @@ export function FileStatusDialog({
             <p className="text-xs text-muted-foreground">
               {t('pdf.inProgressHint')}
             </p>
+            <p className="text-xs text-muted-foreground">
+              {t('pdf.addFilesBusy')}
+            </p>
           </div>
         )}
         {committed && (
           <p role="status" className="text-sm font-medium">
             {t('pdf.committed', batch.outcome)}
+          </p>
+        )}
+        {!batch.active && (
+          <p className="text-sm text-muted-foreground">
+            {t('pdf.addFilesHint')}
           </p>
         )}
         {batch.outcome.status === 'empty' && (

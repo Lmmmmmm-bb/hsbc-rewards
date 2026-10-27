@@ -61,6 +61,7 @@ function App() {
       )}
       {dialog === 'files' && (
         <FileStatusDialog
+          onFiles={importFiles}
           onClose={() => setDialog(null)}
           onCancel={() => {
             pdfImport.cancel()

@@ -155,6 +155,10 @@ export const zh = {
   'import.dropTitle': '加入结单，计算返现',
   'import.limit': '单份 ≤ 25 MB / 200 页 · 本页累计 ≤ 20 份 / 100 MB',
   'pdf.choose': '选择 PDF 文件',
+  'pdf.addFiles': '补充文件',
+  'pdf.addFilesBusy': '完成本批处理或解锁后，可继续补充文件。',
+  'pdf.addFilesHint':
+    '可补充选择 PDF；已有返现结果保留，列表将显示新一批文件的处理状态。',
   'pdf.dropBody': '拖入多份 PDF，或选择文件。加密结单可在本机输入密码解锁。',
   'pdf.stageHint':
     '支持 HSBC PULSE 英文文本结单，暂不支持扫描件。本批处理结束后，成功文件统一计入返现。',

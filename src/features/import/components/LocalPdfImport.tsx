@@ -1,11 +1,9 @@
-import { useRef } from 'react'
 import { RiFileUploadLine } from '@remixicon/react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { usePdfImport } from '@/store/use-pdf-import'
 import { useI18n } from '@/i18n/use-i18n'
 import { ErrorNotice } from '@/components/workspace/ErrorNotice'
 import { ImportBatch } from './ImportBatch'
+import { PdfFilePicker } from './PdfFilePicker'
 
 export function LocalPdfImport({
   onFiles,
@@ -14,7 +12,6 @@ export function LocalPdfImport({
   onFiles: (files: readonly File[]) => void
   onStatus: () => void
 }) {
-  const input = useRef<HTMLInputElement>(null)
   const { batch } = usePdfImport()
   const { t } = useI18n()
   return (
@@ -27,27 +24,12 @@ export function LocalPdfImport({
           />
           <h2 className="text-sm font-semibold">{t('import.dropTitle')}</h2>
         </div>
-        <Input
-          ref={input}
-          type="file"
-          accept="application/pdf,.pdf"
-          multiple
-          className="hidden"
-          aria-label={t('pdf.choose')}
-          onChange={(event) => {
-            const files = Array.from(event.target.files ?? [])
-            event.target.value = ''
-            onFiles(files)
-          }}
-        />
-        <Button
-          data-file-picker-trigger
-          onClick={() => input.current?.click()}
+        <PdfFilePicker
+          label={t('pdf.choose')}
+          onFiles={onFiles}
           disabled={batch.active}
-        >
-          <RiFileUploadLine aria-hidden="true" />
-          {t('pdf.choose')}
-        </Button>
+          pageTrigger
+        />
       </div>
       <p className="text-xs text-muted-foreground">{t('import.anywhere')}</p>
       <p className="text-xs text-muted-foreground">{t('import.limit')}</p>

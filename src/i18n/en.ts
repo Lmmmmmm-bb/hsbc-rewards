@@ -176,6 +176,11 @@ export const en = {
   'import.dropTitle': 'Add statements to calculate rewards',
   'import.limit': 'Each ≤ 25 MB / 200 pages · Page total ≤ 20 files / 100 MB',
   'pdf.choose': 'Choose PDF files',
+  'pdf.addFiles': 'Add more files',
+  'pdf.addFilesBusy':
+    'Finish processing or unlocking this batch before adding more files.',
+  'pdf.addFilesHint':
+    'Choose more PDFs to add to existing rewards. This list will show the new batch’s file status.',
   'pdf.dropBody':
     'Drop multiple PDFs here or choose files. Unlock encrypted statements locally.',
   'pdf.stageHint':
