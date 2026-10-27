@@ -5,6 +5,50 @@ import { testCard, statement, transaction } from '@/test-support/fixtures'
 import { deriveRewardDetails } from './reward-details'
 
 describe('reward display aggregates', () => {
+  it('keeps source coverage and zero-balance currencies for a parsed card with no transactions', () => {
+    const dataset = {
+      cards: [
+        {
+          ...testCard,
+          statementIds: ['statement-a'],
+          accountIds: ['account-cny', 'account-hkd'],
+        },
+      ],
+      statements: [
+        statement({
+          accounts: [
+            {
+              id: 'account-cny',
+              currency: 'CNY' as const,
+              openingMinor: 0,
+              closingMinor: 0,
+            },
+            {
+              id: 'account-hkd',
+              currency: 'HKD' as const,
+              openingMinor: 0,
+              closingMinor: 0,
+            },
+          ],
+        }),
+      ],
+      transactions: [],
+    }
+    const details = deriveRewardDetails(
+      dataset,
+      calculateRewards([], dataset.cards),
+    )
+    expect(details.cards[0]).toMatchObject({
+      statementCount: 1,
+      transactionCount: 0,
+      currencies: ['HKD', 'CNY'],
+      spend: [
+        { currency: 'HKD', minor: 0 },
+        { currency: 'CNY', minor: 0 },
+      ],
+    })
+    expect(details.cards[0].coverage).not.toBeNull()
+  })
   it('keeps currencies separate and excludes refunds, repayments and fees from purchases', () => {
     const dataset = createDemoDataset()
     const details = deriveRewardDetails(

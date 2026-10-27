@@ -16,6 +16,29 @@ const parse = (pages: Parameters<typeof parsePulseStatement>[0]) =>
   parsePulseStatement(pages, pulseFile, pulseIdentity())
 
 describe('HSBC Pulse English statement parser', () => {
+  it('accepts a combined Amount and currency header span while preserving posted-money column boundaries', () => {
+    const page = pulsePage({
+      closing: '10.00',
+      ledger: [purchase('SYNTHETIC STORE CN', '10.00')],
+    })
+    const rows = page.rows.map((row) =>
+      row.text.startsWith('Post date')
+        ? {
+            ...row,
+            spans: [
+              ...row.spans.filter(
+                (span) => !['Amount', '(CNY)'].includes(span.text),
+              ),
+              {
+                text: 'Amount (CNY)',
+                bounds: { x: 495, y: row.bounds.y, width: 60, height: 10 },
+              },
+            ],
+          }
+        : row,
+    )
+    expect(parse([{ ...page, rows }]).transactions[0].account.minor).toBe(1000)
+  })
   it('links different HKD and CNY account numbers to one card and keeps empty accounts', () => {
     const dataset = parse([
       pulsePage({ currency: 'HKD' }),

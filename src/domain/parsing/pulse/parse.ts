@@ -91,6 +91,10 @@ export function parsePulseStatement(
       id: opaque('card', number),
       lastFour: number.slice(-4),
       role: metadata.roles.get(number) ?? 'unknown',
+      statementIds: [file.id],
+      accountIds: [...metadata.accounts.values()]
+        .filter((account) => account.cardNumber === owner)
+        .map((account) => opaque('account', account.number)),
       ...(sharedOwners.has(owner)
         ? {
             pool: {

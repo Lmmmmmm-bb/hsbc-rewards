@@ -6,9 +6,13 @@ export const en = {
   'cashback.subtitle': 'HSBC PULSE UnionPay Dual Currency Diamond Card',
   'cashback.currentRules': 'Current-rule estimate',
   'cashback.total': 'Estimated RewardCash',
+  'cashback.knownHeading': 'Known RewardCash',
+  'cashback.knownHint':
+    'Confirmed portions only; other rewards remain pending. Displayed to two decimals; calculations retain fractional RC.',
+  'cashback.pendingRewards': 'Total still pending',
   'cashback.reference': 'Reference value in CNY',
   'cashback.totalHint':
-    'All three tiers, retaining fractional RC. Actual bank credits and carried remainders follow your statement.',
+    'All three tiers, displayed to two decimals; calculations retain fractional RC. Actual bank credits follow your statement.',
   'cashback.emptyHint':
     'Choose English PDF statements to see rewards, cards and allowances here.',
   'cashback.statements': 'Statements',
@@ -35,7 +39,7 @@ export const en = {
   'card.enrollmentAssumed':
     'Assumes registered with all 5X assigned to Spend Abroad.',
   'card.fxAssumed':
-    'Some Spend Abroad allowance usage uses reference FX for its HKD equivalent.',
+    'Some Spend Abroad allowance usage requires reference FX for its estimated HKD equivalent.',
   'rules.title': 'How rewards are calculated',
   'rules.subtitle':
     'Three independently assessed tiers can combine. Rates calculate RC; CNY value is converted separately.',
@@ -84,16 +88,31 @@ export const en = {
   'pdf.dropBody':
     'Drop multiple PDFs here or choose files. Unlock encrypted statements locally.',
   'pdf.stageHint':
-    'Local reading and unlocking are available. Reward recognition for real statements is still being connected; these files do not yet enter rewards estimates.',
+    'Supports text-based English HSBC Pulse statements; scans are not supported. Files are recognised locally and successful files are added together when the batch finishes.',
   'pdf.batchTitle': 'Your selected files',
   'pdf.batchHint':
     'Temporary results stay in memory. Cancelling clears this batch.',
   'pdf.cancelBatch': 'Cancel batch',
+  'pdf.closeBatch': 'Hide file status',
+  'pdf.committed':
+    'Added {files} statements and {transactions} new transactions.',
+  'pdf.committedHint': 'Hiding file status keeps the rewards already included.',
+  'pdf.emptyBatch':
+    'No new statements in this batch. Existing results are unchanged.',
+  'pdf.failed.session-changed':
+    'The session changed during processing. This batch was not added. Existing results are intact; select these files again.',
+  'pdf.failed.commit-failed':
+    'This batch could not be merged reliably and was not added. Existing results are intact; select files again to check.',
+  'pdf.parsedSummary': '{pages} pages · {transactions} transactions recognised',
+  'pdf.parsing': 'Identifying cards and transactions…',
   'pdf.batchProgress': 'Processed {completed} of {total} files',
   'pdf.status.queued': 'Queued',
   'pdf.status.reading': 'Reading',
   'pdf.status.locked': 'Password required',
   'pdf.status.extracted': 'Text extracted',
+  'pdf.status.parsing': 'Recognising',
+  'pdf.status.parsed': 'Recognised, awaiting batch',
+  'pdf.status.imported': 'Included in rewards',
   'pdf.status.error': 'Read failed',
   'pdf.status.duplicate': 'Duplicate skipped',
   'pdf.status.removed': 'Removed',
@@ -110,6 +129,10 @@ export const en = {
   'pdf.retry': 'Retry',
   'pdf.extractedSummary':
     '{pages} pages read · Transaction recognition is being connected; rewards not calculated',
+  'pdf.error.unsupported-statement':
+    'Not a supported English HSBC Pulse statement. It was not included in rewards.',
+  'pdf.error.invalid-statement':
+    'Statement structure or required fields are incomplete. It could not be recognised reliably and was not included in rewards.',
   'pdf.error.not-pdf': 'Choose a file with a PDF extension and type.',
   'pdf.error.empty-file': 'This file is empty. Choose another file.',
   'pdf.error.file-too-large': 'A file cannot exceed 25 MB.',
@@ -154,8 +177,18 @@ export const en = {
     'Only imported transactions consume caps; earlier usage starts at zero.',
   'rewards.enrollment':
     'Unknown enrollment assumes registration with all 5X allocated to Spend Abroad.',
+  'rewards.enrollmentPeriodIgnored':
+    'Historical estimates ignore personal enrollment dates; this does not establish actual bank entitlement.',
+  'rewards.periodInferred':
+    'The statement does not specify a full cycle. Its coverage start is inferred.',
+  'rewards.roleConflict':
+    'Card-role evidence conflicts; the card role remains unknown.',
+  'rewards.poolConflict':
+    'Shared-allowance evidence conflicts; allowances are estimated separately by card.',
   'rewards.pending': 'Pending calculation',
   'rewards.fxMissing': 'Conversion unavailable',
+  'rewards.fxUnavailableHint':
+    'Reference FX is unavailable. CNY values and some capped rewards are pending.',
   'privacy.title': 'Your files stay in your browser',
   'privacy.localTitle': 'Processing and storage',
   'privacy.localBody':

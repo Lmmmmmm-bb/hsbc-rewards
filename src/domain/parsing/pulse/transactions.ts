@@ -64,7 +64,7 @@ export function readPulseTransactions(
     if (currency !== account.currency)
       throw new DomainError('parse.conflicting-currency')
     const amountLabel = header.spans.find((span) =>
-      /^Amount$/i.test(span.text.trim()),
+      /^Amount(?:\s*\((?:HKD|CNY|RMB)\))?$/i.test(span.text.trim()),
     )
     if (!amountLabel) throw new DomainError('parse.missing-amount-column')
     const amountStart = amountLabel.bounds.x - 45

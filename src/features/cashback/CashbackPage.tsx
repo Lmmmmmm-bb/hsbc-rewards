@@ -39,7 +39,7 @@ export function CashbackPage({
   onPrivacy: () => void
 }) {
   const { t, money, number, rc, date } = useI18n()
-  const hasResults = session.dataset.transactions.length > 0
+  const hasResults = session.dataset.statements.length > 0
   const stats = [
     { label: 'cashback.statements', value: session.dataset.statements.length },
     { label: 'cashback.cards', value: session.dataset.cards.length },
@@ -102,27 +102,41 @@ export function CashbackPage({
             )}
           </Badge>
         </div>
-        <div className="grid items-start gap-5 lg:grid-cols-3">
-          <div className="space-y-4 lg:col-span-2">
+        <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-3">
+          <div className="min-w-0 space-y-4 lg:col-span-2">
             <Card data-reward-summary>
               <CardHeader>
                 <CardTitle>
-                  <h2>{t('cashback.total')}</h2>
+                  <h2>
+                    {t(
+                      hasResults && view.totalRewardMicroRc === null
+                        ? 'cashback.knownHeading'
+                        : 'cashback.total',
+                    )}
+                  </h2>
                 </CardTitle>
                 <CardDescription>
-                  {t(hasResults ? 'cashback.totalHint' : 'cashback.emptyHint')}
+                  {t(
+                    hasResults
+                      ? view.totalRewardMicroRc === null
+                        ? 'cashback.knownHint'
+                        : 'cashback.totalHint'
+                      : 'cashback.emptyHint',
+                  )}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="flex flex-wrap items-end justify-between gap-5">
                   <p
                     data-reward-total
-                    className="break-words text-5xl leading-none font-semibold tracking-tight text-primary tabular-nums sm:text-6xl"
+                    className="min-w-0 break-words text-4xl leading-none font-semibold tracking-tight text-primary tabular-nums sm:text-6xl"
                   >
                     {hasResults
-                      ? view.totalRewardMicroRc === null
-                        ? '—'
-                        : number(view.totalRewardMicroRc / 1_000_000, 6)
+                      ? number(
+                          (view.totalRewardMicroRc ?? view.knownRewardMicroRc) /
+                            1_000_000,
+                          2,
+                        )
                       : '—'}
                     <span className="ml-2 text-lg font-medium text-foreground">
                       RC
@@ -156,6 +170,11 @@ export function CashbackPage({
                     </div>
                   ))}
                 </dl>
+                {hasResults && view.totalRewardMicroRc === null && (
+                  <Badge variant="outline">
+                    {t('cashback.pendingRewards')}
+                  </Badge>
+                )}
                 <dl className="flex flex-wrap gap-x-8 gap-y-4">
                   {stats.map(({ label, value }) => (
                     <div key={label} className="space-y-1">
@@ -177,8 +196,15 @@ export function CashbackPage({
                   </div>
                 </dl>
                 <div className="space-y-1 text-muted-foreground">
+                  {hasResults && view.periodInferred && (
+                    <p>{t('rewards.periodInferred')}</p>
+                  )}
                   {hasResults && view.totalRewardMicroRc === null && (
-                    <p>{t('cashback.known', { amount: rc(view.knownRewardMicroRc) })}</p>
+                    <p>
+                      {t('cashback.known', {
+                        amount: rc(view.knownRewardMicroRc),
+                      })}
+                    </p>
                   )}
                   <p>{t('cashback.fxReference')}</p>
                   {hasResults && (
@@ -189,7 +215,7 @@ export function CashbackPage({
                               (session.fx.hkdToCnyPpm ?? 0) / 1_000_000,
                             ),
                           })
-                        : t('rewards.fxMissing')}
+                        : t('rewards.fxUnavailableHint')}
                     </p>
                   )}
                 </div>
@@ -208,7 +234,10 @@ export function CashbackPage({
               </Alert>
             )}
           </div>
-          <aside className="order-first space-y-4 lg:order-last" aria-label={t('import.dropTitle')}>
+          <aside
+            className="order-first min-w-0 space-y-4 lg:order-last"
+            aria-label={t('import.dropTitle')}
+          >
             <LocalPdfImport beforeRead={beforeRead} />
             <p className="flex items-start gap-2 text-xs leading-relaxed text-muted-foreground">
               <RiShieldCheckLine

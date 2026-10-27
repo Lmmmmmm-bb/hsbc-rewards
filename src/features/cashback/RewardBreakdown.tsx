@@ -87,6 +87,15 @@ export function RewardBreakdown({
                   </p>
                 </div>
                 <div className="space-y-1 text-muted-foreground">
+                  {card.assumptions.includes(
+                    'assumption.enrollment-period-ignored',
+                  ) && <p>{t('rewards.enrollmentPeriodIgnored')}</p>}
+                  {card.assumptions.includes('card.role-conflict') && (
+                    <p>{t('rewards.roleConflict')}</p>
+                  )}
+                  {card.assumptions.includes('card.pool-conflict') && (
+                    <p>{t('rewards.poolConflict')}</p>
+                  )}
                   {card.coverage && (
                     <p>
                       {t('card.coverage', {

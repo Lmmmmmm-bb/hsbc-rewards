@@ -4,9 +4,13 @@ export const zh = {
   'cashback.subtitle': 'HSBC PULSE 银联双币钻石卡',
   'cashback.currentRules': '按现行规则回算',
   'cashback.total': '本次预计 RewardCash',
+  'cashback.knownHeading': '已确定的 RewardCash',
+  'cashback.knownHint':
+    '当前可确认的奖励；其余仍待计算。展示保留两位小数，计算保留零头。',
+  'cashback.pendingRewards': '合计仍待计算',
   'cashback.reference': '人民币参考价值',
   'cashback.totalHint':
-    '三档奖励合计，保留小数精度；银行实际发放及零头结转以结单为准。',
+    '三档奖励合计；展示保留两位小数，计算保留零头。银行实际发放以结单为准。',
   'cashback.emptyHint': '选择英文 PDF 结单，系统会在这里汇总返现、卡片和额度。',
   'cashback.statements': '结单',
   'cashback.cards': '卡片',
@@ -28,7 +32,7 @@ export const zh = {
   'card.capPulse': 'HKD / CNY；MOP 按 HKD 等值',
   'card.sharedPool': '已确认共享额度；下方为共享池使用量，不要跨卡相加。',
   'card.enrollmentAssumed': '赏世界按已登记、5X 全部分配估算。',
-  'card.fxAssumed': '部分赏世界额度使用参考汇率估算港币等值。',
+  'card.fxAssumed': '部分赏世界额度需要参考汇率估算港币等值。',
   'rules.title': '返现怎么算',
   'rules.subtitle':
     '三档独立判断，符合条件可叠加。费率用于计算 RC，人民币价值另外折算。',
@@ -72,15 +76,28 @@ export const zh = {
   'pdf.choose': '选择 PDF 文件',
   'pdf.dropBody': '拖入多份 PDF，或选择文件。加密结单可在本机输入密码解锁。',
   'pdf.stageHint':
-    '当前支持本地读取与解锁，真实结单返现识别仍在接入；文件尚不参与返现计算。',
+    '支持 HSBC Pulse 英文文本结单；扫描件暂不支持。文件在本机识别，整批完成后统一计入返现。',
   'pdf.batchTitle': '本次选择的文件',
   'pdf.batchHint': '临时结果仅在内存中保留，取消会清空本批。',
   'pdf.cancelBatch': '取消本批',
+  'pdf.closeBatch': '收起文件状态',
+  'pdf.committed': '已加入 {files} 份结单，新增 {transactions} 笔交易。',
+  'pdf.committedHint': '收起文件状态不会移除已计入的返现。',
+  'pdf.emptyBatch': '本批没有新增结单，已有结果不受影响。',
+  'pdf.failed.session-changed':
+    '会话在处理期间发生变化，本批未加入。已保留现有结果，请重新选择本批文件。',
+  'pdf.failed.commit-failed':
+    '本批数据无法安全合并，尚未加入。已保留现有结果，请重新选择文件检查。',
+  'pdf.parsedSummary': '{pages} 页 · 已识别 {transactions} 笔交易',
+  'pdf.parsing': '正在识别卡片与交易…',
   'pdf.batchProgress': '本批已处理 {completed} / {total} 份文件',
   'pdf.status.queued': '排队中',
   'pdf.status.reading': '读取中',
   'pdf.status.locked': '需要密码',
   'pdf.status.extracted': '文本已提取',
+  'pdf.status.parsing': '识别中',
+  'pdf.status.parsed': '已识别，待整批加入',
+  'pdf.status.imported': '已加入返现',
   'pdf.status.error': '读取失败',
   'pdf.status.duplicate': '相同文件，已跳过',
   'pdf.status.removed': '已移除',
@@ -94,6 +111,10 @@ export const zh = {
   'pdf.unlock': '解锁此文件',
   'pdf.retry': '重试',
   'pdf.extractedSummary': '{pages} 页已读取 · 交易识别接入中，尚未计入返现',
+  'pdf.error.unsupported-statement':
+    '未识别为支持的 HSBC Pulse 英文结单，未计入返现。',
+  'pdf.error.invalid-statement':
+    '结单结构或关键字段不完整，无法可靠识别，未计入返现。',
   'pdf.error.not-pdf': '请选择扩展名和类型均为 PDF 的文件。',
   'pdf.error.empty-file': '文件内容为空，请重新选择。',
   'pdf.error.file-too-large': '单份文件不能超过 25 MB。',
@@ -130,8 +151,15 @@ export const zh = {
   'rewards.latest': '最新规则回套各历史年度 / 半年，标注“按现行规则回算”。',
   'rewards.imported': '仅已导入交易计额度；此前占用视为零。',
   'rewards.enrollment': '登记信息缺失时假设已登记且 5X 全部分配给赏世界。',
+  'rewards.enrollmentPeriodIgnored':
+    '历史回算忽略个人登记生效期，不能据此推断银行实际发放资格。',
+  'rewards.periodInferred': '结单未列出完整周期，覆盖起始日为推定值。',
+  'rewards.roleConflict': '主副卡身份的来源存在冲突，暂按未知卡片展示。',
+  'rewards.poolConflict': '额度共享证据存在冲突，暂按卡分别估算。',
   'rewards.pending': '待计算',
   'rewards.fxMissing': '待换算',
+  'rewards.fxUnavailableHint':
+    '缺少参考汇率，人民币折算与部分封顶奖励暂时待计算。',
   'privacy.title': '文件不离开浏览器',
   'privacy.localTitle': '处理与保存',
   'privacy.localBody':

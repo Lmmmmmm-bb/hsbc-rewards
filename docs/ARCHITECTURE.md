@@ -71,3 +71,5 @@ PDF API 依据：[官方示例](https://mozilla.github.io/pdf.js/examples/)、[�
 - UI 源码来自 shadcn 官方 Base UI registry 与 Mira 样式，仅展开官方样式占位符、适配路径别名和图标；版权文本保留在 docs/licenses/shadcn-ui.txt。
 - `CashbackPage` 负责单页编排；`LocalPdfImport` 只负责输入与批次状态；`RewardBreakdown` 与 `RewardRules` 分别负责收益解释和只读来源。数据计算仍由应用查询接口调用纯领域函数。
 - `application/session/reward-details.ts` 汇总卡片来源、覆盖期、消费笔数和分币种金额；逐档计奖金额直接读取引擎的封顶结果，不在 UI 重写资格或封顶逻辑。未知金额按币种传播 null，保留其他档已知结果；去重交易的多份来源不重复累计消费。
+- `ports/statements.ts` 定义文本页到结构化结单的异步端口，`adapters/statements` 仅准备本机不透明标识后调用纯模板；`application/import/merge.ts` 先完整合并 / 校验 / 去重，`commit.ts` 通过版本检查后仅写会话一次。
+- 批次控制器保管尚未提交的解析数据；读取 / 识别 / 待解锁结束前不发布业务会话。成功提交后清理临时数据，关闭状态列表不撤销已提交消费；取消和过期回调不触发提交。

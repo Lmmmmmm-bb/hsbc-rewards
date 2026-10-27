@@ -28,14 +28,25 @@ export function deriveRewardDetails(dataset: Dataset, rewards: RewardResult) {
         (row) =>
           row.classification.kind === 'purchase' && row.account.minor > 0,
       )
-      const sourceIds = new Set(
-        rows.flatMap((row) => row.sources.map((source) => source.statementId)),
-      )
+      const sourceIds = new Set([
+        ...(card.statementIds ?? []),
+        ...rows.flatMap((row) =>
+          row.sources.map((source) => source.statementId),
+        ),
+      ])
       const statements = dataset.statements.filter((statement) =>
         sourceIds.has(statement.id),
       )
-      const accounts = currencies.filter((currency) =>
-        rows.some((row) => row.account.currency === currency),
+      const accounts = currencies.filter(
+        (currency) =>
+          rows.some((row) => row.account.currency === currency) ||
+          statements.some((statement) =>
+            statement.accounts.some(
+              (account) =>
+                card.accountIds?.includes(account.id) &&
+                account.currency === currency,
+            ),
+          ),
       )
       const rewardRows = rows.map((row) => ({
         row,
@@ -86,7 +97,15 @@ export function deriveRewardDetails(dataset: Dataset, rewards: RewardResult) {
           }
         }),
         assumptions: [
-          ...new Set(rewardRows.flatMap(({ reward }) => reward.assumptions)),
+          ...new Set([
+            ...rewardRows.flatMap(({ reward }) => reward.assumptions),
+            ...statements.flatMap((statement) =>
+              statement.warnings
+                .filter((warning) => warning.code.startsWith('assumption.'))
+                .map((warning) => warning.code),
+            ),
+            ...(card.warnings ?? []).map((warning) => warning.code),
+          ]),
         ],
       }
     }),

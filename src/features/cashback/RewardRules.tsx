@@ -71,6 +71,7 @@ export function RewardRules({ rules }: { rules: WorkspaceView['rules'] }) {
                     ),
                   )}
                   <li>{t('rewards.fxEffect')}</li>
+                  <li>{t('rewards.enrollmentPeriodIgnored')}</li>
                   <li>{t('rewards.poolUnconfirmed')}</li>
                 </ul>
                 <div className="flex flex-wrap gap-2">

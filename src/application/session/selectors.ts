@@ -28,6 +28,11 @@ export function deriveWorkspace(session: SessionState) {
     rewards: rewardResult,
     rules: LATEST_RULES,
     coverage: details.coverage,
+    periodInferred: dataset.statements.some((statement) =>
+      statement.warnings.some(
+        (warning) => warning.code === 'statement.period-inferred',
+      ),
+    ),
     tierTotals: (['basic', 'abroad', 'pulse'] as const).map((tier) => {
       const amounts = rewardResult.cards.map((card) => card[`${tier}MicroRc`])
       return {
@@ -68,7 +73,9 @@ export function deriveWorkspace(session: SessionState) {
     ).length,
     reviewCount: dataset.transactions.filter((t) => t.confidence < 0.85).length,
     totalRewardMicroRc,
-    knownRewardMicroRc: addMinor(rewardResult.cards.map((card) => card.knownMicroRc)),
+    knownRewardMicroRc: addMinor(
+      rewardResult.cards.map((card) => card.knownMicroRc),
+    ),
     totalRewardCnyMinor:
       totalRewardMicroRc === null
         ? null
