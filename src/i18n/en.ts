@@ -132,7 +132,7 @@ export const en = {
   'pdf.error.unsupported-statement':
     'Not a supported English HSBC Pulse statement. It was not included in rewards.',
   'pdf.error.invalid-statement':
-    'Statement structure or required fields are incomplete. It could not be recognised reliably and was not included in rewards.',
+    'Statement structure, required fields or amounts are invalid. It could not be calculated reliably and was not included in rewards.',
   'pdf.error.not-pdf': 'Choose a file with a PDF extension and type.',
   'pdf.error.empty-file': 'This file is empty. Choose another file.',
   'pdf.error.file-too-large': 'A file cannot exceed 25 MB.',
@@ -184,6 +184,8 @@ export const en = {
   'fx.timeout': 'The rate request timed out. Try again later.',
   'fx.invalid':
     'The rate response was incomplete or had an invalid date. It was not used.',
+  'fx.calculation':
+    'This reference would exceed the safe calculation range. It was not used.',
   'fx.staleHint':
     'An older rate from this session is still used. A successful refresh recalculates all historical results.',
   'rewards.fxEffect':

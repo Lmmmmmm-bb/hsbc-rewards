@@ -72,6 +72,36 @@ function setup(
 }
 
 describe('parsed PDF batch pipeline', () => {
+  it('rejects an individually parseable but uncomputable amount without blocking other files', async () => {
+    const { store, controller } = setup({
+      async read(bytes) {
+        const overflow = new TextDecoder().decode(bytes).includes('overflow')
+        return {
+          pages: [
+            pulsePage({
+              closing: overflow ? '9000000000000.00' : '10.00',
+              ledger: [
+                purchase(
+                  'SYNTHETIC STORE CN',
+                  overflow ? '9000000000000.00' : '10.00',
+                ),
+              ],
+            }),
+          ],
+          dispose: async () => {},
+        }
+      },
+    })
+    controller.start([source('overflow.pdf'), source('valid.pdf')])
+    await vi.waitFor(() => expect(controller.getSnapshot().active).toBe(false))
+    expect(controller.getSnapshot().items.map((item) => item.status)).toEqual([
+      'error',
+      'imported',
+    ])
+    expect(controller.getSnapshot().items[0].problem).toBe('invalid-statement')
+    expect(store.getSnapshot().dataset.statements).toHaveLength(1)
+    expect(deriveWorkspace(store.getSnapshot()).expenseCount).toBe(1)
+  })
   it('imports structurally valid balance mismatches and keeps the warning in the rewards view', async () => {
     const { store, controller } = setup({
       read: async () => ({

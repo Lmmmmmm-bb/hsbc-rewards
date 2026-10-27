@@ -1,6 +1,7 @@
 import { FxError, type FxProblem, type FxProvider } from '@/ports/fx'
 import type { SessionStore } from '@/application/session/types'
 import { FX_MAX_AGE_MS, isFxStale } from './freshness'
+import { validateSessionDataset } from '@/application/session/validate'
 
 export interface FxRequestState {
   readonly status: 'idle' | 'loading' | 'ready' | 'error'
@@ -67,6 +68,11 @@ export function createFxController({
         retrievedAt,
         source: 'live' as const,
         stale: isFxStale({ ...quote, retrievedAt }, retrievedAt),
+      }
+      try {
+        validateSessionDataset(store.getSnapshot().dataset, fx)
+      } catch {
+        throw new FxError('calculation')
       }
       store.setFx(fx)
       publish({ status: 'ready', problem: null })

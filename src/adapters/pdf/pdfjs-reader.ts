@@ -28,6 +28,7 @@ async function read(bytes: ArrayBuffer, options: PdfReadOptions): Promise<LocalP
     standardFontDataUrl: 'bundled:/',
     wasmUrl: 'bundled:/',
     enableXfa: false,
+    useSystemFonts: false,
   })
   let candidate = options.password
   let disposed = false

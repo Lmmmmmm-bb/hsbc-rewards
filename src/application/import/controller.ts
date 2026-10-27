@@ -2,6 +2,7 @@ import { PdfReadError } from '@/ports/pdf'
 import type { PdfSource, PdfTextPage } from '@/ports/pdf'
 import type { Dataset } from '@/domain/model/types'
 import { DomainError } from '@/domain/model/errors'
+import { validateSessionDataset } from '@/application/session/validate'
 import {
   EMPTY_GATE,
   hasPdfHeader,
@@ -159,6 +160,7 @@ export function createPdfImportController(
           entry.abort.signal,
         )
         if (!current(batch, id, entry)) return
+        validateSessionDataset(dataset)
         entry.dataset = dataset
         entry.pages = undefined
         update(id, {

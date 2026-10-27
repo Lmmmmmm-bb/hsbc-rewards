@@ -51,6 +51,36 @@ function file(
 }
 
 describe('atomic statement merge', () => {
+  it('rejects a combined reward overflow before publishing and preserves the prior computable session', () => {
+    const localFile = (id: string): Dataset => {
+      const input = file(id)
+      const amount = 120000000000000
+      return {
+        ...input,
+        statements: input.statements.map((statement) => ({
+          ...statement,
+          accounts: statement.accounts.map((account) => ({
+            ...account,
+            currency: 'HKD',
+            closingMinor: amount,
+          })),
+        })),
+        transactions: input.transactions.map((row) => ({
+          ...row,
+          original: { currency: 'HKD', minor: amount },
+          account: { currency: 'HKD', minor: amount },
+          classification: { ...row.classification, region: 'HK' },
+        })),
+      }
+    }
+    const store = createMemorySession()
+    commitImportedBatch(store, [localFile('a')], store.getSnapshot().revision)
+    const previous = store.getSnapshot()
+    expect(() =>
+      commitImportedBatch(store, [localFile('b')], previous.revision),
+    ).toThrow('money.out-of-range')
+    expect(store.getSnapshot()).toBe(previous)
+  })
   it('merges repeated card identities and unions source metadata without changing input objects', () => {
     const prior = file(),
       next = file('b', '2026-11-20')

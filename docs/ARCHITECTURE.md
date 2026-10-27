@@ -75,5 +75,7 @@ PDF API 依据：[官方示例](https://mozilla.github.io/pdf.js/examples/)、[�
 - `RewardCaps`、`RewardReasons`、`RewardQuality` 只负责展示；已知奖励、原因计数和资格均来自应用查询，组件不重新计算。
 - `ports/fx.ts` 定义只含百万分率与参考日期的报价端口；`adapters/fx` 校验固定来源的响应并处理超时，不能接收结单参数。`application/fx` 管理自动获取、过期、旧值回退与取消；UI 只读快照并触发刷新。
 - `SessionState.revision` 是数据版本。`setFx` 发布新快照但不推进该版本；批次提交读取当时最新的 FX。清空 / 示例切换推进数据版本，同时 FX 控制器取消自身请求；两个异步流程分别防止迟到写回。
+- `application/session/validate.ts` 复用同一查询预检可计算性；解析后隔离单份异常，合并 / FX 发布前验证最终完整快照。安全整数的逐笔输入不被误认为安全的奖励或合计，失败不能先写入再等待 React 抛错。
+- 官方 Accordion 增加与本 preset Button 一致的可见键盘焦点修复，仅使用既有 token 的工具类；不新增业务 CSS。
 - `ports/statements.ts` 定义文本页到结构化结单的异步端口，`adapters/statements` 仅准备本机不透明标识后调用纯模板；`application/import/merge.ts` 先完整合并 / 校验 / 去重，`commit.ts` 通过版本检查后仅写会话一次。
 - 批次控制器保管尚未提交的解析数据；读取 / 识别 / 待解锁结束前不发布业务会话。成功提交后清理临时数据，关闭状态列表不撤销已提交消费；取消和过期回调不触发提交。

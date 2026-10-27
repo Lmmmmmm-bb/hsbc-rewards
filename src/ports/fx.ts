@@ -8,7 +8,12 @@ export interface FxProvider {
 }
 
 export type FxProblem =
-  'network' | 'http' | 'timeout' | 'invalid-response' | 'aborted'
+  | 'network'
+  | 'http'
+  | 'timeout'
+  | 'invalid-response'
+  | 'aborted'
+  | 'calculation'
 export class FxError extends Error {
   readonly code: FxProblem
   constructor(code: FxProblem) {

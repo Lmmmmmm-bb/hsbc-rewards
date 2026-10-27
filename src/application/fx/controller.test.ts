@@ -39,6 +39,56 @@ function setup() {
 afterEach(() => vi.useRealTimers())
 
 describe('session reference-rate lifecycle', () => {
+  it('keeps the last computable quote when a well-formed new quote would overflow the displayed result', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(timestamp)
+    const { store, latest, controller } = setup()
+    const amount = 1000000000000
+    store.replace(
+      {
+        cards: [testCard],
+        statements: [
+          statement({
+            accounts: [
+              {
+                id: 'account-cny',
+                currency: 'HKD',
+                openingMinor: 0,
+                closingMinor: amount,
+              },
+            ],
+          }),
+        ],
+        transactions: [
+          transaction({
+            original: { currency: 'HKD', minor: amount },
+            account: { currency: 'HKD', minor: amount },
+            classification: { ...transaction().classification, region: 'HK' },
+          }),
+        ],
+      },
+      'real',
+    )
+    await controller.refresh()
+    const before = deriveWorkspace(store.getSnapshot())
+    latest.mockResolvedValueOnce({
+      ...quote,
+      hkdToCnyPpm: Number.MAX_SAFE_INTEGER,
+    })
+    await controller.refresh()
+    expect(controller.getSnapshot()).toEqual({
+      status: 'error',
+      problem: 'calculation',
+    })
+    expect(store.getSnapshot().fx).toMatchObject({
+      hkdToCnyPpm: 850000,
+      source: 'cache',
+      stale: true,
+    })
+    expect(deriveWorkspace(store.getSnapshot()).totalRewardCnyMinor).toBe(
+      before.totalRewardCnyMinor,
+    )
+  })
   it('starts only after real import and never uses a demonstration quote for real data', async () => {
     vi.useFakeTimers()
     vi.setSystemTime(timestamp)

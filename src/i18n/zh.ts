@@ -114,7 +114,7 @@ export const zh = {
   'pdf.error.unsupported-statement':
     '未识别为支持的 HSBC Pulse 英文结单，未计入返现。',
   'pdf.error.invalid-statement':
-    '结单结构或关键字段不完整，无法可靠识别，未计入返现。',
+    '结单结构、关键字段或金额异常，无法可靠计算，未计入返现。',
   'pdf.error.not-pdf': '请选择扩展名和类型均为 PDF 的文件。',
   'pdf.error.empty-file': '文件内容为空，请重新选择。',
   'pdf.error.file-too-large': '单份文件不能超过 25 MB。',
@@ -158,6 +158,7 @@ export const zh = {
   'fx.failed': '未能获取参考汇率，可稍后重试。',
   'fx.timeout': '汇率请求超时，可稍后重试。',
   'fx.invalid': '汇率来源返回的数据不完整或日期异常，未采用本次结果。',
+  'fx.calculation': '此参考值超出本次结果的安全计算范围，未采用本次结果。',
   'fx.staleHint': '本次会话的旧值仍用于估算，刷新成功后统一重算所有历史结果。',
   'rewards.fxEffect':
     '参考汇率用于 CNY 展示及缺少银行港币等值的赏世界封顶估算，刷新可能改变附加奖励。',

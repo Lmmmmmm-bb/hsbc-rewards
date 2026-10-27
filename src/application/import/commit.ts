@@ -2,6 +2,7 @@ import type { Dataset } from '@/domain/model/types'
 import { DomainError } from '@/domain/model/errors'
 import type { SessionStore } from '@/application/session/types'
 import { mergeImportedDatasets } from './merge'
+import { validateSessionDataset } from '@/application/session/validate'
 
 export function commitImportedBatch(
   store: SessionStore,
@@ -19,11 +20,16 @@ export function commitImportedBatch(
   const fileCount = dataset.statements.length - previous.statements.length
   const transactionCount =
     dataset.transactions.length - previous.transactions.length
-  if (fileCount > 0)
+  if (fileCount > 0) {
+    validateSessionDataset(
+      dataset,
+      snapshot.mode === 'real' ? snapshot.fx : undefined,
+    )
     store.replace(
       dataset,
       'real',
       snapshot.mode === 'real' ? snapshot.fx : undefined,
     )
+  }
   return { files: fileCount, transactions: Math.max(0, transactionCount) }
 }

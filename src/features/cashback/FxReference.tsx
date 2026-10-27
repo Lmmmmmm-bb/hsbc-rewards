@@ -79,7 +79,9 @@ export function FxReference({
                 ? 'fx.timeout'
                 : request.problem === 'invalid-response'
                   ? 'fx.invalid'
-                  : 'fx.failed',
+                  : request.problem === 'calculation'
+                    ? 'fx.calculation'
+                    : 'fx.failed',
             )}
           </p>
         )}
