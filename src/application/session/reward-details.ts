@@ -82,6 +82,19 @@ export function deriveRewardDetails(dataset: Dataset, rewards: RewardResult) {
                     LATEST_RULES.maximumAbroadMultiplier)
           return {
             tier,
+            knownMicroRc: addMinor(
+              entries.map((entry) => entry.result.microRc ?? 0),
+            ),
+            reasons: [
+              ...new Set(entries.flatMap((entry) => entry.result.reasonCodes)),
+            ]
+              .sort()
+              .map((code) => ({
+                code,
+                count: entries.filter((entry) =>
+                  entry.result.reasonCodes.includes(code),
+                ).length,
+              })),
             rateBasisPoints: entries[0]?.result.rateBasisPoints ?? fallbackRate,
             eligibleSpend: accounts.map((currency) => {
               const amounts = entries

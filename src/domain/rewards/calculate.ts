@@ -120,7 +120,8 @@ export function calculateRewards(input: readonly Transaction[], cards: readonly 
     let tiers: TierReward[]
 
     if (!classification.eligible || classification.kind !== 'purchase' || transaction.account.minor <= 0) {
-      tiers = [emptyTier('basic', LATEST_RULES.basicRateBasisPoints, `transaction.${classification.kind}`), emptyTier('abroad', abroadRate, 'reward.transaction-excluded'), emptyTier('pulse', LATEST_RULES.pulse.rateBasisPoints, 'reward.transaction-excluded')]
+      const reason = classification.kind !== 'purchase' ? `transaction.${classification.kind}` : transaction.account.minor <= 0 ? 'transaction.non-positive' : classification.reasonCodes.find(code => code.startsWith('eligibility.')) ?? 'reward.transaction-excluded'
+      tiers = [emptyTier('basic', LATEST_RULES.basicRateBasisPoints, reason), emptyTier('abroad', abroadRate, reason), emptyTier('pulse', LATEST_RULES.pulse.rateBasisPoints, reason)]
     } else {
       const basic: TierReward = { tier: 'basic', rateBasisPoints: LATEST_RULES.basicRateBasisPoints, eligibleMinor: transaction.account.minor, cappedMinor: 0, microRc: microRcForSpend(transaction.account.minor, LATEST_RULES.basicRateBasisPoints), reasonCodes: ['reward.eligible'] }
       const originalKnown = transaction.original.currency !== UNKNOWN_CURRENCY
@@ -135,7 +136,7 @@ export function calculateRewards(input: readonly Transaction[], cards: readonly 
       const mobile = ['apple-pay', 'google-pay', 'samsung-pay', 'unionpay-qr'].includes(classification.paymentMethod)
       const pulse = pulseRegion && pulseCurrency && mobile
         ? cappedTier('pulse', transaction, card, LATEST_RULES.pulse.rateBasisPoints, assumptions)
-        : emptyTier('pulse', LATEST_RULES.pulse.rateBasisPoints, !pulseRegion ? 'reward.region-excluded' : !pulseCurrency ? 'reward.currency-excluded' : 'reward.payment-excluded')
+        : emptyTier('pulse', LATEST_RULES.pulse.rateBasisPoints, classification.region === null ? 'region.unknown' : !originalKnown ? 'currency.original-unknown' : !pulseRegion ? 'reward.region-excluded' : !pulseCurrency ? 'reward.currency-excluded' : 'reward.payment-excluded')
       tiers = [basic, abroad, pulse]
       if (!card.pool) assumptions.push('assumption.pool-unconfirmed')
     }

@@ -19,6 +19,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { LocalPdfImport } from '@/features/import/components/LocalPdfImport'
 import { RewardBreakdown } from './RewardBreakdown'
 import { RewardRules } from './RewardRules'
+import { RewardQualityAlerts } from './RewardQualityAlerts'
 import { useI18n } from '@/i18n/use-i18n'
 
 export function CashbackPage({
@@ -156,10 +157,10 @@ export function CashbackPage({
                   </div>
                 </div>
                 <dl className="grid gap-4 border-y py-5 sm:grid-cols-3">
-                  {view.tierTotals.map(({ tier, microRc }) => (
+                  {view.tierTotals.map(({ tier, microRc, knownMicroRc }) => (
                     <div
                       key={tier}
-                      className="flex items-baseline justify-between gap-3 sm:block sm:space-y-2"
+                      className="flex flex-wrap items-baseline justify-between gap-3 sm:block sm:space-y-2"
                     >
                       <dt className="text-muted-foreground">
                         {t(`rewards.${tier}`)}
@@ -167,6 +168,13 @@ export function CashbackPage({
                       <dd className="font-mono text-base tabular-nums">
                         {hasResults ? rc(microRc) : '— RC'}
                       </dd>
+                      {hasResults && microRc === null && knownMicroRc > 0 && (
+                        <dd className="basis-full text-right text-muted-foreground sm:text-left">
+                          {t('rewards.knownPortion', {
+                            amount: rc(knownMicroRc),
+                          })}
+                        </dd>
+                      )}
                     </div>
                   ))}
                 </dl>
@@ -233,6 +241,7 @@ export function CashbackPage({
                 </AlertDescription>
               </Alert>
             )}
+            {hasResults && <RewardQualityAlerts quality={view.quality} />}
           </div>
           <aside
             className="order-first min-w-0 space-y-4 lg:order-last"

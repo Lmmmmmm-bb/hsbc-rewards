@@ -15,8 +15,10 @@ import {
   EmptyTitle,
   EmptyDescription,
 } from '@/components/ui/empty'
-import { Progress } from '@/components/ui/progress'
 import { useI18n } from '@/i18n/use-i18n'
+import { RewardQuality } from './RewardQuality'
+import { RewardReasons } from './RewardReasons'
+import { RewardCaps } from './RewardCaps'
 
 export function RewardBreakdown({
   cards,
@@ -56,9 +58,13 @@ export function RewardBreakdown({
           </CardContent>
         </Card>
       ) : (
-        <div className="grid items-start gap-5 xl:grid-cols-2">
+        <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-2">
           {cards.map((card) => (
-            <Card key={card.cardId} data-reward-card>
+            <Card
+              key={card.cardId}
+              data-reward-card
+              className={cards.length === 1 ? 'xl:col-span-2' : undefined}
+            >
               <CardHeader className="border-b">
                 <CardDescription>{t('card.product')}</CardDescription>
                 <CardTitle>
@@ -72,11 +78,18 @@ export function RewardBreakdown({
                   </h3>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-5">
+              <CardContent className="@container/reward space-y-5">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <p className="font-mono text-2xl font-semibold tabular-nums">
-                    {rc(card.totalMicroRc)}
-                  </p>
+                  <div className="min-w-0 space-y-1">
+                    {card.totalMicroRc === null && (
+                      <p className="text-muted-foreground">
+                        {t('cashback.knownHeading')}
+                      </p>
+                    )}
+                    <p className="break-words font-mono text-2xl font-semibold tabular-nums">
+                      {rc(card.totalMicroRc ?? card.knownMicroRc)}
+                    </p>
+                  </div>
                   <p className="text-muted-foreground">
                     {t('cashback.reference')}{' '}
                     <span className="font-medium text-foreground tabular-nums">
@@ -122,9 +135,15 @@ export function RewardBreakdown({
                     ))}
                   </dd>
                 </dl>
+                <RewardQuality quality={card.quality} />
                 <div className="grid gap-5 sm:grid-cols-3">
                   {card.tiers.map(
-                    ({ tier, rateBasisPoints, eligibleSpend }) => (
+                    ({
+                      tier,
+                      rateBasisPoints,
+                      eligibleSpend,
+                      knownMicroRc,
+                    }) => (
                       <section
                         key={tier}
                         className="grid grid-cols-2 items-start gap-x-3 gap-y-2 border-b pb-4 last:border-b-0 sm:block sm:space-y-2 sm:border-0 sm:pb-0"
@@ -140,13 +159,23 @@ export function RewardBreakdown({
                         <p className="text-right font-mono text-base font-medium tabular-nums sm:text-left">
                           {rc(card[`${tier}MicroRc`])}
                         </p>
+                        {card[`${tier}MicroRc`] === null &&
+                          knownMicroRc > 0 && (
+                            <p className="col-span-2 text-muted-foreground">
+                              {t('rewards.knownPortion', {
+                                amount: rc(knownMicroRc),
+                              })}
+                            </p>
+                          )}
                         <p className="text-muted-foreground">
                           {t('card.eligible')}
                         </p>
                         <ul className="space-y-1 text-right font-mono text-muted-foreground tabular-nums sm:text-left">
                           {eligibleSpend.map((amount) => (
                             <li key={amount.currency}>
-                              {money(amount.minor, amount.currency)}
+                              {amount.minor === null
+                                ? `${amount.currency} · ${t('rewards.pending')}`
+                                : money(amount.minor, amount.currency)}
                             </li>
                           ))}
                         </ul>
@@ -154,70 +183,10 @@ export function RewardBreakdown({
                     ),
                   )}
                 </div>
-                <div className="space-y-4 border-t pt-4">
-                  <h4 className="font-medium">{t('card.caps')}</h4>
-                  {card.pools.length === 0 && (
-                    <p className="text-muted-foreground">
-                      {t('rewards.noPool')}
-                    </p>
-                  )}
-                  {card.pools.some((pool) => pool.shared) && (
-                    <p className="text-muted-foreground">
-                      {t('card.sharedPool')}
-                    </p>
-                  )}
-                  {card.pools.map((pool) => (
-                    <section key={pool.key} className="space-y-2">
-                      <div className="flex flex-wrap justify-between gap-2">
-                        <p className="font-medium">
-                          {t(`rewards.${pool.tier}`)}
-                        </p>
-                        <p className="text-muted-foreground">
-                          {t(
-                            pool.tier === 'abroad'
-                              ? 'rewards.annual'
-                              : 'rewards.half',
-                            { period: pool.period },
-                          )}
-                        </p>
-                      </div>
-                      <Progress
-                        value={
-                          pool.usedMinor === null
-                            ? null
-                            : (pool.usedMinor / pool.capMinor) * 100
-                        }
-                        aria-label={
-                          t(`rewards.${pool.tier}`) + ' ' + pool.period
-                        }
-                      />
-                      <div className="flex flex-wrap justify-between gap-x-3 gap-y-1 tabular-nums">
-                        <p>
-                          {t('rewards.used', {
-                            used:
-                              pool.usedMinor === null
-                                ? t('rewards.pending')
-                                : number(pool.usedMinor / 100),
-                            cap: number(pool.capMinor / 100),
-                          })}
-                        </p>
-                        <p>
-                          {t('rewards.remaining')}{' '}
-                          {pool.remainingMinor === null
-                            ? t('rewards.pending')
-                            : number(pool.remainingMinor / 100)}
-                        </p>
-                      </div>
-                      <p className="text-muted-foreground">
-                        {t(
-                          pool.tier === 'abroad'
-                            ? 'card.capAbroad'
-                            : 'card.capPulse',
-                        )}
-                      </p>
-                    </section>
-                  ))}
-                </div>
+                <RewardCaps pools={card.pools} />
+                {card.transactionCount > 0 && (
+                  <RewardReasons tiers={card.tiers} />
+                )}
                 <div className="space-y-1 text-muted-foreground">
                   {card.totalMicroRc === null && (
                     <p>

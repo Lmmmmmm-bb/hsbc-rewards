@@ -185,6 +185,47 @@ export const en = {
     'Card-role evidence conflicts; the card role remains unknown.',
   'rewards.poolConflict':
     'Shared-allowance evidence conflicts; allowances are estimated separately by card.',
+  'rewards.knownPortion': 'Known portion: {amount}',
+  'quality.title': 'Source balance checks',
+  'quality.matched': 'Matched checks: {count}',
+  'quality.mismatch': 'Mismatched checks: {count}',
+  'quality.unverified': 'Unverified checks: {count}',
+  'quality.excluded': 'Excluded transactions: {count}',
+  'quality.uncertain': 'Incomplete evidence: {count}',
+  'quality.duplicate': 'Possible duplicates: {count}',
+  'quality.noAccounts': 'No source sub-account balance checks are available.',
+  'quality.duplicateHint':
+    '{count} transactions may be duplicates. Without unique bank evidence, they remain included in the estimate.',
+  'quality.referenceHint':
+    '{count} transactions have conflicting bank references and remain included in the estimate.',
+  'quality.unverifiedHint':
+    '{count} source checks lack required balances. Read transactions remain included in the estimate.',
+  'quality.uncertainHint':
+    '{count} transactions lack complete region, original-currency or date evidence. Estimates use the evidence available.',
+  'reasons.title': 'Reward eligibility and exclusions',
+  'reasons.common': 'These transactions are excluded from all three tiers',
+  'reasons.count': '{count} transactions',
+  'reasons.empty': 'No spending meets this tier’s conditions.',
+  'reason.eligible': 'Eligible and rewarded',
+  'reason.cap': 'This tier’s spending cap applies',
+  'reason.fx': 'Reference FX is required to calculate the cap and rewards',
+  'reason.region': 'Reliable merchant-region evidence is missing',
+  'reason.currency':
+    'Original currency is unknown; extra eligibility is unconfirmed',
+  'reason.originalHkd': 'HKD original currency excludes Spend Abroad',
+  'reason.regionExcluded':
+    'Merchant region does not meet this tier’s conditions',
+  'reason.currencyExcluded': 'Original currency is neither CNY nor MOP',
+  'reason.payment': 'No qualifying mobile or QR payment marker was identified',
+  'reason.enrollment': 'Not enrolled or no Spend Abroad multiplier assigned',
+  'reason.refund': 'Refund ignored under the agreed estimate policy',
+  'reason.repayment': 'Repayment excluded',
+  'reason.fee': 'Fee excluded',
+  'reason.cash': 'Cash advance or cash instalment excluded',
+  'reason.credit': 'Credit excluded',
+  'reason.nonpositive': 'Zero amount or nonpositive spending',
+  'reason.excluded': 'Excluded reload, bill-payment or similar transaction',
+  'reason.other': 'This tier’s reward conditions are not met',
   'rewards.pending': 'Pending calculation',
   'rewards.fxMissing': 'Conversion unavailable',
   'rewards.fxUnavailableHint':
