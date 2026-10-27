@@ -2,6 +2,17 @@
 
 基于 Vite、React、TypeScript、Tailwind CSS 和 shadcn/ui 的项目，使用 shadcn preset `b4hZZS5Uu`。
 
+Pulse Rewards 在浏览器本地分析 HSBC Pulse 英文 PDF 结单，提供交易明细、子账户结欠核对和按现行规则回算的返现估算。当前正在分阶段实现，完成情况以验收记录为准。
+
+## 产品与开发文档
+
+- [产品基线与完整功能范围](docs/PRODUCT.md)
+- [架构、模块职责和数据不变量](docs/ARCHITECTURE.md)
+- [阶段拆分、验收门槛和进度](docs/DEVELOPMENT.md)
+- [变更记录](CHANGELOG.md)
+
+每个阶段验收通过并独立提交后，再进入下一阶段。原始结单、密码和真实交易原文不提交到仓库。
+
 ## 本地开发
 
 使用 Node.js 24（见 `.nvmrc`）和 pnpm 12.15.0。
