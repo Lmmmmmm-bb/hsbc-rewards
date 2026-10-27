@@ -20,6 +20,7 @@ export function Dialog({
   onClose,
   className,
   description,
+  returnFocus,
 }: {
   title: string
   children: ReactNode
@@ -27,6 +28,7 @@ export function Dialog({
   onClose: () => void
   className?: string
   description?: string
+  returnFocus?: () => HTMLElement | null
 }) {
   const { t } = useI18n()
   const descriptionId = useId()
@@ -38,6 +40,7 @@ export function Dialog({
       }}
     >
       <DialogContent
+        finalFocus={returnFocus}
         showCloseButton={false}
         aria-describedby={description ? descriptionId : undefined}
         className={cn(

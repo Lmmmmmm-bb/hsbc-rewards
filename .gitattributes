@@ -1,0 +1,2 @@
+# Preserve the original upstream brand asset bytes, including CRLF line endings.
+src/assets/hsbc/hongkong-hsbc-logo-en.svg binary

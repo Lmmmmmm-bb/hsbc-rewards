@@ -3,11 +3,13 @@ import type { WorkspaceView } from '@/application/session/selectors'
 import { buttonVariants } from '@/components/ui/button'
 import { InfoSection } from '@/components/workspace/InfoSection'
 import { useI18n } from '@/i18n/use-i18n'
+import { HsbcLogo } from '@/components/workspace/HsbcLogo'
 
 export function OfficialSources({ rules }: { rules: WorkspaceView['rules'] }) {
   const { t, date } = useI18n()
   return (
     <div className="space-y-4">
+      <HsbcLogo />
       <p className="text-sm text-muted-foreground">{t('rules.sourcesHint')}</p>
       <InfoSection title={t('rules.sourcesTitle')}>
         <ul className="space-y-4">

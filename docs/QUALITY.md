@@ -55,4 +55,4 @@ python3 scripts/create-synthetic-interactions.py /tmp/pulse-interactions
 node scripts/audit-reward-interactions.mjs /tmp/pulse-audit-tools/node_modules /tmp/pulse-interactions
 ```
 
-固定生成 22 份虚构文件，验证年度封顶跨半年、半年重置、跨年分组、五种宽度、刷新清空、当日缓存只请求一次、20 份列表限高及文本拖动不拦截。使用 Lighthouse 快照检查无障碍并生成合成截图；拖放通过测试浏览器文件拖放协议触发，不等同于访达原生拖放。脚本不接收真实结单文件入口。
+固定生成 22 份虚构文件，验证年度封顶跨半年、半年重置、跨年分组、五种宽度、刷新清空、当日缓存只请求一次、20 份文件在弹窗内滚动、固定头尾、淡入淡出 / 减少动态效果及文本拖动不拦截。使用 Lighthouse 快照检查无障碍并生成合成截图；拖放通过测试浏览器文件拖放协议触发，不等同于访达原生拖放。脚本不接收真实结单文件入口。

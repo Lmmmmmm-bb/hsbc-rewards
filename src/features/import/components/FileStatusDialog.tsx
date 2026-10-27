@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { usePdfImport } from '@/store/use-pdf-import'
 import { Dialog } from '@/components/workspace/Dialog'
 import { Button } from '@/components/ui/button'
@@ -14,6 +15,7 @@ export function FileStatusDialog({
   onCancel: () => void
 }) {
   const { batch, controller } = usePdfImport()
+  const cancelled = useRef(false)
   const { t, number } = useI18n()
   const items = batch.items.filter((item) => item.status !== 'removed')
   const committed = batch.outcome.status === 'committed'
@@ -28,11 +30,24 @@ export function FileStatusDialog({
       title={t('pdf.dialogTitle')}
       description={t('pdf.dialogHint')}
       onClose={onClose}
+      returnFocus={() =>
+        cancelled.current
+          ? document.getElementById('cashback-main')
+          : (document.querySelector<HTMLElement>(
+              '[data-file-status-trigger]',
+            ) ?? document.getElementById('cashback-main'))
+      }
       className="sm:max-w-3xl"
       footer={
         <>
           {batch.active && (
-            <Button variant="outline" onClick={onCancel}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                cancelled.current = true
+                onCancel()
+              }}
+            >
               {t('pdf.cancelBatch')}
             </Button>
           )}
@@ -47,7 +62,7 @@ export function FileStatusDialog({
           {(['imported', 'locked', 'error', 'duplicate'] as const).map(
             (status) => (
               <div key={status} className="space-y-1">
-                <dt className="text-xs text-muted-foreground">
+                <dt className="text-xs text-foreground">
                   {t(`pdf.summary.${status}`)}
                 </dt>
                 <dd className="text-xl font-semibold tabular-nums">

@@ -40,7 +40,11 @@ export function LocalPdfImport({
             onFiles(files)
           }}
         />
-        <Button onClick={() => input.current?.click()} disabled={batch.active}>
+        <Button
+          data-file-picker-trigger
+          onClick={() => input.current?.click()}
+          disabled={batch.active}
+        >
           <RiFileUploadLine aria-hidden="true" />
           {t('pdf.choose')}
         </Button>

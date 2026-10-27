@@ -61,6 +61,7 @@ export function ImportBatch({
         </ErrorNotice>
       )}
       <Button
+        data-file-status-trigger
         variant="outline"
         size="sm"
         className="w-full justify-between"
