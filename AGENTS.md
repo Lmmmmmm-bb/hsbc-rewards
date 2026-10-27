@@ -38,6 +38,8 @@ pnpm dev
 
 不要直接修改生成的 `dist/` 或 `node_modules/`。依赖变更使用 pnpm 并同步锁文件；不要为无关任务升级依赖。
 
+生产构建仅显式隔离 React 运行时与 PDF.js 引擎；PDF 引擎、Worker 和辅助资源继续按导入边界加载，不合并成首屏 vendor 包。Vercel 的 `vercel.json` 和 Netlify 的 `netlify.toml` 为 `/assets/` 下的内容哈希资源设置一年不可变缓存；HTML、favicon 和授权文本使用 `no-cache` 校验更新。压缩由托管平台处理，部署后检查实际响应头；本地 `vite preview` 不读取这两份平台配置。
+
 ## 模块与依赖方向
 
 技术栈为 React、TypeScript、Vite、Tailwind CSS、shadcn/ui 和 Vitest。`@/` 指向 `src/`。
@@ -108,6 +110,7 @@ pnpm dev
 - 共用合成数据放在 `src/test-support/fixtures/`，共用执行辅助函数放在 `src/test-support/helpers/`；只供一个测试文件使用的准备逻辑留在本文件。测试支持模块仅供单测导入，不进入业务代码；不要通过全局 setup 隐式注入数据或依赖。
 - UI 变更实际走查相关流程及 320 / 360 / 768 / 1280 / 1440 宽度，检查键盘与错误状态；不能把类型检查当作浏览器验收。
 - 涉及性能、无障碍或导入资源生命周期时，使用 `scripts/audit-workspace.mjs`、`scripts/benchmark-import.mjs` 或 `scripts/audit-reward-interactions.mjs` 验收，先检查对应脚本的入口参数。输出截图或页面快照的流程只使用合成数据。
+- 分包或缓存变更额外运行 `node scripts/audit-build.mjs /tmp/pulse-build-audit`；脚本在仓库外构建并以内存中的文案变更检查 React、PDF 引擎、Worker、字体和辅助资源是否保持哈希与内容稳定，同时检查 PDF 不进入首屏依赖图，不修改源码或常规 `dist/`。冷启动比较手机与桌面各至少三轮的中位数，另行核验重复访问及部署更新后的资源请求。
 - 真实样本验证可使用 `node scripts/verify-pulse-samples.mjs /path/to/statement.pdf`；仅在已获授权时运行，只记录匿名计数与状态。
 - 按变更同步 README 和本文中的相关说明；多阶段工作每个阶段完成验证并记录证据后再推进。
 - 当前已验收范围为 4 份真实样本与 Chromium；扩展样本、Safari / Firefox、OCR 仍待补齐。不要把历史测试数量、性能分数或样本结果当作本次验证结论。

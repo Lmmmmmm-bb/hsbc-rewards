@@ -1,0 +1,28 @@
+[build]
+  command = "pnpm build"
+  publish = "dist"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/favicon.svg"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/licenses/*"
+  [headers.values]
+    Cache-Control = "no-cache"
