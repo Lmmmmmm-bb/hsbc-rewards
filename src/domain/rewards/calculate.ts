@@ -2,6 +2,7 @@ import { DomainError } from '../model/errors'
 import type { Card, Transaction } from '../model/types'
 import { convertMinorInverse, microRcForSpend, proportionalMicroRc, safeInteger } from '../money/money'
 import { requireIsoDate, rewardPeriod } from '../normalization/dates'
+import { UNKNOWN_CURRENCY } from '../normalization/currency'
 import { LATEST_RULES } from './rules'
 
 export type RewardTier = 'basic' | 'abroad' | 'pulse'
@@ -122,12 +123,13 @@ export function calculateRewards(input: readonly Transaction[], cards: readonly 
       tiers = [emptyTier('basic', LATEST_RULES.basicRateBasisPoints, `transaction.${classification.kind}`), emptyTier('abroad', abroadRate, 'reward.transaction-excluded'), emptyTier('pulse', LATEST_RULES.pulse.rateBasisPoints, 'reward.transaction-excluded')]
     } else {
       const basic: TierReward = { tier: 'basic', rateBasisPoints: LATEST_RULES.basicRateBasisPoints, eligibleMinor: transaction.account.minor, cappedMinor: 0, microRc: microRcForSpend(transaction.account.minor, LATEST_RULES.basicRateBasisPoints), reasonCodes: ['reward.eligible'] }
-      const abroadCandidate = classification.region !== null && classification.region !== 'HK' && transaction.original.currency !== 'HKD'
+      const originalKnown = transaction.original.currency !== UNKNOWN_CURRENCY
+      const abroadCandidate = originalKnown && classification.region !== null && classification.region !== 'HK' && transaction.original.currency !== 'HKD'
       const abroadEnrolled = card.abroadEnrollment !== 'not-registered' && multiplier > 0
       if (abroadCandidate && abroadEnrolled && (!card.abroadEnrollment || card.abroadMultiplier === undefined)) assumptions.push('assumption.abroad-five-times')
       const abroad = abroadCandidate && abroadEnrolled
         ? cappedTier('abroad', transaction, card, abroadRate, assumptions)
-        : emptyTier('abroad', abroadRate, !abroadEnrolled ? 'reward.not-enrolled' : classification.region === null ? 'region.unknown' : transaction.original.currency === 'HKD' ? 'reward.original-hkd' : 'reward.region-excluded')
+        : emptyTier('abroad', abroadRate, !abroadEnrolled ? 'reward.not-enrolled' : !originalKnown ? 'currency.original-unknown' : classification.region === null ? 'region.unknown' : transaction.original.currency === 'HKD' ? 'reward.original-hkd' : 'reward.region-excluded')
       const pulseRegion = classification.region === 'CN' || classification.region === 'MO'
       const pulseCurrency = transaction.original.currency === 'CNY' || transaction.original.currency === 'MOP'
       const mobile = ['apple-pay', 'google-pay', 'samsung-pay', 'unionpay-qr'].includes(classification.paymentMethod)

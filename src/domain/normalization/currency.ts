@@ -1,6 +1,9 @@
 import { DomainError } from '../model/errors'
 import type { AccountCurrency } from '../model/types'
 
+/** ISO 4217's no-currency code represents missing original-currency evidence, never a foreign-currency qualification. */
+export const UNKNOWN_CURRENCY = 'XXX'
+
 const aliases: Readonly<Record<string, string>> = { RMB: 'CNY', 'CN¥': 'CNY', '￥': 'CNY', 'HK$': 'HKD', 'MOP$': 'MOP', 'JP¥': 'JPY' }
 
 export function normalizeCurrency(value: string): string {

@@ -26,7 +26,7 @@ export function identifyPayment(description: string): PaymentMethod {
 
 function kindOf(text: string, amountMinor: number): TransactionKind {
   if (/\b(?:REFUND|REVERSAL|REVERSED|MERCHANT CREDIT)\b/i.test(text)) return 'refund'
-  if (/\b(?:PAYMENT RECEIVED|PAYMENT THANK YOU|AUTOPAY|AUTO PAY|DIRECT DEBIT|REPAYMENT)\b/i.test(text)) return 'repayment'
+  if (/\b(?:PAYMENT RECEIVED|PAYMENT THANK YOU|AUTOPAY|AUTO PAY|DIRECT DEBIT|REPAYMENT)\b/i.test(text.replace(/\s*-\s*/g, ' '))) return 'repayment'
   if (/\b(?:FINANCE CHARGE|ANNUAL FEE|LATE (?:CHARGE|FEE)|INTEREST|REPLACEMENT FEE|SERVICE CHARGE)\b/i.test(text)) return 'fee'
   if (/\b(?:CASH ADVANCE|CASH (?:INSTALMENT|INSTALLMENT)|SPENDING (?:INSTALMENT|INSTALLMENT))\b/i.test(text)) return 'cash-advance'
   return amountMinor < 0 ? 'credit' : 'purchase'

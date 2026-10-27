@@ -12,6 +12,13 @@ export interface TextRow {
   readonly spans: readonly TextSpan[]
 }
 
+export interface TextPage {
+  readonly page: number
+  readonly width: number
+  readonly height: number
+  readonly rows: readonly TextRow[]
+}
+
 /** Keep coordinates and reading order independent of a particular PDF library. */
 export function groupTextRows(spans: readonly TextSpan[]): TextRow[] {
   const groups: { baseline: number; spans: TextSpan[] }[] = []

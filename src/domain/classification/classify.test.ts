@@ -22,4 +22,7 @@ describe('automatic transaction evidence', () => {
   it('does not lower confidence for a repayment just because geography is inapplicable', () => {
     expect(classifyTransaction(transaction({ description: 'PAYMENT RECEIVED', account: { currency: 'CNY', minor: -25000 } })).confidence).toBe(1)
   })
+  it('recognizes the bank payment separator without treating it as a generic credit', () => {
+    expect(classifyTransaction(transaction({ description: 'IFS PAYMENT - THANK YOU', account: { currency: 'HKD', minor: -80000 } })).classification.kind).toBe('repayment')
+  })
 })

@@ -1,4 +1,4 @@
-import type { TextRow } from '@/domain/parsing/text-layout'
+import type { TextPage } from '@/domain/parsing/text-layout'
 
 export interface PdfSource {
   readonly name: string
@@ -7,12 +7,7 @@ export interface PdfSource {
   arrayBuffer(): Promise<ArrayBuffer>
 }
 
-export interface PdfTextPage {
-  readonly page: number
-  readonly width: number
-  readonly height: number
-  readonly rows: readonly TextRow[]
-}
+export type PdfTextPage = TextPage
 
 export interface LocalPdfDocument {
   readonly pages: readonly PdfTextPage[]

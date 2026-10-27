@@ -53,6 +53,7 @@ export interface Statement {
   readonly id: string
   readonly fileHash: string
   readonly fileName: string
+  readonly fileSizeBytes?: number
   readonly date: string
   readonly period: { readonly from: string; readonly to: string }
   readonly pageCount: number
