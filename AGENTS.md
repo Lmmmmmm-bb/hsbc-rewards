@@ -102,7 +102,9 @@ pnpm dev
 
 标题、描述和分享元信息采用 i18n 文案。Open Graph 和 Twitter Card 仅由 `vite-plugin-open-graph` 生成，不重复注入。分享图使用 [OG Image Playground](https://og-playground.vercel.app/) 制作，PNG 统一为 1200 × 630，保存到 `public/social-card.png`；只保留最终图片，不提交一次性生成或验收文件。
 
-生产构建仅显式隔离 React 运行时与 PDF.js 引擎。PDF 引擎、Worker、辅助资源及弹窗内容保持按需加载，不合并为首屏 vendor 包。
+生产构建显式隔离 React 运行时、首屏 UI 稳定依赖与 PDF.js 引擎。UI 依赖组仅捕获静态首屏模块，不提前加载弹窗专用依赖。PDF 引擎、Worker、辅助资源及弹窗内容保持按需加载；PDF 辅助资源使用独立哈希文件，即使体积较小也不内联进读取模块。
+
+HTML 仅预加载首屏使用的 Inter Latin 可变字体和 Roboto Latin 500 WOFF2，使用源码资源路径交由 Vite 生成哈希 URL，并与 CSS 中的字体 URL 保持一致；保留 `font-display: swap`，不提前加载其余语言子集或 PDF 字体。
 
 ## 验证与交付
 
@@ -112,7 +114,7 @@ pnpm dev
 - 语言集成测试位于 `src/app/AppProviders.language.test.tsx`，在 Node 中显式创建并清理 JSDOM，不使用全局 DOM setup；覆盖 hydration、浏览器语言、手动选择，以及读取、解析、待解锁批次在切换后的提交和取消。JSDOM 仅用于测试，不进入应用包。
 - 重点覆盖金额、封顶、去重、缺失数据和异步取消；不写复刻实现的测试或无意义快照。共用合成数据放 `src/tests/fixtures/`，共用辅助函数放 `src/tests/helpers/`；单文件专用准备逻辑留在测试内，不用全局 setup 隐式注入依赖，业务代码不得导入测试支持模块。
 - UI 或样式变更实际走查相关流程及 320 / 360 / 768 / 1280 / 1440 宽度，检查错误状态、键盘和减少动态效果。涉及弹窗时覆盖慢速加载、关闭、取消、后台导入、失败重试、Escape、Tab 限制及关闭后的焦点恢复。浏览器产物仅用合成数据并存到仓库外。
-- 分包、缓存或 SEO 构建变更运行 `node scripts/audit-build.mjs /tmp/pulse-build-audit`。工具在仓库外构建，通过内存中的文案修改检查稳定资源哈希、PDF 与弹窗的懒加载边界；`scripts/audit-seo.mjs` 独立验证生成的预渲染 HTML、搜索元信息与分享图。验证不修改源码或常规 `dist/`。性能比较使用手机、桌面各至少三轮冷启动的中位数；重复访问和部署更新后的请求另行核验。
+- 分包、缓存或 SEO 构建变更运行 `node scripts/audit-build.mjs /tmp/pulse-build-audit`。工具在仓库外构建，通过内存中的文案修改检查 React / UI / PDF 稳定资源哈希、PDF 与弹窗的懒加载边界、首屏模块的静态可达性及 PDF 辅助资源外置；`scripts/audit-seo.mjs` 独立验证生成的预渲染 HTML、搜索元信息与分享图。验证不修改源码或常规 `dist/`。性能比较使用手机、桌面各至少三轮冷启动的中位数；重复访问和部署更新后的请求另行核验。
 - 结单解析验证入口为 `node scripts/verify-pulse-samples.mjs /path/to/statement.pdf`，只输出匿名计数及状态；读取真实样本前须已有明确授权。
 - 不保留只服务一次验收的生成器、报告或浏览器脚本；可复用的检查才进入仓库，且不进入应用包。
 - 按变更同步用户文档和本文。交付说明实际改动、已执行验证及未验证项；不要把历史样本、浏览器覆盖或性能结果当作本次结论，也不要将类型检查视为浏览器验收。

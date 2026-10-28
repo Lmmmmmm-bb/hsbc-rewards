@@ -29,6 +29,13 @@ export default defineConfig({
               test: /[\\/]node_modules[\\/]pdfjs-dist[\\/]build[\\/]pdf\.mjs$/,
               priority: 10,
             },
+            {
+              // Cache stable UI code without promoting dialog-only dependencies.
+              name: 'ui-runtime',
+              test: /[\\/]node_modules[\\/](?:motion|framer-motion|motion-dom|motion-utils|@base-ui[\\/](?:react|utils)|@floating-ui[\\/][^\\/]+|cn|clsx|class-variance-authority|use-sync-external-store)[\\/]/,
+              tags: ['$initial'],
+              priority: 5,
+            },
           ],
         },
       },

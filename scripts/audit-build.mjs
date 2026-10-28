@@ -23,12 +23,25 @@ const probeHeading = `${heading}（缓存验收）`
 
 async function snapshot(name, probe = false) {
   let transformed = false
+  const staticModules = new Set()
   const result = await build({
     root,
     configFile: join(root, 'vite.config.ts'),
     logLevel: 'warn',
     build: { outDir: join(work, name), emptyOutDir: true, reportCompressedSize: false },
-    plugins: probe ? [{
+    plugins: [{
+      name: 'cache-audit-static-graph',
+      generateBundle(_options, bundle) {
+        const entry = Object.values(bundle).find(item => item.type === 'chunk' && item.isEntry)
+        assert.ok(entry?.facadeModuleId, 'The browser entry must have a source module.')
+        const visit = (id) => {
+          if (staticModules.has(id)) return
+          staticModules.add(id)
+          this.getModuleInfo(id)?.importedIds.forEach(visit)
+        }
+        visit(entry.facadeModuleId)
+      },
+    }, ...(probe ? [{
       name: 'cache-audit-copy-edit',
       enforce: 'pre',
       transform(code, id) {
@@ -38,7 +51,7 @@ async function snapshot(name, probe = false) {
         transformed = true
         return { code: changed, map: null }
       },
-    }] : [],
+    }] : [])],
   })
   assert.ok(!probe || transformed, 'The copy probe must run.')
   assert.ok(!Array.isArray(result) && 'output' in result)
@@ -56,20 +69,34 @@ async function snapshot(name, probe = false) {
   }
   visit(entry.fileName)
   const runtime = chunks.find(chunk => chunk.name === 'react-runtime')
+  const ui = chunks.find(chunk => chunk.name === 'ui-runtime')
   const engine = chunks.find(chunk => chunk.name === 'pdf-engine')
+  const reader = chunks.find(chunk => chunk.name === 'pdfjs-reader')
   const dialogs = chunks.find(chunk => chunk.name === 'DialogContents')
-  assert.ok(runtime && engine, 'Both stable dependency chunks must exist.')
+  assert.ok(runtime && ui && engine, 'All stable dependency chunks must exist.')
+  assert.ok(reader && !initial.has(reader.fileName), 'The PDF reader must stay lazy.')
   assert.ok(dialogs && !initial.has(dialogs.fileName), 'Dialog content must stay lazy.')
   assert.ok(initial.has(runtime.fileName), 'React must be available on initial navigation.')
+  assert.ok(initial.has(ui.fileName), 'Shared UI code must be available on initial navigation.')
   assert.ok(!initial.has(engine.fileName), 'PDF.js must stay lazy.')
   assert.equal(engine.imports.length, 0, 'The PDF engine must not depend on the app entry.')
-  for (const chunk of [runtime, engine]) {
+  for (const chunk of [runtime, ui, engine]) {
     assert.ok(!Object.keys(chunk.modules).some(id => id.startsWith(join(root, 'src/'))), `${chunk.name} must contain no business modules.`)
   }
   for (const file of initial) {
+    for (const id of Object.keys(byFile.get(file).modules)) {
+      if (id === '\0rolldown/runtime.js') continue
+      assert.ok(staticModules.has(id), `A lazy-only module must not be promoted into the initial graph: ${id}`)
+    }
     assert.ok(!Object.keys(byFile.get(file).modules).some(id => /[\\/]pdfjs-dist[\\/]/.test(id)), 'No PDF.js module may enter the initial graph.')
     assert.ok(!Object.keys(byFile.get(file).modules).some(id => /[\\/](?:PrivacyDetails|RewardRules|FileStatusList|FileStatusRow|PasswordForm)\.tsx$/.test(id)), 'Deferred dialog bodies must not enter the initial graph.')
   }
+  const pdfResources = result.output.filter(item => item.type === 'asset' && item.originalFileNames.some(name => /[\\/]pdfjs-dist[\\/](?:cmaps|standard_fonts|wasm)[\\/]/.test(name)))
+  assert.ok(pdfResources.some(item => item.fileName.endsWith('.bcmap')), 'CMaps must be emitted as independent resources.')
+  for (const id of Object.keys(reader.modules).filter(id => /[\\/]pdfjs-dist[\\/](?:cmaps|standard_fonts|wasm)[\\/]/.test(id))) {
+    assert.ok(id.includes('no-inline'), 'All PDF support URLs must explicitly opt out of inlining.')
+  }
+  assert.ok(!/["'`]data:/.test(reader.code), 'The PDF reader must not embed support data URLs.')
   for (const chunk of chunks) {
     assert.ok(!Object.keys(chunk.modules).some(id => /[\\/]app[\\/]prerender\.tsx$|[\\/]react-dom[\\/].*server/.test(id)), 'Build-time rendering must not enter any browser chunk.')
   }
@@ -92,7 +119,7 @@ async function snapshot(name, probe = false) {
   return {
     directory: join(work, name),
     entry: entry.fileName,
-    stable: { react: runtime.fileName, pdf: engine.fileName },
+    stable: { react: runtime.fileName, ui: ui.fileName, pdf: engine.fileName },
     initial: [...initial],
     initialBytes: [...initial].reduce((sum, file) => sum + Buffer.byteLength(byFile.get(file).code), 0),
     initialGzipBytes: [...initial].reduce((sum, file) => sum + gzipSync(byFile.get(file).code).length, 0),
@@ -112,7 +139,7 @@ async function snapshot(name, probe = false) {
 const baseline = await snapshot('baseline')
 const probe = await snapshot('copy-edit', true)
 assert.notEqual(baseline.entry, probe.entry, 'The changed copy must invalidate the business entry.')
-for (const kind of ['react', 'pdf']) {
+for (const kind of ['react', 'ui', 'pdf']) {
   assert.equal(baseline.stable[kind], probe.stable[kind], `${kind} must retain its content hash.`)
   const file = baseline.stable[kind]
   assert.deepEqual(baseline.files[file], probe.files[file], `${kind} must remain byte-identical.`)
@@ -122,7 +149,7 @@ const resources = Object.keys(baseline.files).filter(file => file.startsWith('as
 for (const file of resources) assert.deepEqual(baseline.files[file], probe.files[file], `${file} must remain byte-identical.`)
 const report = {
   probe: 'In-memory edit to cashback.emptyTitle in zh.ts; source files are untouched.',
-  checks: { pdfStaysLazy: true, dialogsStayLazy: true, prerenderStaysBuildOnly: true, staticSeo: true, stableDependenciesUnchanged: true, unchangedResources: resources.length },
+  checks: { pdfStaysLazy: true, dialogsStayLazy: true, noLazyModulesPromoted: true, pdfSupportDataExternal: true, prerenderStaysBuildOnly: true, staticSeo: true, stableDependenciesUnchanged: true, unchangedResources: resources.length },
   baseline,
   copyEdit: { entry: probe.entry, stable: probe.stable, directory: probe.directory },
 }

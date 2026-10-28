@@ -38,6 +38,25 @@ export async function verifySeoBuild(directory, { indexable, expectedHeading }) 
   }
 
   assert.ok(!html.includes('<!--app-html-->') && !/\b(?:src|href)="\/src\//.test(html), 'Pre-rendered HTML must contain only built asset URLs.')
+  const fontPreloads = [...html.matchAll(/<link\b[^>]*rel="preload"[^>]*>/g)].map(([tag]) => {
+    assert.match(tag, /as="font"/)
+    assert.match(tag, /type="font\/woff2"/)
+    assert.match(tag, /\bcrossorigin(?:\s|=|>)/)
+    const url = tag.match(/href="(\/assets\/[^"]+\.woff2)"/)?.[1]
+    assert.ok(url, 'Preloaded fonts must use built asset URLs.')
+    return url
+  })
+  assert.equal(fontPreloads.length, 2, 'Only the two visible Latin fonts should be preloaded.')
+  assert.equal(new Set(fontPreloads).size, 2, 'A font must not be preloaded twice.')
+  for (const family of ['inter-latin-wght-normal-', 'roboto-latin-500-normal-']) {
+    assert.ok(fontPreloads.some(url => url.startsWith(`/assets/${family}`)), 'Preload the exact font subsets used on the initial page.')
+  }
+  const stylesheets = [...html.matchAll(/<link\b[^>]*rel="stylesheet"[^>]*href="(\/assets\/[^"]+\.css)"[^>]*>/g)]
+  const css = (await Promise.all(stylesheets.map(([, url]) => readFile(join(directory, url), 'utf8')))).join('\n')
+  for (const url of fontPreloads) {
+    await readFile(join(directory, url))
+    assert.ok(css.includes(url), 'A preloaded font must reuse its stylesheet URL.')
+  }
   const structuredData = JSON.parse(html.match(/<script type="application\/ld\+json">([^]*?)<\/script>/)?.[1] ?? '')
   assert.equal(structuredData['@graph'].find(item => item['@type'] === 'WebSite').url, SITE_URL)
   const robots = await readFile(join(directory, 'robots.txt'), 'utf8')

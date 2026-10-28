@@ -4,7 +4,8 @@ const assetUrls = import.meta.glob<string>(
     '/node_modules/pdfjs-dist/standard_fonts/*.{pfb,ttf}',
     '/node_modules/pdfjs-dist/wasm/*.{wasm,js}',
   ],
-  { query: '?url', import: 'default', eager: true },
+  // Keep even small support files independently cached and fetched only when used.
+  { query: '?url&no-inline', import: 'default', eager: true },
 )
 
 /** Only bundled allowlisted resources, never a URL or filename supplied by a PDF. */
