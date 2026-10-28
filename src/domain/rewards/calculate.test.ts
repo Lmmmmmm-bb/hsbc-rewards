@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { classifyTransaction } from '@/domain/classification/classify'
-import { testCard, transaction } from '@/test-support/fixtures/dataset'
+import { testCard, transaction } from '@/tests/fixtures/dataset'
 import { calculateRewards } from './calculate'
 import { LATEST_RULES } from './rules'
 

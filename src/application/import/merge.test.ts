@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Dataset } from '@/domain/model/types'
-import { importedFile as file } from '@/test-support/fixtures/imported-file'
-import { testCard } from '@/test-support/fixtures/dataset'
+import { importedFile as file } from '@/tests/fixtures/imported-file'
+import { testCard } from '@/tests/fixtures/dataset'
 import { mergeImportedDatasets } from './merge'
 
 const empty: Dataset = { cards: [], statements: [], transactions: [] }

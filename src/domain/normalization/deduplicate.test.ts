@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { transaction } from '@/test-support/fixtures/dataset'
+import { transaction } from '@/tests/fixtures/dataset'
 import { deduplicateTransactions } from './deduplicate'
 
 describe('unique-evidence transaction merging', () => {

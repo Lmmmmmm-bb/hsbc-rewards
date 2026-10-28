@@ -45,7 +45,7 @@ pnpm dev
 | `src/features/` | 导入与返现业务界面 |
 | `src/components/ui/`、`src/components/workspace/` | 通用控件、布局和共用展示组件 |
 | `src/i18n/`、`src/index.css` | 中英文消息、格式化及全局主题 |
-| `src/test-support/` | 单测共用的合成数据与执行辅助函数 |
+| `src/tests/` | 单测共用的合成数据与执行辅助函数 |
 | `scripts/` | 显式运行的构建与结单解析验证工具 |
 
 领域层不依赖 React、浏览器 API、PDF.js、网络或存储。应用层通过端口调用适配器；UI 通过应用查询和 store 读取结果，不直接导入 PDF 引擎或汇率请求实现。资格、金额、额度和质量统计在领域层或应用查询中计算，组件只展示。错误及原因使用稳定代码，用户文案集中在 i18n。
@@ -97,7 +97,7 @@ pnpm dev
 代码或依赖变更完成后运行 `pnpm typecheck`、`pnpm lint`、`pnpm test`、`pnpm build` 和 `git diff --check`。仅文档变更检查事实、链接和 diff。
 
 - Vitest 在 Node 环境下仅收集 `src/**/*.test.{ts,tsx}`，显式从 `vitest` 导入 API。测试与模块相邻，按 `<module>.test.ts` 或 `<module>.<scenario>.test.ts` 命名；跨模块用例归到主要验证入口。
-- 重点覆盖金额、封顶、去重、缺失数据和异步取消；不写复刻实现的测试或无意义快照。共用合成数据放 `src/test-support/fixtures/`，共用辅助函数放 `src/test-support/helpers/`；单文件专用准备逻辑留在测试内，不用全局 setup 隐式注入依赖，业务代码不得导入测试支持模块。
+- 重点覆盖金额、封顶、去重、缺失数据和异步取消；不写复刻实现的测试或无意义快照。共用合成数据放 `src/tests/fixtures/`，共用辅助函数放 `src/tests/helpers/`；单文件专用准备逻辑留在测试内，不用全局 setup 隐式注入依赖，业务代码不得导入测试支持模块。
 - UI 或样式变更实际走查相关流程及 320 / 360 / 768 / 1280 / 1440 宽度，检查错误状态、键盘和减少动态效果。涉及弹窗时覆盖慢速加载、关闭、取消、后台导入、失败重试、Escape、Tab 限制及关闭后的焦点恢复。浏览器产物仅用合成数据并存到仓库外。
 - 分包或缓存变更运行 `node scripts/audit-build.mjs /tmp/pulse-build-audit`。工具在仓库外构建，通过内存中的文案修改检查稳定资源哈希及 PDF、弹窗的懒加载边界，不修改源码或常规 `dist/`。性能比较使用手机、桌面各至少三轮冷启动的中位数；重复访问和部署更新后的请求另行核验。
 - 结单解析验证入口为 `node scripts/verify-pulse-samples.mjs /path/to/statement.pdf`，只输出匿名计数及状态；读取真实样本前须已有明确授权。

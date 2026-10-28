@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Dataset } from '@/domain/model/types'
-import { statement, testCard, transaction } from '@/test-support/fixtures/dataset'
-import { rewardContext } from '@/test-support/helpers/rewards'
+import { statement, testCard, transaction } from '@/tests/fixtures/dataset'
+import { rewardContext } from '@/tests/helpers/rewards'
 import { deriveRewardPoolViews } from './reward-pools'
 
 function inspect(dataset: Dataset, rate: number | null = 900000) {

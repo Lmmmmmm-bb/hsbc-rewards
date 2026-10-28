@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { PdfReadError } from '@/ports/pdf'
 import type { LocalPdfDocument, PdfReader } from '@/ports/pdf'
-import { deferred } from '@/test-support/helpers/deferred'
+import { deferred } from '@/tests/helpers/deferred'
 import { createPdfImportController } from './controller'
 
 const source = (name = 'synthetic.pdf', body = '%PDF-synthetic') => {

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { Dataset } from '@/domain/model/types'
-import { importedFile as file } from '@/test-support/fixtures/imported-file'
+import { importedFile as file } from '@/tests/fixtures/imported-file'
 import { createMemorySession } from '@/store/memory-session'
 import { commitImportedBatch } from './commit'
 
