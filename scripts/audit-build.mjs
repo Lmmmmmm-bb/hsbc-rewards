@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url'
 import { gzipSync } from 'node:zlib'
 import { build } from 'vite'
 import { verifySeoBuild } from './audit-seo.mjs'
+import { verifyAgentBuild } from './audit-agents.mjs'
 import { zh } from '../src/i18n/zh.ts'
 
 // Explicit build/cache audit. The copy edit exists only in a build transform;
@@ -73,9 +74,11 @@ async function snapshot(name, probe = false) {
   const engine = chunks.find(chunk => chunk.name === 'pdf-engine')
   const reader = chunks.find(chunk => chunk.name === 'pdfjs-reader')
   const dialogs = chunks.find(chunk => chunk.name === 'DialogContents')
+  const agentService = chunks.find(chunk => Object.keys(chunk.modules).includes(join(root, 'src/application/agent/service.ts')))
   assert.ok(runtime && ui && engine, 'All stable dependency chunks must exist.')
   assert.ok(reader && !initial.has(reader.fileName), 'The PDF reader must stay lazy.')
   assert.ok(dialogs && !initial.has(dialogs.fileName), 'Dialog content must stay lazy.')
+  assert.ok(agentService && !initial.has(agentService.fileName), 'Agent result queries must load only when native WebMCP is available.')
   assert.ok(initial.has(runtime.fileName), 'React must be available on initial navigation.')
   assert.ok(initial.has(ui.fileName), 'Shared UI code must be available on initial navigation.')
   assert.ok(!initial.has(engine.fileName), 'PDF.js must stay lazy.')
@@ -99,11 +102,13 @@ async function snapshot(name, probe = false) {
   assert.ok(!/["'`]data:/.test(reader.code), 'The PDF reader must not embed support data URLs.')
   for (const chunk of chunks) {
     assert.ok(!Object.keys(chunk.modules).some(id => /[\\/]app[\\/]prerender\.tsx$|[\\/]react-dom[\\/].*server/.test(id)), 'Build-time rendering must not enter any browser chunk.')
+    assert.ok(!Object.keys(chunk.modules).some(id => /[\\/]app[\\/]agent-documents\.ts$|[\\/]scripts[\\/]/.test(id)), 'Public-document rendering and verification must stay outside browser chunks.')
   }
   await verifySeoBuild(join(work, name), {
     indexable: process.env.VERCEL_ENV !== 'preview',
     expectedHeading: probe ? probeHeading : heading,
   })
+  await verifyAgentBuild(join(work, name), { originTrialToken: process.env.WEBMCP_ORIGIN_TRIAL_TOKEN })
   const files = {}
   async function collect(folder) {
     for (const item of await readdir(folder, { withFileTypes: true })) {
@@ -147,9 +152,10 @@ for (const kind of ['react', 'ui', 'pdf']) {
 const chunkFiles = new Set(baseline.chunks.map(chunk => chunk.file))
 const resources = Object.keys(baseline.files).filter(file => file.startsWith('assets/') && !chunkFiles.has(file))
 for (const file of resources) assert.deepEqual(baseline.files[file], probe.files[file], `${file} must remain byte-identical.`)
+for (const file of ['llms.txt', 'webmcp.txt']) assert.deepEqual(baseline.files[file], probe.files[file], `${file} must be independent of page copy and session state.`)
 const report = {
   probe: 'In-memory edit to cashback.emptyTitle in zh.ts; source files are untouched.',
-  checks: { pdfStaysLazy: true, dialogsStayLazy: true, noLazyModulesPromoted: true, pdfSupportDataExternal: true, prerenderStaysBuildOnly: true, staticSeo: true, stableDependenciesUnchanged: true, unchangedResources: resources.length },
+  checks: { pdfStaysLazy: true, dialogsStayLazy: true, agentServiceStaysLazy: true, noLazyModulesPromoted: true, pdfSupportDataExternal: true, prerenderStaysBuildOnly: true, staticSeo: true, agentDocumentsMatchContract: true, stableDependenciesUnchanged: true, unchangedResources: resources.length },
   baseline,
   copyEdit: { entry: probe.entry, stable: probe.stable, directory: probe.directory },
 }

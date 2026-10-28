@@ -1,11 +1,6 @@
-import type { MessageKey } from '@/i18n/zh'
-import type { CardRewardInput, SummaryInput } from './reward-queries'
-import type { TransactionInput } from './transaction-query'
-import type { QualityInput } from './quality-query'
-
-export const AGENT_SCHEMA_VERSION = 1
-export const AGENT_DOCUMENT_PATHS = { overview: '/llms.txt', guide: '/webmcp.txt' } as const
-export const AGENT_FILE_INPUT_SELECTOR = '[data-agent-pdf-input="primary"]'
+import type { MessageKey } from '../../i18n/zh.ts'
+import { AGENT_PAGE_LIMIT } from './contract.ts'
+export { AGENT_SCHEMA_VERSION, AGENT_DOCUMENT_PATHS, AGENT_FILE_INPUT_SELECTOR } from './contract.ts'
 
 export interface FieldSchema {
   readonly type: 'string' | 'integer' | 'boolean' | 'array'
@@ -34,7 +29,7 @@ export interface AgentToolDefinition {
 
 const ref = { type: 'string', minLength: 1, maxLength: 160 } as const
 const periodId = { type: 'string', pattern: '^(all|[0-9]{4}-H[12])$' } as const
-const page = { cursor: ref, limit: { type: 'integer', minimum: 1, maximum: 20 } as const }
+const page = { cursor: ref, limit: { type: 'integer', minimum: 1, maximum: AGENT_PAGE_LIMIT } as const }
 const scope = { periodId, cardRef: ref }
 function tool(descriptionKey: AgentToolDefinition['descriptionKey'], properties: ToolInputSchema['properties'], required: readonly string[] = [],
   options: { dataAccess?: boolean; write?: boolean; untrusted?: boolean; consequential?: boolean } = {}): AgentToolDefinition {
@@ -61,15 +56,3 @@ export const AGENT_TOOLS = {
 } as const
 
 export type AgentToolName = keyof typeof AGENT_TOOLS
-export interface AgentToolInputs {
-  reward_get_context: Record<string, never>
-  reward_get_rules: { topic?: 'overview' | 'eligibility' | 'caps' | 'assumptions' | 'sources' }
-  reward_request_access: Record<string, never>
-  reward_open_import: { fileRef?: string }
-  reward_get_import_status: { batchRef?: string }
-  reward_cancel_import: { batchRef: string }
-  reward_get_summary: SummaryInput
-  reward_get_card_rewards: CardRewardInput
-  reward_list_transactions: TransactionInput
-  reward_get_quality: QualityInput
-}

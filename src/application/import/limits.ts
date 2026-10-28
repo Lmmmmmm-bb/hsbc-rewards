@@ -1,11 +1,7 @@
 import type { PdfSource } from '@/ports/pdf'
+import { IMPORT_LIMITS } from './policy'
 
-export const IMPORT_LIMITS = Object.freeze({
-  fileBytes: 25 * 1024 * 1024,
-  sessionBytes: 100 * 1024 * 1024,
-  files: 20,
-  pages: 200,
-})
+export { IMPORT_LIMITS } from './policy'
 export type InputError = 'not-pdf' | 'file-too-large' | 'empty-file' | 'session-limit'
 
 export function validatePdfSource(

@@ -1,4 +1,5 @@
-import { AGENT_TOOLS, type AgentToolInputs, type AgentToolName, type FieldSchema } from './catalog'
+import { AGENT_TOOLS, type AgentToolName, type FieldSchema } from './catalog'
+import type { AgentToolInputs } from './inputs'
 import { AgentError } from './errors'
 
 function matches(value: unknown, schema: FieldSchema): boolean {

@@ -1,6 +1,6 @@
 import { LATEST_RULES } from '@/domain/rewards/rules'
 import type { Translate } from '@/i18n/message-types'
-import type { AgentToolInputs } from './catalog'
+import type { AgentToolInputs } from './inputs'
 import { BASELINE_ASSUMPTIONS } from './projections'
 
 export function getAgentRules(input: AgentToolInputs['reward_get_rules'], t: Translate) {

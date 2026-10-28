@@ -4,6 +4,7 @@ import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import { prerender } from './scripts/vite/prerender.ts'
 import { seo } from './scripts/vite/seo.ts'
+import { agentDocuments } from './scripts/vite/agents.ts'
 
 export default defineConfig({
   plugins: [
@@ -11,6 +12,7 @@ export default defineConfig({
     tailwindcss(),
     prerender(),
     seo({ indexable: process.env.VERCEL_ENV !== 'preview' }),
+    agentDocuments({ originTrialToken: process.env.WEBMCP_ORIGIN_TRIAL_TOKEN }),
   ],
   build: {
     rolldownOptions: {

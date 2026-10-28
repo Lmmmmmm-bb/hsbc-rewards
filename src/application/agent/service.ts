@@ -13,6 +13,7 @@ import { getAgentQuality } from './quality-query'
 import { currentBatchRef, readAgentImport } from './import-query'
 import { getAgentRules } from './rules-query'
 import { validateAgentInput } from './validate'
+import { AGENT_RESPONSE_CHAR_LIMIT } from './contract'
 
 export interface AgentUiActions {
   requestAccess(): void | Promise<void>
@@ -92,7 +93,7 @@ export function createAgentService(deps: {
         if (disposed) throw new AgentError('unavailable')
         if (AGENT_TOOLS[name].dataAccess) allowed()
         if (result.meta) snapshots.capture(result.meta.resultToken)
-        if (JSON.stringify(result).length > 24_000) throw new AgentError('query_too_broad')
+        if (JSON.stringify(result).length > AGENT_RESPONSE_CHAR_LIMIT) throw new AgentError('query_too_broad')
         const needsAction = name === 'reward_request_access' && !deps.access.allowed()
         const latest = result.meta ? readAgentImport(deps.importer.getSnapshot(), snapshots.references, deps.now()) : null
         const meta = result.meta && latest ? { ...result.meta, latestImport: {

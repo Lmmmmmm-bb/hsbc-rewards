@@ -2,8 +2,8 @@ import type { SessionState, SessionStore } from '../session/types'
 import { deriveWorkspace } from '../session/selectors'
 import { createAgentReferences } from './references'
 import { AgentError } from './errors'
+import { AGENT_PAGE_LIMIT } from './contract'
 
-export const AGENT_PAGE_LIMIT = 20
 export interface PageInput { readonly cursor?: string; readonly limit?: number }
 
 function sameFx(a: SessionState['fx'], b: SessionState['fx']) {
