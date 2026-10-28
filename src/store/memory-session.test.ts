@@ -39,17 +39,30 @@ describe('isolated memory sessions', () => {
     const store = createMemorySession()
     loadDemoSession(store)
     const view = deriveWorkspace(store.getSnapshot())
+
     expect(view).toMatchObject({
-      expenseCount: 7,
-      spendCnyMinor: 300000,
-      spendHkdMinor: 100000,
+      expenseCount: 26,
+      spendCnyMinor: 10203000,
+      spendHkdMinor: 1399000,
       mismatchCount: 1,
       reviewCount: 1,
-      totalRewardMicroRc: 110000000,
+      totalRewardMicroRc: 4335280060,
     })
     expect(
-      view.rewards.pools.find((pool) => pool.ownerId === 'demo-main' && pool.tier === 'abroad')
+      view.rewards.pools.find((pool) => pool.ownerId === 'demo-main' && pool.tier === 'abroad' && pool.period === '2026')
         ?.usedMinor,
-    ).toBe(343333)
+    ).toBe(10000000)
+    expect(view.periods.map((period) => period.id)).toEqual(['2026-H2', '2026-H1', '2025-H2'])
+    expect(view.periods.reduce((total, period) => total + period.totalRewardMicroRc!, 0))
+      .toBe(view.totalRewardMicroRc)
+
+    const mainInHalf = (id: string) => view.periods.find((period) => period.id === id)!
+      .rewardCards.find((card) => card.card.id === 'demo-main')!
+
+    expect(mainInHalf('2026-H1').pools.find((pool) => pool.tier === 'pulse'))
+      .toMatchObject({ usedMinor: 8000000, remainingMinor: 0 })
+    expect(mainInHalf('2026-H2').pools.find((pool) => pool.tier === 'pulse'))
+      .toMatchObject({ usedMinor: 110000, remainingMinor: 7890000 })
+    expect(mainInHalf('2026-H2').abroadMicroRc).toBe(0)
   })
 })

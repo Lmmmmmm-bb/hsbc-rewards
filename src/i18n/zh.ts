@@ -374,6 +374,7 @@ export const zh = {
   'clear.body':
     '将清空账单、文件状态和返现估算，保留公开汇率缓存与语言偏好。之后可重新导入或查看示例。',
   'footer.independent': '独立于 HSBC · 返现仅为估算',
+  'footer.github': 'GitHub',
 } as const
 
 export type MessageKey = keyof typeof zh

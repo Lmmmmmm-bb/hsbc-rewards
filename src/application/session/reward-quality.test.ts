@@ -15,22 +15,22 @@ describe('reward quality aggregates', () => {
   it('separates balance mismatch, missing eligibility evidence and excluded payments in the demo', () => {
     const { quality } = inspect(createDemoDataset())
     expect(quality.total).toMatchObject({
-      matchedAccounts: 2,
+      matchedAccounts: 10,
       mismatchAccounts: 1,
       unverifiedAccounts: 0,
-      excludedCount: 3,
+      excludedCount: 11,
       uncertainEligibilityCount: 1,
       possibleDuplicateCount: 0,
     })
     expect(quality.byCard.get('demo-main')).toMatchObject({
-      matchedAccounts: 1,
+      matchedAccounts: 5,
       mismatchAccounts: 1,
-      excludedCount: 3,
+      excludedCount: 8,
       uncertainEligibilityCount: 0,
     })
     expect(quality.byCard.get('demo-additional')).toMatchObject({
-      matchedAccounts: 1,
-      excludedCount: 0,
+      matchedAccounts: 5,
+      excludedCount: 3,
       uncertainEligibilityCount: 1,
     })
   })

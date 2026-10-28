@@ -91,6 +91,7 @@ pnpm dev
 
 ## UI、文案与加载
 
+- GitHub 仓库链接位于底部，与「AI 接入」及隐私入口并列；「查看示例」仅在空白且无文件记录时显示。示例使用两张卡、六份合成账单，覆盖三个自然半年及消费封顶、退款等场景。
 - 沿用 shadcn `b4hZZS5Uu` preset、Base UI 和 Remix Icon，优先组合已有控件及 Tailwind 工具类，不新增业务样式表、行内视觉样式或额外主题。
 - 新控件通过 `pnpm dlx shadcn@4.22.1 add <component>` 生成并检查差异。项目不常驻安装 shadcn CLI；已有控件需要的状态变体与折叠动画保留在 `src/index.css`，新增控件时核对所需 CSS，不盲目恢复整个 CSS 包。
 - 保持主色 `#D90012`、HSBC 六边形、正文 Inter、品牌标题 Roboto 500 和系统字体回退。

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import * as m from 'motion/react-m'
-import { RiArrowGoBackLine, RiBookOpenLine } from '@remixicon/react'
-import { Button } from '@/components/ui/button'
+import { RiArrowGoBackLine, RiBookOpenLine, RiGithubLine } from '@remixicon/react'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { useI18n } from '@/i18n/use-i18n'
 import { HsbcLogo } from './HsbcLogo'
 import { LanguageSwitcher } from './LanguageSwitcher'
@@ -64,14 +64,11 @@ export function WorkspaceShell({
               <RiBookOpenLine aria-hidden="true" />
               {t('rules.dialogTitle')}
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onDemo}
-              disabled={mode === 'real'}
-            >
-              {t('cashback.tryExample')}
-            </Button>
+            {mode === 'empty' && !hasData && (
+              <Button variant="ghost" size="sm" onClick={onDemo}>
+                {t('cashback.tryExample')}
+              </Button>
+            )}
             {hasData && (
               <Button variant="ghost" size="sm" onClick={onClear}>
                 <RiArrowGoBackLine aria-hidden="true" />
@@ -105,6 +102,15 @@ export function WorkspaceShell({
             <Button variant="link" size="sm" onClick={onPrivacy}>
               {t('action.privacy')}
             </Button>
+            <a
+              className={buttonVariants({ variant: 'link', size: 'sm' })}
+              href="https://github.com/Lmmmmmm-bb/hsbc-rewards"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <RiGithubLine aria-hidden="true" />
+              {t('footer.github')}
+            </a>
           </div>
         </div>
       </footer>

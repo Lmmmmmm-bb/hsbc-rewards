@@ -424,4 +424,5 @@ export const en = {
   'clear.body':
     'Clears statements, file statuses, and reward estimates. Keeps public rate cache and language preference. You can then import again or view the example.',
   'footer.independent': 'Independent of HSBC · RewardCash estimates only',
+  'footer.github': 'GitHub',
 } satisfies MessageCatalog

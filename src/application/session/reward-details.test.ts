@@ -58,12 +58,12 @@ describe('reward display aggregates', () => {
       }),
     )
     expect(details.cards[0]).toMatchObject({
-      transactionCount: 7,
-      purchaseCount: 4,
-      statementCount: 1,
+      transactionCount: 22,
+      purchaseCount: 14,
+      statementCount: 3,
       spend: [
-        { currency: 'HKD', minor: 10000 },
-        { currency: 'CNY', minor: 300000 },
+        { currency: 'HKD', minor: 400000 },
+        { currency: 'CNY', minor: 10100000 },
       ],
     })
     expect(
@@ -71,9 +71,9 @@ describe('reward display aggregates', () => {
         ?.eligibleSpend,
     ).toEqual([
       { currency: 'HKD', minor: 10000 },
-      { currency: 'CNY', minor: 100000 },
+      { currency: 'CNY', minor: 8520000 },
     ])
-    expect(details.coverage).toEqual({ from: '2026-09-23', to: '2026-10-22' })
+    expect(details.coverage).toEqual({ from: '2025-11-23', to: '2026-10-22' })
   })
 
   it('propagates unknown FX only into the affected tier and currency', () => {

@@ -273,6 +273,8 @@ describe('initial language and hydration', () => {
     expectMetadata('en-US')
 
     await clickButton(container, createTranslator('en-US')('cashback.tryExample'))
+    expect([...container.querySelectorAll('button')].some((button) =>
+      button.textContent === createTranslator('en-US')('cashback.tryExample'))).toBe(false)
     const before = sessionStore.getSnapshot()
     const total = query(container, '[data-reward-total]')
     const amount = total.textContent
@@ -286,6 +288,8 @@ describe('initial language and hydration', () => {
     expect(sessionStore.getSnapshot().mode).toBe('empty')
     expectMetadata('zh-CN')
     expect(window.localStorage.getItem(LOCALE_PREFERENCE_KEY)).toBe('zh-CN')
+    expect([...container.querySelectorAll('button')].some((button) =>
+      button.textContent === zh['cashback.tryExample'])).toBe(true)
     expect(fetch).not.toHaveBeenCalled()
   })
 
