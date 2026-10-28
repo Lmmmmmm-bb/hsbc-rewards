@@ -34,6 +34,7 @@ export function listAgentTransactions(snapshots: AgentSnapshots, input: Transact
       items: page.items.map(({ row, reward, matchedComponents }) => ({
         transactionRef: snapshot.references.get('transaction', row.id),
         cardRef: snapshot.references.get('card', row.cardId),
+        statementRefs: [...new Set(row.sources.map((source) => snapshot.references.get('statement', source.statementId)))],
         transactionDate: row.transactionDate,
         postingDate: row.postingDate,
         kind: row.classification.kind,

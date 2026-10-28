@@ -21,15 +21,13 @@ export function agentScope(snapshot: AgentSnapshot, input: ResultScope) {
   )
   const ids = new Set(rows.map((row) => row.id))
   const rewards = snapshot.view.rewards.transactions.filter((row) => ids.has(row.transactionId))
-  const sourceIds = new Set(rows.flatMap((row) => row.sources.map((source) => source.statementId)))
-  if (!period && cardId === null)
-    snapshot.session.dataset.statements.forEach((source) => sourceIds.add(source.id))
-  for (const card of cards) {
-    for (const id of card.card.statementIds ?? []) {
-      const source = snapshot.session.dataset.statements.find((statement) => statement.id === id)
-      if (source && (!period || (source.date >= period.from && source.date <= period.to))) sourceIds.add(id)
-    }
-  }
+  const cardSources = new Set([
+    ...rows.flatMap((row) => row.sources.map((source) => source.statementId)),
+    ...cards.flatMap((card) => card.card.statementIds ?? []),
+  ])
+  // Use the same source set that produced period counts and quality, including empty sources.
+  const candidates = period?.sourceIds ?? snapshot.session.dataset.statements.map((source) => source.id)
+  const sourceIds = new Set(candidates.filter((id) => cardId === null || cardSources.has(id)))
   return { periodId, period, view, cards, rows, rewards, cardId, sourceIds }
 }
 

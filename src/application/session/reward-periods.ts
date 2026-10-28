@@ -105,6 +105,7 @@ export function deriveRewardPeriods(
         half,
         from,
         to,
+        sourceIds: [...periodSources],
         statementCount: scoped.statements.length,
         cardCount: scoped.cards.length,
         expenseCount: rows.filter(

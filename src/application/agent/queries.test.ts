@@ -110,12 +110,58 @@ describe('agent result queries', () => {
     expect(listAgentTransactions(snapshots, { resultToken }).data.items[0]).toMatchObject({ original: null, account: { currency: 'CNY', minor: 25000 } })
   })
 
+  it('keeps half-year source counts and reconciliation items aligned for global and card queries', () => {
+    const sources = [
+      statement({ id: 'july', fileHash: 'july', date: '2026-07-20',
+        accounts: [{ id: 'account-cny', currency: 'CNY', openingMinor: 0, closingMinor: 25001 }] }),
+      statement({ id: 'august', fileHash: 'august', date: '2026-08-20',
+        accounts: [{ id: 'account-cny', currency: 'CNY', openingMinor: 0, closingMinor: 25000 }] }),
+    ]
+    const rows = ['2026-06-30', '2026-08-01'].map((date, index) => transaction({
+      id: `row-${index}`, transactionDate: date, postingDate: date,
+      sources: [{ statementId: sources[index].id, fileHash: sources[index].fileHash, page: 1, row: 1, text: 'SYNTHETIC' }],
+    }))
+    const { snapshots } = setup({ cards: [{ ...testCard, statementIds: ['july', 'august'], accountIds: ['account-cny'] }], statements: sources, transactions: rows })
+    for (const periodId of ['2026-H1', '2026-H2']) {
+      const summary = getAgentSummary(snapshots, { periodId })
+      expect(summary.data.statementCount).toBe(1)
+      const cardRef = summary.data.cards.items[0].cardRef
+      for (const card of [undefined, cardRef]) {
+        const quality = getAgentQuality(snapshots, { periodId, cardRef: card, resultToken: summary.meta.resultToken })
+        const checks = quality.data.issues.items.filter((item) => item.kind === 'reconciliation')
+        expect(checks).toHaveLength(summary.data.statementCount)
+        expect(checks.filter((item) => item.status === 'mismatch')).toHaveLength(summary.data.quality.mismatchAccounts)
+        expect(checks[0].statementDate).toBe(periodId === '2026-H1' ? '2026-07-20' : '2026-08-20')
+      }
+    }
+  })
+
+  it('links every retained transaction source to identifiable, privacy-safe statement checks', () => {
+    const first = statement({ id: 'first', fileHash: 'PRIVATE_HASH_ONE', fileName: 'PRIVATE_ONE.pdf', date: '2026-07-20' })
+    const second = statement({ id: 'second', fileHash: 'PRIVATE_HASH_TWO', fileName: 'PRIVATE_TWO.pdf', date: '2026-08-20' })
+    const row = transaction({ transactionDate: '2026-06-30', sources: [first, second].map((source) => ({
+      statementId: source.id, fileHash: source.fileHash, page: 1, row: 1, text: 'PRIVATE_RAW_ROW',
+    })) })
+    const { snapshots } = setup({ cards: [{ ...testCard, statementIds: ['first', 'second'], accountIds: ['account-cny'] }], statements: [first, second], transactions: [row] })
+    const summary = getAgentSummary(snapshots, { periodId: '2026-H1' })
+    const token = summary.meta.resultToken
+    const quality = getAgentQuality(snapshots, { resultToken: token, periodId: '2026-H1' })
+    const checks = quality.data.issues.items.filter((item) => item.kind === 'reconciliation')
+    expect(checks.map((item) => item.statementDate)).toEqual(['2026-07-20', '2026-08-20'])
+    expect(checks[0]).toMatchObject({ statementPeriod: first.period, cardRefs: [summary.data.cards.items[0].cardRef] })
+    const transactions = listAgentTransactions(snapshots, { resultToken: token, periodId: '2026-H1' })
+    expect(transactions.data.items[0].statementRefs).toEqual(checks.map((item) => item.statementRef))
+    expect(JSON.stringify([transactions, quality])).not.toContain('PRIVATE_')
+  })
+
   it('retains zero-transaction statement checks and distinguishes empty sessions from zero estimates', () => {
     const { store, snapshots } = setup({ cards: [testCard], statements: [statement()], transactions: [] })
     const summary = getAgentSummary(snapshots)
     expect(summary.data).toMatchObject({ totalRewardMicroRc: 0, pendingTransactionCount: 0 })
     expect(getAgentQuality(snapshots, { resultToken: summary.meta.resultToken }).data.issues.items)
       .toContainEqual(expect.objectContaining({ kind: 'reconciliation', scope: 'full-source-statement' }))
+    expect(getAgentQuality(snapshots, { resultToken: summary.meta.resultToken, periodId: '2026-H2' }).data.issues.items)
+      .toContainEqual(expect.objectContaining({ kind: 'reconciliation', statementDate: '2026-10-20' }))
     expect(() => getAgentSummary(snapshots, { cursor: 'cursor_without_version' })).toThrow('agent.invalid_arguments')
     store.clear()
     expect(() => getAgentSummary(snapshots)).toThrow('agent.no_results')

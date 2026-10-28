@@ -110,11 +110,13 @@ Each pool reports poolRef, related cardRefs, shared, component, period, basisCod
 - period identifies the cap year or half-year; asOf is the query's cumulative cutoff. observedThrough and observedCoverage describe imported observations, not proof that all spending before that date was imported.
 - usedMinor / remainingMinor can be null when cap evidence is pending. Separate periods remain separate; remaining caps from different periods must not be combined.
 
-Quality transaction issues follow the query scope. Reconciliation records always cover the complete relevant source statement, even if a half-year query includes only some of its transactions. A matched reconciliation record is a check, not a quality error. Differences are informational and do not delete transactions.
+Quality transaction issues follow the query scope. Reconciliation records use the same relevant sources as the summary and always cover each complete source statement, even if a half-year query includes only some of its transactions. Statement and reconciliation items include statementRef, statementDate, statementPeriod, and related cardRefs so an agent can identify the source without a filename. Transactions include statementRefs linking all retained source statements, including proven cross-file duplicates. A matched reconciliation record is a check, not a quality error. Differences are informational and do not delete transactions.
 
 ## Versions and pagination
 
 The first summary can omit resultToken. All card-detail, quality, and transaction queries require it. Summary pagination also requires it. Data commits and result-relevant exchange-rate evidence changes invalidate tokens and cursors. Language changes, dialogs, page-period selection, and uncommitted progress do not.
+
+Import references have a separate lifecycle: batchRef and fileRef remain stable through the first successful commit from an empty page. Starting a new batch or canceling the current batch invalidates its import references. Result-version changes do not rename an unchanged import batch.
 
 On agent.result_changed, read a fresh summary and start related queries again. No historical result snapshots are retained. Cursors are opaque, short-lived page-local references bound to the result and filters. Do not change filters while reusing a cursor. Pages default to 10 items and allow 1–${AGENT_PAGE_LIMIT}; totalCount covers the entire matching list and nextCursor=null ends pagination. Summary pagination applies only to its card index; totals continue to cover the entire selected scope. Output beyond ${AGENT_RESPONSE_CHAR_LIMIT} characters returns agent.query_too_broad; narrow the scope or page size.
 

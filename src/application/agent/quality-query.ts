@@ -1,13 +1,14 @@
 import { agentScope, type ResultScope } from './scope'
 import type { AgentSnapshots, PageInput } from './snapshots'
 import { evidence, resultMeta } from './projections'
+import { statementIdentity, type AgentStatementIdentity } from './source-projection'
 
 export interface QualityInput extends ResultScope, PageInput { readonly resultToken: string }
 type QualityItem =
   | { kind: 'transaction'; transactionRef: string; codes: readonly string[] }
-  | { kind: 'statement'; statementRef: string; codes: readonly string[] }
+  | (AgentStatementIdentity & { kind: 'statement'; codes: readonly string[] })
   | { kind: 'card'; cardRef: string; codes: readonly string[] }
-  | { kind: 'reconciliation'; statementRef: string; currency: string; status: string; deltaMinor: number | null; scope: 'full-source-statement' }
+  | (AgentStatementIdentity & { kind: 'reconciliation'; currency: string; status: string; deltaMinor: number | null; scope: 'full-source-statement' })
 
 export function getAgentQuality(snapshots: AgentSnapshots, input: QualityInput) {
   const snapshot = snapshots.capture(input.resultToken)
@@ -27,13 +28,13 @@ export function getAgentQuality(snapshots: AgentSnapshots, input: QualityInput) 
     if (codes.length) items.push({ kind: 'card', cardRef: snapshot.references.get('card', card.cardId), codes })
   }
   for (const report of snapshot.view.reports.filter((report) => scope.sourceIds.has(report.statement.id))) {
-    const statementRef = snapshot.references.get('statement', report.statement.id)
+    const source = statementIdentity(snapshot, report.statement)
     const codes = report.statement.warnings.map((warning) => warning.code)
-    if (codes.length) items.push({ kind: 'statement', statementRef, codes })
+    if (codes.length) items.push({ kind: 'statement', ...source, codes })
     for (const account of report.accounts) {
       if (scope.cardId !== null && !scope.cards[0].card.accountIds?.includes(account.accountId) &&
         !scope.rows.some((row) => row.accountId === account.accountId)) continue
-      items.push({ kind: 'reconciliation', statementRef, currency: account.currency,
+      items.push({ kind: 'reconciliation', ...source, currency: account.currency,
         status: account.status, deltaMinor: account.deltaMinor, scope: 'full-source-statement' })
     }
   }

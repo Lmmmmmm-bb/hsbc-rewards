@@ -7,6 +7,7 @@ import { LATEST_RULES } from '@/domain/rewards/rules'
 import { createPdfImportController } from '../import/controller'
 import { createAgentAccess } from './access'
 import { createAgentService } from './service'
+import { commitImportedBatch } from '../import/commit'
 
 const disposers: Array<() => void> = []
 afterEach(() => disposers.splice(0).forEach((dispose) => dispose()))
@@ -32,6 +33,46 @@ function source(name: string) {
 }
 
 describe('agent tool service', () => {
+  it('keeps import references through the first commit and FX updates but rejects them after a new batch', async () => {
+    const store = createMemorySession()
+    const importer = createPdfImportController({
+      reader: { read: async (_, options) => {
+        if (!options.password) throw new PdfReadError('password-required')
+        return { pages: [], dispose: async () => {} }
+      } },
+      parser: { parse: async () => importedFile() },
+      commit: (files, revision) => commitImportedBatch(store, files, revision),
+      fingerprint: async () => 'synthetic-first-commit', now: () => 1000,
+      existing: () => ({ hashes: [], files: 0, bytes: 0, revision: store.getSnapshot().revision }),
+    })
+    const access = createAgentAccess(store)
+    access.connect()
+    access.grant()
+    const ui = { requestAccess: vi.fn(), openImport: vi.fn(), cancelImport: () => importer.cancel() }
+    let id = 0
+    const service = createAgentService({ store, importer, access, ui, nextId: () => `first-${++id}`, now: () => 1000,
+      translate: () => createTranslator('en-US') })
+    disposers.push(() => { service.dispose(); access.dispose(); importer.cancel() })
+    importer.start([source('synthetic-first.pdf')])
+    await vi.waitFor(() => expect(importer.getSnapshot().items[0].status).toBe('locked'))
+    const before = (await service.execute('reward_get_import_status')).data as { batchRef: string; files: { fileRef: string }[] }
+    const batch = importer.getSnapshot().batch
+    const itemId = importer.getSnapshot().items[0].id
+    importer.unlock(itemId, 'synthetic-unlock')
+    await vi.waitFor(() => expect(importer.getSnapshot().outcome.status).toBe('committed'))
+    expect(importer.getSnapshot().batch).toBe(batch)
+    expect(await service.execute('reward_get_import_status', { batchRef: before.batchRef })).toMatchObject({ status: 'ok', data: {
+      batchRef: before.batchRef, files: [{ fileRef: before.files[0].fileRef, status: 'imported' }],
+    } })
+    store.setFx({ hkdToCnyPpm: 900000, source: 'live', stale: false, rateDate: '2026-10-27', retrievedAt: 1000 })
+    expect(await service.execute('reward_open_import', { fileRef: before.files[0].fileRef })).toMatchObject({ status: 'ok' })
+    expect(ui.openImport).toHaveBeenLastCalledWith(itemId)
+    importer.start([source('synthetic-next.pdf')])
+    expect(await service.execute('reward_get_import_status', { batchRef: before.batchRef })).toMatchObject({ error: { code: 'agent.batch_changed' } })
+    expect(await service.execute('reward_open_import', { fileRef: before.files[0].fileRef })).toMatchObject({ error: { code: 'agent.file_not_found' } })
+    expect(await service.execute('reward_cancel_import', { batchRef: before.batchRef })).toMatchObject({ error: { code: 'agent.batch_changed' } })
+  })
+
   it('exposes public capabilities without leaking results and never grants access by opening the dialog', async () => {
     const { service, access, ui } = setup()
     const context = await service.execute('reward_get_context')

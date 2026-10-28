@@ -14,6 +14,7 @@ import { currentBatchRef, readAgentImport } from './import-query'
 import { getAgentRules } from './rules-query'
 import { validateAgentInput } from './validate'
 import { AGENT_RESPONSE_CHAR_LIMIT } from './contract'
+import { createAgentReferences } from './references'
 
 export interface AgentUiActions {
   requestAccess(): void | Promise<void>
@@ -34,6 +35,18 @@ export function createAgentService(deps: {
   nextId: () => string; now: () => number; translate: () => Translate
 }) {
   const snapshots = createAgentSnapshots(deps.store, deps.nextId)
+  const importReferences = createAgentReferences(deps.nextId)
+  let importBatch = deps.importer.getSnapshot().batch
+  function currentImport() {
+    const batch = deps.importer.getSnapshot()
+    if (batch.batch !== importBatch) {
+      importReferences.clear()
+      importBatch = batch.batch
+    }
+    return batch
+  }
+  const importStatus = (expectedBatch?: string) =>
+    readAgentImport(currentImport(), importReferences, deps.now(), expectedBatch)
   let disposed = false
   const allowed = () => { if (!deps.access.allowed()) throw new AgentError('access_required') }
   function context() {
@@ -56,18 +69,19 @@ export function createAgentService(deps: {
         let itemId: string | undefined
         if (fileRef) {
           allowed()
-          itemId = snapshots.references.resolve('file', fileRef)
-          if (!deps.importer.getSnapshot().items.some((item) => item.id === itemId && item.status !== 'removed')) throw new AgentError('file_not_found')
+          const batch = currentImport()
+          itemId = importReferences.resolve('file', fileRef)
+          if (!batch.items.some((item) => item.id === itemId && item.status !== 'removed')) throw new AgentError('file_not_found')
         }
         await deps.ui.openImport(itemId)
         return { data: { opened: true, fileInputSelector: AGENT_FILE_INPUT_SELECTOR, nextAction: fileRef ? 'handle_file' : 'provide_files' } }
       }
       case 'reward_get_import_status':
-        return { data: readAgentImport(deps.importer.getSnapshot(), snapshots.references, deps.now(), validateAgentInput(name, value).batchRef) }
+        return { data: importStatus(validateAgentInput(name, value).batchRef) }
       case 'reward_cancel_import': {
         const { batchRef } = validateAgentInput(name, value)
-        const batch = deps.importer.getSnapshot()
-        if (currentBatchRef(batch, snapshots.references) !== batchRef) throw new AgentError('batch_changed')
+        const batch = currentImport()
+        if (currentBatchRef(batch, importReferences) !== batchRef) throw new AgentError('batch_changed')
         if (batch.outcome.status !== 'idle' || !batch.items.some((item) => ['queued', 'reading', 'locked', 'parsing', 'parsed'].includes(item.status)))
           throw new AgentError('batch_not_active')
         deps.ui.cancelImport()
@@ -95,7 +109,7 @@ export function createAgentService(deps: {
         if (result.meta) snapshots.capture(result.meta.resultToken)
         if (JSON.stringify(result).length > AGENT_RESPONSE_CHAR_LIMIT) throw new AgentError('query_too_broad')
         const needsAction = name === 'reward_request_access' && !deps.access.allowed()
-        const latest = result.meta ? readAgentImport(deps.importer.getSnapshot(), snapshots.references, deps.now()) : null
+        const latest = result.meta ? importStatus() : null
         const meta = result.meta && latest ? { ...result.meta, latestImport: {
           batchRef: latest.batchRef, active: latest.active, outcome: latest.outcome,
           uncommittedFiles: latest.files.filter((file) => ['queued', 'reading', 'locked', 'parsing', 'parsed', 'extracted'].includes(file.status)).length,
@@ -110,7 +124,7 @@ export function createAgentService(deps: {
           error: { code: `agent.${code}`, message: deps.translate()(`agent.error.${code}`), nextAction } }
       }
     },
-    dispose() { disposed = true; snapshots.dispose() },
+    dispose() { disposed = true; snapshots.dispose(); importReferences.clear() },
   }
 }
 export type AgentService = ReturnType<typeof createAgentService>
