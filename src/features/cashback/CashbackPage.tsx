@@ -27,6 +27,7 @@ export function CashbackPage({
   onPrivacy,
   onRules,
   onFileStatus,
+  onAgent,
 }: {
   session: SessionState
   view: WorkspaceView
@@ -38,6 +39,7 @@ export function CashbackPage({
   onPrivacy: () => void
   onRules: () => void
   onFileStatus: () => void
+  onAgent: () => void
 }) {
   const { t } = useI18n()
   const [periodId, setPeriodId] = useState('all')
@@ -53,6 +55,7 @@ export function CashbackPage({
       onClear={onClear}
       onRules={onRules}
       onPrivacy={onPrivacy}
+      onAgent={onAgent}
     >
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div className="space-y-1">

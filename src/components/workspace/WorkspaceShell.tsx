@@ -14,6 +14,7 @@ export function WorkspaceShell({
   onDemo,
   onClear,
   onPrivacy,
+  onAgent,
 }: {
   children: ReactNode
   mode: 'empty' | 'demo' | 'real'
@@ -22,6 +23,7 @@ export function WorkspaceShell({
   onDemo: () => void
   onClear: () => void
   onPrivacy: () => void
+  onAgent: () => void
 }) {
   const { t } = useI18n()
   return (
@@ -96,9 +98,14 @@ export function WorkspaceShell({
       >
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 py-2 text-xs text-muted-foreground sm:px-6">
           <p>{t('footer.independent')}</p>
-          <Button variant="link" size="sm" onClick={onPrivacy}>
-            {t('action.privacy')}
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="link" size="sm" onClick={onAgent} data-agent-access-trigger>
+              {t('agent.dialogTitle')}
+            </Button>
+            <Button variant="link" size="sm" onClick={onPrivacy}>
+              {t('action.privacy')}
+            </Button>
+          </div>
         </div>
       </footer>
     </div>

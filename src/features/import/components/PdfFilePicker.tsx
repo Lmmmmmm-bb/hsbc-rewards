@@ -24,6 +24,8 @@ export function PdfFilePicker({
         type="file"
         accept="application/pdf,.pdf"
         multiple
+        disabled={disabled}
+        data-agent-pdf-input={pageTrigger ? 'primary' : undefined}
         className="hidden"
         aria-label={label}
         onChange={(event) => {

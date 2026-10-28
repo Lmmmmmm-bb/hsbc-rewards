@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 import { Button } from '@/components/ui/button'
 import { Dialog } from '@/components/workspace/Dialog'
 import { PrivacyDialog } from '@/components/workspace/PrivacyDialog'
@@ -11,80 +11,67 @@ import { useFx } from '@/store/use-fx'
 import { PageFileDrop } from '@/features/import/components/PageFileDrop'
 import { RulesDialog } from '@/features/cashback/RulesDialog'
 import { FileStatusDialog } from '@/features/import/components/FileStatusDialog'
+import { sessionStore } from '@/store/memory-session'
+import { createWorkspaceActions } from '@/app/workspace-actions'
+import { useAgentRuntime } from '@/app/use-agent-runtime'
+import { AgentDialog } from '@/features/agent/AgentDialog'
 
 function App() {
-  const { session, view, loadDemo, clear } = useSession(),
+  const { session, view } = useSession(),
     { t } = useI18n(),
     { batch } = usePdfImport()
-  const [dialog, setDialog] = useState<
-    'privacy' | 'clear' | 'rules' | 'files' | null
-  >(null)
+  const [actions] = useState(() => createWorkspaceActions(sessionStore, pdfImport))
+  const { dialog, focusItemId } = useSyncExternalStore(actions.subscribe, actions.getSnapshot, actions.getSnapshot)
+  const agent = useAgentRuntime(actions)
   const fx = useFx()
-  const restart = () => {
-    pdfImport.cancel()
-    clear()
-    setDialog(null)
-  }
-  const importFiles = (files: readonly File[]) => {
-    if (!files.length) return
-    if (!pdfImport.getSnapshot().active) {
-      if (session.mode === 'demo') clear()
-      setDialog(null)
-    }
-    pdfImport.start(files)
-    if (pdfImport.getSnapshot().items.length) setDialog('files')
-  }
   return (
-    <PageFileDrop onFiles={importFiles} busy={batch.active}>
+    <PageFileDrop onFiles={actions.importFiles} busy={batch.active}>
       <CashbackPage
         key={session.mode}
         session={session}
         view={view}
         fxRequest={fx.request}
         hasPendingFiles={batch.items.length > 0}
-        onDemo={() => {
-          if (session.mode === 'real') return
-          pdfImport.cancel()
-          loadDemo()
-        }}
-        onFiles={importFiles}
-        onRules={() => setDialog('rules')}
-        onFileStatus={() => setDialog('files')}
-        onClear={() => setDialog('clear')}
-        onPrivacy={() => setDialog('privacy')}
+        onDemo={actions.loadDemo}
+        onFiles={actions.importFiles}
+        onRules={() => actions.show('rules')}
+        onFileStatus={() => actions.show('files')}
+        onClear={() => actions.show('clear')}
+        onPrivacy={() => actions.show('privacy')}
+        onAgent={() => actions.show('agent')}
       />
       {dialog === 'rules' && (
-        <RulesDialog rules={view.rules} onClose={() => setDialog(null)} />
+        <RulesDialog rules={view.rules} onClose={actions.close} />
       )}
       {dialog === 'privacy' && (
-        <PrivacyDialog onClose={() => setDialog(null)} />
+        <PrivacyDialog onClose={actions.close} />
       )}
       {dialog === 'files' && (
         <FileStatusDialog
-          onFiles={importFiles}
-          onClose={() => setDialog(null)}
-          onCancel={() => {
-            pdfImport.cancel()
-            setDialog(null)
-          }}
+          onFiles={actions.importFiles}
+          onClose={actions.close}
+          onCancel={actions.cancelImport}
+          focusItemId={focusItemId}
         />
       )}
       {dialog === 'clear' && (
         <Dialog
           title={t('clear.title')}
-          onClose={() => setDialog(null)}
+          onClose={actions.close}
           footer={
             <>
-              <Button variant="outline" onClick={() => setDialog(null)}>
+              <Button variant="outline" onClick={actions.close}>
                 {t('action.cancel')}
               </Button>
-              <Button onClick={restart}>{t('action.confirmClear')}</Button>
+              <Button onClick={actions.restart}>{t('action.confirmClear')}</Button>
             </>
           }
         >
           <p>{t('clear.body')}</p>
         </Dialog>
       )}
+      {dialog === 'agent' && <AgentDialog status={agent.status} shared={agent.shared}
+        onGrant={agent.grant} onRevoke={agent.revoke} onClose={actions.close} />}
     </PageFileDrop>
   )
 }

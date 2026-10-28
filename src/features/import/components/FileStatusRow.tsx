@@ -22,7 +22,7 @@ export function FileStatusRow({
 }) {
   const { t, number } = useI18n()
   return (
-    <li data-batch-item>
+    <li data-batch-item data-file-id={item.id} tabIndex={-1}>
       <Card size="sm" className="border ring-0">
         <CardContent className="space-y-3">
           <div className="flex items-start gap-2">

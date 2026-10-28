@@ -7,7 +7,7 @@ export function PrivacyDetails() {
     <div className="space-y-4" data-privacy-details>
       <InfoSection title={t('privacy.localTitle')}>
         <dl className="space-y-3">
-          {(['pdf', 'results', 'cache', 'language'] as const).map((kind) => (
+          {(['pdf', 'results', 'agent', 'cache', 'language'] as const).map((kind) => (
             <div
               key={kind}
               className="grid gap-1 sm:grid-cols-[9rem_1fr] sm:gap-4"

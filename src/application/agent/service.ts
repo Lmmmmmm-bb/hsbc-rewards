@@ -94,7 +94,13 @@ export function createAgentService(deps: {
         if (result.meta) snapshots.capture(result.meta.resultToken)
         if (JSON.stringify(result).length > 24_000) throw new AgentError('query_too_broad')
         const needsAction = name === 'reward_request_access' && !deps.access.allowed()
-        return { schemaVersion: AGENT_SCHEMA_VERSION, status: needsAction ? 'needs_user_action' : 'ok', ...result }
+        const latest = result.meta ? readAgentImport(deps.importer.getSnapshot(), snapshots.references, deps.now()) : null
+        const meta = result.meta && latest ? { ...result.meta, latestImport: {
+          batchRef: latest.batchRef, active: latest.active, outcome: latest.outcome,
+          uncommittedFiles: latest.files.filter((file) => ['queued', 'reading', 'locked', 'parsing', 'parsed', 'extracted'].includes(file.status)).length,
+          failedFiles: latest.failedFiles, skippedFiles: latest.skippedFiles, partialSuccess: latest.partialSuccess,
+        } } : undefined
+        return { schemaVersion: AGENT_SCHEMA_VERSION, status: needsAction ? 'needs_user_action' : 'ok', ...result, ...(meta ? { meta } : {}) }
       } catch (error) {
         const code: AgentProblem = error instanceof AgentError ? error.code : 'unavailable'
         const nextAction = code === 'access_required' ? 'request_access' : code === 'no_results' ? 'provide_files'

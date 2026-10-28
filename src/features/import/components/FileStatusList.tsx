@@ -6,14 +6,26 @@ export function FileStatusList({
   items,
   controller,
   editable,
+  focusItemId,
 }: {
   items: readonly ImportItem[]
   controller: PdfImportController
   editable: boolean
+  focusItemId?: string
 }) {
   const { t } = useI18n()
+  const host = useRef<HTMLUListElement>(null)
+  useEffect(() => {
+    if (!focusItemId) return
+    const item = [...(host.current?.querySelectorAll<HTMLElement>('[data-file-id]') ?? [])]
+      .find((element) => element.dataset.fileId === focusItemId)
+    const password = item?.querySelector<HTMLInputElement>('input[type="password"]:not(:disabled)')
+    const target = password ?? item
+    target?.focus()
+  }, [focusItemId])
   return (
     <ul
+      ref={host}
       data-file-list
       className="space-y-3"
       aria-label={t('pdf.batchTitle')}
@@ -29,3 +41,4 @@ export function FileStatusList({
     </ul>
   )
 }
+import { useEffect, useRef } from 'react'

@@ -12,10 +12,12 @@ export function FileStatusDialog({
   onClose,
   onCancel,
   onFiles,
+  focusItemId,
 }: {
   onClose: () => void
   onCancel: () => void
   onFiles: (files: readonly File[]) => void
+  focusItemId?: string
 }) {
   const { batch, controller } = usePdfImport()
   const cancelled = useRef(false)
@@ -138,6 +140,7 @@ export function FileStatusDialog({
               items={items}
               controller={controller}
               editable={editable}
+              focusItemId={focusItemId}
             />
           )}
         </DeferredDialogContent>

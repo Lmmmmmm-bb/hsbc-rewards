@@ -5,6 +5,18 @@ const plural = (count: string | number, one: string, other: string) =>
   Number(count) === 1 ? one : other
 
 export const en = {
+  'agent.dialogTitle': 'Assistant collaboration',
+  'agent.dialogHint': 'Allow a browser assistant to read analysis results in this page.',
+  'agent.allow': 'Allow result access',
+  'agent.revoke': 'Stop sharing',
+  'agent.shared': 'Sharing is enabled for real results in this page',
+  'agent.notShared': 'Real results are not shared',
+  'agent.connecting': 'Preparing assistant tools for this page…',
+  'agent.unsupported': 'Assistant tools are unavailable in this browser. You can continue using the page to process statements.',
+  'agent.scope': 'Sharing includes import status, estimated rewards, spending caps, transaction amounts, and reasons. Transaction descriptions are read only on request. PDFs and passwords still use local processing.',
+  'agent.modelPrivacy': 'Your assistant may send the results it reads to its model provider. Enable sharing only for an assistant you trust.',
+  'agent.lifetime': 'Sharing lasts for this page, including later imports, and ends on refresh, close, or restart. The example can be read directly; real statements require sharing to be enabled.',
+  'agent.boundary': 'This controls this site’s tool output. It does not authenticate assistants or block extensions that already have page access. Stopping sharing cannot recall previously read data.',
   'agent.tool.context': 'Inspect supported statements, limits, result-sharing status, and browser file input instructions for Reward+.',
   'agent.tool.rules': 'Read the rules actually used by this application, their verification date, estimate assumptions, and official sources.',
   'agent.tool.access': 'Open the page-local result-sharing dialog. A page action enables sharing; calling this tool does not grant access.',
@@ -67,6 +79,8 @@ export const en = {
   'privacy.subtitle':
     'Statements are processed on your device. Public rates and your language preference are saved separately.',
   'privacy.pdfLabel': 'PDFs and passwords',
+  'privacy.agentLabel': 'Browser assistants',
+  'privacy.agentValue': 'When you enable assistant collaboration, results can be given to your browser assistant, which may send them to its model provider. Sharing lasts for this page and can be stopped at any time.',
   'privacy.pdfValue':
     'Used only for this processing on your device, then released. PDF files and passwords are never uploaded or saved.',
   'privacy.resultsLabel': 'Statement data and reward estimates',

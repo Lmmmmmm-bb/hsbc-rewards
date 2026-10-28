@@ -18,6 +18,7 @@ function setup() {
     fingerprint: async (bytes) => new TextDecoder().decode(bytes), now: () => 1000,
     existing: () => ({ hashes: [], files: 1, bytes: 1000, revision: store.getSnapshot().revision }) })
   const access = createAgentAccess(store)
+  access.connect()
   const ui = { requestAccess: vi.fn(), openImport: vi.fn(), cancelImport: vi.fn(() => importer.cancel()) }
   let id = 0
   const service = createAgentService({ store, importer, access, ui, nextId: () => `synthetic-${++id}`, now: () => 1000,
@@ -88,6 +89,10 @@ describe('agent tool service', () => {
     const first = await service.execute('reward_get_import_status')
     const oldBatch = (first.data as { batchRef: string }).batchRef
     expect(first.data).toMatchObject({ nextAction: 'user_unlock' })
+    expect(await service.execute('reward_get_summary')).toMatchObject({
+      meta: { latestImport: { active: true, uncommittedFiles: 1, outcome: { status: 'idle' } } },
+      data: { statementCount: 1 },
+    })
     expect(JSON.stringify(first)).not.toContain('SYNTHETIC_PRIVATE')
     importer.cancel()
     importer.start([source('SYNTHETIC_PRIVATE_TWO.pdf')])
