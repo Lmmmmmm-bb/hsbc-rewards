@@ -13,5 +13,5 @@ export function useAgentRuntime(actions: WorkspaceActions) {
   const shared = useSyncExternalStore(runtime.access.subscribe, runtime.access.getSnapshot, runtime.access.getSnapshot)
   useEffect(() => { translate.current = t }, [t])
   useEffect(() => runtime.connect(document, actions, () => translate.current), [runtime, actions])
-  return { status, shared, grant: runtime.access.grant, revoke: runtime.access.revoke }
+  return { status, shared, grant: runtime.access.grant, revoke: runtime.access.revoke, retry: runtime.retry }
 }

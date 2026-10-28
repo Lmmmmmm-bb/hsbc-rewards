@@ -71,7 +71,7 @@ function App() {
         </Dialog>
       )}
       {dialog === 'agent' && <AgentDialog status={agent.status} shared={agent.shared}
-        onGrant={agent.grant} onRevoke={agent.revoke} onClose={actions.close} />}
+        onGrant={agent.grant} onRevoke={agent.revoke} onRetry={agent.retry} onClose={actions.close} />}
     </PageFileDrop>
   )
 }

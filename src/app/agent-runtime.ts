@@ -6,13 +6,16 @@ import { createAgentAccess } from '@/application/agent/access'
 import { nativeModelContext, registerAgentTools } from '@/adapters/webmcp/register'
 import type { WorkspaceActions } from './workspace-actions'
 
-export type AgentConnectionState = 'idle' | 'ready' | 'unavailable'
+export type AgentConnectionState = 'idle' | 'ready' | 'unavailable' | 'error'
+type ServiceModule = typeof import('@/application/agent/service')
 
 /** Construction is SSR-safe. Only connect performs browser registration and subscriptions. */
-export function createAgentRuntime(store: SessionStore, importer: PdfImportController) {
+export function createAgentRuntime(store: SessionStore, importer: PdfImportController,
+  loadService: () => Promise<ServiceModule> = () => import('@/application/agent/service')) {
   const access = createAgentAccess(store)
   let status: AgentConnectionState = 'idle'
   let generation = 0
+  let retryCurrent: (() => void) | undefined
   const listeners = new Set<() => void>()
   const publish = (next: AgentConnectionState) => {
     if (status === next) return
@@ -21,36 +24,50 @@ export function createAgentRuntime(store: SessionStore, importer: PdfImportContr
   }
   return {
     access,
+    retry: () => retryCurrent?.(),
     getSnapshot: () => status,
     subscribe(listener: () => void) { listeners.add(listener); return () => { listeners.delete(listener) } },
     connect(document: Document, ui: WorkspaceActions, translate: () => Translate) {
       const token = ++generation
-      const lifetime = new AbortController()
       const disconnect = access.connect()
-      const context = nativeModelContext(document)
-      let disposeService: (() => void) | undefined
-      if (context) {
-        void import('@/application/agent/service').then(async ({ createAgentService }) => {
-          if (token !== generation || lifetime.signal.aborted) return () => {}
-          const service = createAgentService({ store, importer, access, ui, translate,
-            nextId: () => crypto.randomUUID(), now: () => Date.now() })
-          disposeService = service.dispose
-          return registerAgentTools(context, service, createTranslator('en-US'), lifetime.signal)
-        }).then(
-          (dispose) => {
-            if (token !== generation || lifetime.signal.aborted) dispose()
-            else publish('ready')
-          },
-          () => {
+      let attempt = 0
+      let stopAttempt = () => {}
+      const start = () => {
+        if (token !== generation) return
+        stopAttempt()
+        const epoch = ++attempt
+        const scope = new AbortController()
+        const current = () => token === generation && epoch === attempt && !scope.signal.aborted
+        let disposeService: (() => void) | undefined
+        let unregister: (() => void) | undefined
+        stopAttempt = () => { scope.abort(); unregister?.(); disposeService?.() }
+        publish('idle')
+        void (async () => {
+          try {
+            const context = nativeModelContext(document)
+            if (!context) { if (current()) publish('unavailable'); return }
+            const { createAgentService } = await loadService()
+            if (!current()) return
+            const service = createAgentService({ store, importer, access, ui, translate,
+              nextId: () => crypto.randomUUID(), now: () => Date.now() })
+            disposeService = service.dispose
+            const dispose = await registerAgentTools(context, service, createTranslator('en-US'), scope.signal)
+            if (!current()) { dispose(); return }
+            unregister = dispose
+            publish('ready')
+          } catch {
             disposeService?.()
-            if (token === generation && !lifetime.signal.aborted) publish('unavailable')
-          },
-        )
-      } else publish('unavailable')
+            if (current()) publish('error')
+          }
+        })()
+      }
+      const retry = () => { if (status === 'error') start() }
+      retryCurrent = retry
+      start()
       return () => {
-        lifetime.abort()
-        disposeService?.()
+        stopAttempt()
         disconnect()
+        if (retryCurrent === retry) retryCurrent = undefined
         if (token === generation) { generation++; publish('idle') }
       }
     },
