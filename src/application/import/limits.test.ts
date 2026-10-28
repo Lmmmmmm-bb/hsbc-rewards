@@ -28,6 +28,7 @@ describe('import limits and password gate', () => {
       'session-limit',
     )
   })
+
   it('requires a PDF filename, compatible MIME and nonempty data, allowing blank MIME', () => {
     expect(validatePdfSource(file(1, 'SYNTHETIC.PDF', ''), { files: 0, bytes: 0 })).toBeNull()
     expect(validatePdfSource(file(1, 'x.txt'), { files: 0, bytes: 0 })).toBe('not-pdf')
@@ -38,11 +39,15 @@ describe('import limits and password gate', () => {
     expect(hasPdfHeader(new TextEncoder().encode('preamble\n%PDF-1.7').buffer)).toBe(true)
     expect(hasPdfHeader(new TextEncoder().encode('not a pdf').buffer)).toBe(false)
   })
+
   it('freezes only after five failures and starts a fresh counter after 60 seconds', () => {
     let gate = EMPTY_GATE
     for (let i = 0; i < 4; i++) gate = recordPasswordFailure(gate, 1000)
+
     expect(gate.until).toBe(0)
+
     gate = recordPasswordFailure(gate, 1000)
+
     expect(passwordWaitSeconds(gate, 1000)).toBe(60)
     expect(passwordWaitSeconds(gate, 60_001)).toBe(1)
     expect(passwordWaitSeconds(gate, 61_000)).toBe(0)

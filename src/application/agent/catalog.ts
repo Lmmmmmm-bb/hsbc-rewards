@@ -14,12 +14,14 @@ export interface FieldSchema {
   readonly uniqueItems?: boolean
   readonly items?: FieldSchema
 }
+
 export interface ToolInputSchema {
   readonly type: 'object'
   readonly properties: Readonly<Record<string, FieldSchema>>
   readonly required: readonly string[]
   readonly additionalProperties: false
 }
+
 export interface AgentToolDefinition {
   readonly descriptionKey: Extract<MessageKey, `agent.tool.${string}`>
   readonly inputSchema: ToolInputSchema
@@ -31,6 +33,7 @@ const ref = { type: 'string', minLength: 1, maxLength: 160 } as const
 const periodId = { type: 'string', pattern: '^(all|[0-9]{4}-H[12])$' } as const
 const page = { cursor: ref, limit: { type: 'integer', minimum: 1, maximum: AGENT_PAGE_LIMIT } as const }
 const scope = { periodId, cardRef: ref }
+
 function tool(descriptionKey: AgentToolDefinition['descriptionKey'], properties: ToolInputSchema['properties'], required: readonly string[] = [],
   options: { dataAccess?: boolean; write?: boolean; untrusted?: boolean; consequential?: boolean } = {}): AgentToolDefinition {
   return { descriptionKey, inputSchema: { type: 'object', properties, required, additionalProperties: false },

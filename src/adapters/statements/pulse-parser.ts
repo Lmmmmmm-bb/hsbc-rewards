@@ -9,6 +9,7 @@ import { hashText } from '@/adapters/crypto/sha256'
 export const pulseStatementParser: StatementParser = {
   async parse(pages, source, signal) {
     if (signal.aborted) throw new DOMException('Cancelled', 'AbortError')
+
     const identities = new Map<string, string>()
     await Promise.all(
       pulseAccountNumbers(pages).flatMap((number) =>

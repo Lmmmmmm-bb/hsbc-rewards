@@ -47,6 +47,7 @@ export function CashbackPage({
   const scope = period ?? view
   const hasResults = session.dataset.statements.length > 0
   const revealKey = `${session.revision}:${period?.id ?? 'all'}`
+
   return (
     <WorkspaceShell
       mode={session.mode}

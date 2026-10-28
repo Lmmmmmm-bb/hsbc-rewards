@@ -28,6 +28,7 @@ export const pdfImport = createPdfImportController({
   yieldTask: () => new Promise((resolve) => setTimeout(resolve, 0)),
   existing: () => {
     const session = sessionStore.getSnapshot()
+
     return {
       hashes:
         session.mode === 'real'

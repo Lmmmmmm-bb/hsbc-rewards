@@ -21,9 +21,11 @@ export async function verifySeoBuild(directory, { indexable, expectedHeading }) 
   for (const [tag] of html.matchAll(/<meta\b[^>]*>/g)) {
     const name = tag.match(/(?:name|property)="((?:og|twitter):[^"]+)"/)?.[1]
     if (!name) continue
+
     assert.ok(!socialTags.has(name), `${name} must not be emitted twice.`)
     socialTags.set(name, tag.match(/content="([^"]*)"/)?.[1])
   }
+
   assert.equal(socialTags.get('og:url'), SITE_URL)
   assert.equal(socialTags.get('og:type'), 'website')
   assert.equal(socialTags.get('og:image'), SOCIAL_IMAGE.url)
@@ -32,6 +34,7 @@ export async function verifySeoBuild(directory, { indexable, expectedHeading }) 
   assert.equal(socialTags.get('og:image:type'), SOCIAL_IMAGE.type)
   assert.equal(socialTags.get('twitter:card'), 'summary_large_image')
   assert.equal(socialTags.get('twitter:image'), SOCIAL_IMAGE.url)
+
   for (const field of ['title', 'description', 'image:alt']) {
     assert.ok(socialTags.get(`og:${field}`), `Open Graph ${field} must be present.`)
     assert.equal(socialTags.get(`twitter:${field}`), socialTags.get(`og:${field}`))
@@ -44,19 +47,23 @@ export async function verifySeoBuild(directory, { indexable, expectedHeading }) 
     assert.match(tag, /\bcrossorigin(?:\s|=|>)/)
     const url = tag.match(/href="(\/assets\/[^"]+\.woff2)"/)?.[1]
     assert.ok(url, 'Preloaded fonts must use built asset URLs.')
+
     return url
   })
   assert.equal(fontPreloads.length, 2, 'Only the two visible Latin fonts should be preloaded.')
   assert.equal(new Set(fontPreloads).size, 2, 'A font must not be preloaded twice.')
+
   for (const family of ['inter-latin-wght-normal-', 'roboto-latin-500-normal-']) {
     assert.ok(fontPreloads.some(url => url.startsWith(`/assets/${family}`)), 'Preload the exact font subsets used on the initial page.')
   }
+
   const stylesheets = [...html.matchAll(/<link\b[^>]*rel="stylesheet"[^>]*href="(\/assets\/[^"]+\.css)"[^>]*>/g)]
   const css = (await Promise.all(stylesheets.map(([, url]) => readFile(join(directory, url), 'utf8')))).join('\n')
   for (const url of fontPreloads) {
     await readFile(join(directory, url))
     assert.ok(css.includes(url), 'A preloaded font must reuse its stylesheet URL.')
   }
+
   const structuredData = JSON.parse(html.match(/<script type="application\/ld\+json">([^]*?)<\/script>/)?.[1] ?? '')
   assert.equal(structuredData['@graph'].find(item => item['@type'] === 'WebSite').url, SITE_URL)
   const robots = await readFile(join(directory, 'robots.txt'), 'utf8')

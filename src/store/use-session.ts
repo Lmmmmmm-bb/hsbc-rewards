@@ -10,6 +10,7 @@ export function useSession() {
     sessionStore.getSnapshot,
   )
   const view = useMemo(() => deriveWorkspace(session), [session])
+
   return {
     session,
     view,

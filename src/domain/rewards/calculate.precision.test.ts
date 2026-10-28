@@ -16,9 +16,11 @@ describe('accrued RC precision', () => {
       })),
       [testCard],
     )
+
     expect(result.cards[0].totalMicroRc).toBe(4000)
     expect(result.cards[0].remainderMicroRc).toBe(4000)
   })
+
   it('does not change an uncapped award when the same spending is split into multiple transactions', () => {
     const create = (id: string, amount: number) =>
       transaction({
@@ -26,6 +28,7 @@ describe('accrued RC precision', () => {
         account: { currency: 'CNY', minor: amount },
         original: { currency: 'CNY', minor: amount },
       })
+
     const single = calculateRewards([create('single', 123456)], [testCard], {
       hkdToCnyPpm: 850000,
     })
@@ -34,9 +37,11 @@ describe('accrued RC precision', () => {
       [testCard],
       { hkdToCnyPpm: 850000 },
     )
+
     expect(split.cards[0].totalMicroRc).toBe(single.cards[0].totalMicroRc)
     expect(single.cards[0].totalMicroRc).toBe(54320640)
   })
+
   it('only truncates sub-microRC at a proportional cap boundary and preserves exact pool snapshots', () => {
     const before = transaction({
       id: 'before',
@@ -59,6 +64,7 @@ describe('accrued RC precision', () => {
     const last = result.byTransaction
       .get('edge')!
       .tiers.find((tier) => tier.tier === 'abroad')!
+
     expect(first.poolAfter?.usedMinor).toBe(9999999)
     expect(last.poolAfter?.usedMinor).toBe(10000000)
     expect(last.microRc).toBe(66)

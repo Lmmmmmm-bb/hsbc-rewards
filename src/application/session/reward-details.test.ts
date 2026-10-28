@@ -38,6 +38,7 @@ describe('reward display aggregates', () => {
       dataset,
       calculateRewards([], dataset.cards),
     )
+
     expect(details.cards[0]).toMatchObject({
       statementCount: 1,
       transactionCount: 0,
@@ -49,6 +50,7 @@ describe('reward display aggregates', () => {
     })
     expect(details.cards[0].coverage).not.toBeNull()
   })
+
   it('keeps currencies separate and excludes refunds, repayments and fees from purchases', () => {
     const dataset = createDemoDataset()
     const details = deriveRewardDetails(
@@ -57,6 +59,7 @@ describe('reward display aggregates', () => {
         hkdToCnyPpm: 900000,
       }),
     )
+
     expect(details.cards[0]).toMatchObject({
       transactionCount: 22,
       purchaseCount: 14,
@@ -96,6 +99,7 @@ describe('reward display aggregates', () => {
       dataset,
       calculateRewards(rows, dataset.cards),
     )
+
     expect(
       details.cards[0].tiers.find((tier) => tier.tier === 'basic')
         ?.eligibleSpend,
@@ -134,6 +138,7 @@ describe('reward display aggregates', () => {
       dataset,
       calculateRewards([row], dataset.cards, { hkdToCnyPpm: 900000 }),
     )
+
     expect(details.cards[0].spend).toEqual([
       { currency: 'CNY', minor: 9000000 },
     ])
@@ -163,6 +168,7 @@ describe('reward display aggregates', () => {
       dataset,
       calculateRewards([row], dataset.cards),
     )
+
     expect(details.cards[0]).toMatchObject({
       statementCount: 2,
       transactionCount: 1,

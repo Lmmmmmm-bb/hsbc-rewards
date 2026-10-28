@@ -14,6 +14,7 @@ function inspect(dataset: Dataset, rate: number | null = 900000) {
 describe('reward quality aggregates', () => {
   it('separates balance mismatch, missing eligibility evidence and excluded payments in the demo', () => {
     const { quality } = inspect(createDemoDataset())
+
     expect(quality.total).toMatchObject({
       matchedAccounts: 10,
       mismatchAccounts: 1,
@@ -72,6 +73,7 @@ describe('reward quality aggregates', () => {
       ],
     }
     const { quality } = inspect(dataset)
+
     expect(quality.total.matchedAccounts).toBe(1)
     expect(quality.byCard.get(testCard.id)?.matchedAccounts).toBe(1)
     expect(quality.byCard.get('second-card')?.matchedAccounts).toBe(1)
@@ -94,6 +96,7 @@ describe('reward quality aggregates', () => {
         }),
       ],
     }
+
     expect(inspect(dataset).quality.total).toMatchObject({
       matchedAccounts: 0,
       mismatchAccounts: 0,
@@ -116,6 +119,7 @@ describe('reward quality aggregates', () => {
       { cards: [testCard], statements: [statement()], transactions },
       null,
     )
+
     expect(quality.total.possibleDuplicateCount).toBe(2)
     expect(quality.total.uncertainEligibilityCount).toBe(0)
   })

@@ -4,6 +4,7 @@ import { DeferredDialogContent } from './DeferredDialogContent'
 
 export function PrivacyDialog({ onClose }: { onClose: () => void }) {
   const { t } = useI18n()
+
   return (
     <Dialog
       title={t('privacy.title')}

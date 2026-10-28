@@ -5,6 +5,7 @@ import { FxError, type FxQuote } from '@/ports/fx'
 export function decodeFxQuote(data: unknown, now: number): FxQuote {
   if (typeof data !== 'object' || data === null || Array.isArray(data))
     throw new FxError('invalid-response')
+
   const row = data as Record<string, unknown>
   if (
     row.base !== 'HKD' ||
@@ -17,6 +18,7 @@ export function decodeFxQuote(data: unknown, now: number): FxQuote {
     row.date > new Date(now).toISOString().slice(0, 10)
   )
     throw new FxError('invalid-response')
+
   const hkdToCnyPpm = Math.round(row.rate * 1_000_000)
   if (!Number.isSafeInteger(hkdToCnyPpm) || hkdToCnyPpm <= 0)
     throw new FxError('invalid-response')

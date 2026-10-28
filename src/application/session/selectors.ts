@@ -19,6 +19,7 @@ function computeWorkspace(dataset: Dataset, hkdToCnyPpm: number | null) {
   const rewardResult = calculateRewards(dataset.transactions, dataset.cards, {
     hkdToCnyPpm,
   })
+
   return {
     reports,
     rewards: rewardResult,
@@ -50,6 +51,7 @@ function computeWorkspace(dataset: Dataset, hkdToCnyPpm: number | null) {
 }
 
 export type WorkspaceView = ReturnType<typeof computeWorkspace>
+
 const cache = new WeakMap<
   Dataset,
   { rate: number | null; view: WorkspaceView }
@@ -60,6 +62,7 @@ export function deriveWorkspace(session: SessionState): WorkspaceView {
   const rate = session.fx.hkdToCnyPpm
   const previous = cache.get(session.dataset)
   if (previous && previous.rate === rate) return previous.view
+
   const view = computeWorkspace(session.dataset, rate)
   cache.set(session.dataset, { rate, view })
   return view

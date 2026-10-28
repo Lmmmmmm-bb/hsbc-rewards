@@ -8,6 +8,7 @@ export function RewardCaps({
   pools: WorkspaceView['rewardCards'][number]['pools']
 }) {
   const { t, number } = useI18n()
+
   return (
     <section className="space-y-2" aria-label={t('card.caps')}>
       <h4 className="font-medium">{t('card.caps')}</h4>

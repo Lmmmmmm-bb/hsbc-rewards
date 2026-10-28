@@ -22,6 +22,7 @@ export function RewardBreakdown({
   revealKey: string
 }) {
   const { t, rc } = useI18n()
+
   return (
     <section
       data-reward-breakdown

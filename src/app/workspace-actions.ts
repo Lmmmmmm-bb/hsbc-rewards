@@ -10,15 +10,19 @@ export type WorkspaceDialog = 'privacy' | 'rules' | 'files' | 'clear' | 'agent' 
 export function createWorkspaceActions(store: SessionStore, importer: PdfImportController) {
   let snapshot: { dialog: WorkspaceDialog; focusItemId?: string } = { dialog: null }
   const listeners = new Set<() => void>()
+
   const show = (dialog: WorkspaceDialog, focusItemId?: string) => {
     if (snapshot.dialog === dialog && snapshot.focusItemId === focusItemId) return
+
     snapshot = { dialog, focusItemId }
     listeners.forEach((listener) => listener())
   }
+
   const openForAgent = (dialog: 'agent' | 'files', focusItemId?: string) => {
     if (snapshot.dialog && snapshot.dialog !== dialog) throw new AgentError('ui_busy')
     show(dialog, focusItemId)
   }
+
   return {
     getSnapshot: () => snapshot,
     subscribe(listener: () => void) { listeners.add(listener); return () => { listeners.delete(listener) } },
@@ -26,25 +30,33 @@ export function createWorkspaceActions(store: SessionStore, importer: PdfImportC
     show,
     requestAccess: () => openForAgent('agent'),
     openImport: (itemId?: string) => openForAgent('files', itemId),
+
     cancelImport() {
       importer.cancel()
       if (snapshot.dialog === 'files') show(null)
     },
+
     importFiles(files: readonly PdfSource[]) {
       if (!files.length) return
+
       if (!importer.getSnapshot().active) {
         if (store.getSnapshot().mode === 'demo') store.clear()
         show(null)
       }
+
       importer.start(files)
       if (importer.getSnapshot().items.length) show('files')
     },
+
     restart() { importer.cancel(); store.clear(); show(null) },
+
     loadDemo() {
       if (store.getSnapshot().mode === 'real') return
+
       importer.cancel()
       loadDemoSession(store)
     },
   }
 }
+
 export type WorkspaceActions = ReturnType<typeof createWorkspaceActions>

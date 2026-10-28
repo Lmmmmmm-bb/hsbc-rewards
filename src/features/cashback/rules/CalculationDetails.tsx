@@ -3,6 +3,7 @@ import { useI18n } from '@/i18n/use-i18n'
 
 export function CalculationDetails() {
   const { t } = useI18n()
+
   return (
     <div className="grid gap-3 md:grid-cols-2">
       <InfoSection title={t('rules.scopeTitle')} className="md:col-span-2">

@@ -7,6 +7,7 @@ import { OfficialSources } from './rules/OfficialSources'
 
 export function RewardRules({ rules }: { rules: WorkspaceView['rules'] }) {
   const { t } = useI18n()
+
   return (
     <Tabs defaultValue="rewards" data-reward-rules className="gap-4">
       <TabsList

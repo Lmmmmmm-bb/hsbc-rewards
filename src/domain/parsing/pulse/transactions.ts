@@ -31,10 +31,12 @@ export function readPulseTransactions(
   const output: PulseRow[] = []
   const closed = new Set<string>()
   let pending: PulseRow | null = null
+
   const flush = () => {
     if (pending) output.push(pending)
     pending = null
   }
+
   const resolutionFrom = new Date(
     Date.UTC(
       Number(metadata.date.slice(0, 4)),
@@ -47,6 +49,7 @@ export function readPulseTransactions(
   for (const page of [...pages].sort((a, b) => a.page - b.page)) {
     const accountNumber = metadata.pageAccounts.get(page.page)
     if (!accountNumber || closed.has(accountNumber)) continue
+
     const account = metadata.accounts.get(accountNumber)!
     if (pending && pending.accountNumber !== accountNumber) flush()
     let cardNumber: string = pending?.cardNumber ?? account.cardNumber
@@ -56,6 +59,7 @@ export function readPulseTransactions(
       ),
     )
     if (headerIndex < 0) continue
+
     const header = page.rows[headerIndex]
     const currency = /\((HKD|CNY|RMB)\)$/i
       .exec(header.text)![1]
@@ -63,21 +67,26 @@ export function readPulseTransactions(
       .replace('RMB', 'CNY')
     if (currency !== account.currency)
       throw new DomainError('parse.conflicting-currency')
+
     const amountLabel = header.spans.find((span) =>
       /^Amount(?:\s*\((?:HKD|CNY|RMB)\))?$/i.test(span.text.trim()),
     )
     if (!amountLabel) throw new DomainError('parse.missing-amount-column')
+
     const amountStart = amountLabel.bounds.x - 45
     for (const row of page.rows.slice(headerIndex + 1)) {
       const text = row.text.trim()
       // First sheets have a payment stub before later transaction sheets. It ends this page only.
       if (pageFooter.test(text)) break
+
       if (endOfTransactions.test(text)) {
         flush()
         closed.add(accountNumber)
         break
       }
+
       if (/^PREVIOUS BALANCE\b/i.test(text)) continue
+
       const card = cardRow.exec(text)
       if (card) {
         const number = card[1].replace(/\s/g, '')
@@ -87,6 +96,7 @@ export function readPulseTransactions(
         cardNumber = nextCardNumber
         continue
       }
+
       const match = datedRow.exec(text)
       if (match) {
         flush()
@@ -96,10 +106,12 @@ export function readPulseTransactions(
           .join(' ')
         if (!amountText || !match[3].endsWith(amountText))
           throw new DomainError('parse.invalid-transaction-amount')
+
         const minor = parseMinor(amountText)
         const description = match[3].slice(0, -amountText.length).trim()
         if (!description)
           throw new DomainError('parse.missing-transaction-description')
+
         const posted = resolveDateToken(shortDate(match[1]), {
           from: resolutionFrom,
           to: metadata.date,
@@ -125,9 +137,11 @@ export function readPulseTransactions(
         }
         continue
       }
+
       if (/^\d{1,2}\s*[A-Z]{3}\b/i.test(text))
         throw new DomainError('parse.invalid-transaction-row')
       if (!pending || row.bounds.y > page.height * 0.9) continue
+
       const original = originalLine.exec(text)
       const hkd = /^HKD (?:EQUIVALENT|EQUIV\.?)[ :]+([\d,]+\.\d{2})$/i.exec(
         text,
@@ -143,6 +157,7 @@ export function readPulseTransactions(
             pending.original.minor !== value.minor)
         )
           throw new DomainError('parse.conflicting-original-amount')
+
         pending.original = value
       } else if (hkd) {
         const amount = parseMinor(hkd[1])
@@ -151,6 +166,7 @@ export function readPulseTransactions(
           pending.bankHkdEquivalentMinor !== amount
         )
           throw new DomainError('parse.conflicting-original-amount')
+
         pending.bankHkdEquivalentMinor = amount
       } else if (paymentLine.test(text)) {
         pending.paymentLines.push(text)
@@ -168,11 +184,14 @@ export function readPulseTransactions(
           row.bounds.x + row.bounds.width > amountStart
         )
           throw new DomainError('parse.ambiguous-continuation')
+
         pending.description += ` ${text}`
       }
+
       pending.sourceRows.push({ page: page.page, row })
     }
   }
+
   flush()
   return output
 }

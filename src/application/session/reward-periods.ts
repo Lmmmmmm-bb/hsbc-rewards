@@ -24,6 +24,7 @@ export function deriveRewardPeriods(
     if (!rowGroups.has(key)) rowGroups.set(key, [])
     rowGroups.get(key)!.push(row)
   }
+
   const emptySources = dataset.statements.filter(
     (statement) => !sourceIds.has(statement.id),
   )
@@ -39,9 +40,11 @@ export function deriveRewardPeriods(
     const key = rewardPeriod(statement.date, 'half-year')
     if (!rowGroups.has(key)) rowGroups.set(key, [])
   }
+
   const poolStates = new Map<string, RewardPool>()
   const byId = new Map(dataset.transactions.map((row) => [row.id, row]))
   let position = 0
+
   return [...rowGroups.keys()]
     .sort()
     .map((id) => {
@@ -58,6 +61,7 @@ export function deriveRewardPeriods(
         for (const tier of rewards.transactions[position++].tiers)
           if (tier.poolAfter) poolStates.set(tier.poolAfter.key, tier.poolAfter)
       }
+
       const fallbackIds = new Set(
         fallbackSources
           .filter(
@@ -99,6 +103,7 @@ export function deriveRewardPeriods(
             : pool.period === id,
         ),
       }
+
       return {
         id,
         year,

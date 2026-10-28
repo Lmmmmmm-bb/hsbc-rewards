@@ -37,8 +37,10 @@ describe('HSBC Pulse English statement parser', () => {
           }
         : row,
     )
+
     expect(parse([{ ...page, rows }]).transactions[0].account.minor).toBe(1000)
   })
+
   it('links different HKD and CNY account numbers to one card and keeps empty accounts', () => {
     const dataset = parse([
       pulsePage({ currency: 'HKD' }),
@@ -52,6 +54,7 @@ describe('HSBC Pulse English statement parser', () => {
         ],
       }),
     ])
+
     expect(dataset.cards).toHaveLength(1)
     expect(dataset.cards[0]).toMatchObject({
       lastFour: '4444',
@@ -91,6 +94,7 @@ describe('HSBC Pulse English statement parser', () => {
         ],
       }),
     ])
+
     expect(dataset.transactions).toHaveLength(1)
     expect(dataset.transactions[0].classification.paymentMethod).toBe(
       'unionpay-qr',
@@ -116,6 +120,7 @@ describe('HSBC Pulse English statement parser', () => {
       ledger: [line('APPLE PAY-MOBILE:0000')],
     })
     const dataset = parse([first, terms, next])
+
     expect(dataset.transactions).toHaveLength(1)
     expect(dataset.transactions[0].classification.paymentMethod).toBe(
       'apple-pay',
@@ -133,11 +138,13 @@ describe('HSBC Pulse English statement parser', () => {
         ledger: [purchase('SYNTHETIC STORE CN', '20.00', '02JAN', '31DEC')],
       }),
     ])
+
     expect(dataset.transactions[0]).toMatchObject({
       postingDate: '2026-01-02',
       transactionDate: '2025-12-31',
     })
   })
+
   it('continues a sub-account after the first page payment stub without parsing the stub as a merchant', () => {
     const first = pulsePage({
       end: false,
@@ -157,6 +164,7 @@ describe('HSBC Pulse English statement parser', () => {
       ledger: [purchase('SYNTHETIC CAFE CN', '20.00')],
     })
     const dataset = parse([first, next])
+
     expect(dataset.transactions).toHaveLength(2)
     expect(
       reconcileStatement(dataset.statements[0], dataset.transactions)[0].status,
@@ -176,6 +184,7 @@ describe('HSBC Pulse English statement parser', () => {
         ],
       }),
     ])
+
     expect(dataset.transactions[0]).toMatchObject({
       original: { currency: 'USD', minor: 1000 },
       account: { currency: 'HKD', minor: 7800 },
@@ -192,8 +201,11 @@ describe('HSBC Pulse English statement parser', () => {
         ledger: [purchase('SYNTHETIC SHOP USA US', '78.00')],
       }),
     ])
+
     expect(dataset.transactions[0].original.currency).toBe('XXX')
+
     const result = calculateRewards(dataset.transactions, dataset.cards)
+
     expect(result.cards[0]).toMatchObject({
       basicMicroRc: 312000,
       abroadMicroRc: 0,
@@ -215,6 +227,7 @@ describe('HSBC Pulse English statement parser', () => {
         ],
       }),
     ])
+
     expect(dataset.cards).toHaveLength(2)
     expect(dataset.cards[1].role).toBe('additional')
     expect(dataset.cards[0].pool).toEqual(dataset.cards[1].pool)
@@ -239,6 +252,7 @@ describe('HSBC Pulse English statement parser', () => {
         ],
       }),
     ])
+
     expect(dataset.cards[0]).toMatchObject({
       abroadEnrollment: 'registered',
       abroadMultiplier: 5,
@@ -261,10 +275,12 @@ describe('HSBC Pulse English statement parser', () => {
         ledger: [purchase('SYNTHETIC STORE CN', '1.00')],
       }),
     ])
+
     expect(
       reconcileStatement(dataset.statements[0], dataset.transactions)[0].status,
     ).toBe('unverified')
   })
+
   it('does not create irrelevant foreign-currency warnings for a bank fee', () => {
     const dataset = parse([
       pulsePage({
@@ -273,12 +289,14 @@ describe('HSBC Pulse English statement parser', () => {
         ledger: [purchase('FINANCE CHARGE', '10.00')],
       }),
     ])
+
     expect(dataset.transactions[0].classification.kind).toBe('fee')
     expect(dataset.transactions[0].warnings).toEqual([])
   })
 
   it('extracts identifier candidates for caller-side hashing without leaking raw IDs in parsed identifiers', () => {
     const pages = [pulsePage()]
+
     expect(pulseAccountNumbers(pages)).toEqual([
       '1111222233334444',
       '5555666677778888',
@@ -349,6 +367,7 @@ describe('HSBC Pulse English statement parser', () => {
         ledger: [purchase('SYNTHETIC LONG', '2.00'), line('MERCHANT CHN CN')],
       }),
     ])
+
     expect(dataset.transactions[0].description).toBe(
       'SYNTHETIC LONG MERCHANT CHN CN',
     )
@@ -368,7 +387,9 @@ describe('HSBC Pulse English statement parser', () => {
         pulsePage({ page: 2, date: '21 OCT 2026' }),
       ]),
     ).toThrow('parse.conflicting-statement-dates')
+
     const page = pulsePage()
+
     expect(() =>
       parse([
         {
@@ -378,6 +399,7 @@ describe('HSBC Pulse English statement parser', () => {
       ]),
     ).toThrow('parse.missing-card-association')
   })
+
   it('reads the repeated payment-stub date column without including its adjacent balance', () => {
     const page = pulsePage()
     const stub = pulsePage()
@@ -412,6 +434,7 @@ describe('HSBC Pulse English statement parser', () => {
                 },
               ],
       }))
+
     expect(
       parse([{ ...page, rows: [...page.rows, ...stub] }]).statements[0].date,
     ).toBe('2026-10-20')

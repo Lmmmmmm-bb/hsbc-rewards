@@ -22,7 +22,9 @@ export interface AgentUiActions {
   openImport(itemId?: string): void | Promise<void>
   cancelImport(): void
 }
+
 interface ToolResult { readonly meta?: { readonly resultToken: string }; readonly data: unknown }
+
 export interface AgentResponse {
   readonly schemaVersion: number
   readonly status: 'ok' | 'needs_user_action' | 'error'
@@ -50,7 +52,9 @@ export function createAgentService(deps: {
   }
   const importSummary = () => summarizeAgentImport(currentImport(), importReferences, deps.now())
   let disposed = false
+
   const allowed = () => { if (!deps.access.allowed()) throw new AgentError('access_required') }
+
   function context() {
     return { schemaVersion: AGENT_SCHEMA_VERSION, mode: deps.store.getSnapshot().mode,
       sharingEnabled: deps.access.allowed(), hasResults: deps.store.getSnapshot().mode !== 'empty',
@@ -58,6 +62,7 @@ export function createAgentService(deps: {
       fileInput: { selector: AGENT_FILE_INPUT_SELECTOR, accept: 'application/pdf', multiple: true },
       limits: IMPORT_LIMITS, ruleId: LATEST_RULES.id, units: { reward: 'microRC', microRcPerRc: 1_000_000, money: 'minor' } }
   }
+
   async function run(name: AgentToolName, value: unknown): Promise<ToolResult> {
     switch (name) {
       case 'reward_get_context': validateAgentInput(name, value); return { data: context() }
@@ -65,6 +70,7 @@ export function createAgentService(deps: {
       case 'reward_request_access':
         validateAgentInput(name, value)
         if (!deps.access.allowed()) await deps.ui.requestAccess()
+
         return { data: { sharingEnabled: deps.access.allowed(), nextAction: deps.access.allowed() ? 'continue' : 'enable_sharing' } }
       case 'reward_open_import': {
         const { fileRef } = validateAgentInput(name, value)
@@ -75,6 +81,7 @@ export function createAgentService(deps: {
           itemId = importReferences.resolve('file', fileRef)
           if (!batch.items.some((item) => item.id === itemId && item.status !== 'removed')) throw new AgentError('file_not_found')
         }
+
         await deps.ui.openImport(itemId)
         return { data: { opened: true, fileInputSelector: AGENT_FILE_INPUT_SELECTOR, nextAction: fileRef ? 'handle_file' : 'provide_files' } }
       }
@@ -86,6 +93,7 @@ export function createAgentService(deps: {
         if (currentBatchRef(batch, importReferences) !== batchRef) throw new AgentError('batch_changed')
         if (batch.outcome.status !== 'idle' || !batch.items.some((item) => ['queued', 'reading', 'locked', 'parsing', 'parsed'].includes(item.status)))
           throw new AgentError('batch_not_active')
+
         deps.ui.cancelImport()
         return { data: { cancelledBatchRef: batchRef, previousResultsRetained: true, nextAction: deps.store.getSnapshot().mode === 'empty' ? 'provide_files' : 'read_summary' } }
       }
@@ -95,6 +103,7 @@ export function createAgentService(deps: {
       case 'reward_get_quality': return getAgentQuality(snapshots, validateAgentInput(name, value))
     }
   }
+
   return {
     async execute(name: AgentToolName, value: unknown = {}, signal?: AbortSignal): Promise<AgentResponse> {
       try {
@@ -103,8 +112,11 @@ export function createAgentService(deps: {
         validateAgentInput(name, value)
         if (['reward_get_summary', 'reward_get_card_rewards', 'reward_list_transactions', 'reward_get_quality'].includes(name) && deps.store.getSnapshot().mode === 'empty')
           throw new AgentError('no_results')
+
         if (AGENT_TOOLS[name].dataAccess) allowed()
+
         const result = await run(name, value)
+
         if (signal?.aborted) throw new AgentError('cancelled')
         if (disposed) throw new AgentError('unavailable')
         if (AGENT_TOOLS[name].dataAccess) allowed()
@@ -116,6 +128,7 @@ export function createAgentService(deps: {
           uncommittedFiles: latest.uncommittedFiles,
           failedFiles: latest.failedFiles, skippedFiles: latest.skippedFiles, partialSuccess: latest.partialSuccess,
         } } : undefined
+
         const response: AgentResponse = { schemaVersion: AGENT_SCHEMA_VERSION, status: needsAction ? 'needs_user_action' : 'ok', ...result, ...(meta ? { meta } : {}) }
         if (JSON.stringify(response).length > AGENT_RESPONSE_CHAR_LIMIT) throw new AgentError('query_too_broad')
         return response
@@ -123,11 +136,14 @@ export function createAgentService(deps: {
         const code: AgentProblem = error instanceof AgentError ? error.code : 'unavailable'
         const nextAction = code === 'access_required' ? 'request_access' : code === 'no_results' ? 'provide_files'
           : code === 'result_changed' ? 'read_summary' : code === 'ui_busy' ? 'finish_current_dialog' : 'review_request'
+
         return { schemaVersion: AGENT_SCHEMA_VERSION, status: code === 'access_required' ? 'needs_user_action' : 'error',
           error: { code: `agent.${code}`, message: deps.translate()(`agent.error.${code}`), nextAction } }
       }
     },
+
     dispose() { disposed = true; snapshots.dispose(); importReferences.clear(); importPages.clear() },
   }
 }
+
 export type AgentService = ReturnType<typeof createAgentService>

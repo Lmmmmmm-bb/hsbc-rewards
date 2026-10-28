@@ -8,8 +8,10 @@ export const msUntilFxExpiry = (quote: CachedFxQuote, now: number) =>
   quote.retrievedAt > now
     ? 0
     : Math.max(0, FX_CACHE_TTL_MS - (now - quote.retrievedAt))
+
 export const isFxFresh = (quote: CachedFxQuote, now: number) =>
   msUntilFxExpiry(quote, now) > 0
+
 export const isFxStale = (quote: CachedFxQuote, now: number) =>
   !isFxFresh(quote, now) ||
   now - Date.parse(`${quote.rateDate}T00:00:00Z`) >= 7 * DAY

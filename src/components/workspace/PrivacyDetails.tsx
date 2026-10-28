@@ -3,6 +3,7 @@ import { InfoSection } from './InfoSection'
 
 export function PrivacyDetails() {
   const { t } = useI18n()
+
   return (
     <div className="space-y-4" data-privacy-details>
       <InfoSection title={t('privacy.localTitle')}>

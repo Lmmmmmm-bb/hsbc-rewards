@@ -16,6 +16,7 @@ function setup() {
     existing: () => ({ hashes: [], files: 0, bytes: 0, revision: store.getSnapshot().revision }) })
   const actions = createWorkspaceActions(store, importer)
   const runtime = createAgentRuntime(store, importer)
+
   return { store, importer, actions, runtime }
 }
 
@@ -25,13 +26,17 @@ describe('page-local agent composition', () => {
     const subscribe = vi.spyOn(store, 'subscribe')
     const loadService = vi.fn(() => import('@/application/agent/service'))
     const runtime = createAgentRuntime(store, importer, loadService)
+
     expect(subscribe).not.toHaveBeenCalled()
+
     const actions = createWorkspaceActions(store, importer)
     const before = store.getSnapshot()
     const stop = runtime.connect({} as Document, actions, () => createTranslator('en-US'))
+
     expect(runtime.getSnapshot()).toBe('unavailable')
     expect(loadService).not.toHaveBeenCalled()
     expect(store.getSnapshot()).toBe(before)
+
     stop()
     runtime.access.dispose()
   })
@@ -42,6 +47,7 @@ describe('page-local agent composition', () => {
     let registrations = 0
     const context: NativeModelContext = { async registerTool(tool, { signal }) {
       if (tools.has(tool.name)) throw new Error('Duplicate native tool')
+
       registrations++
       tools.set(tool.name, tool)
       signal.addEventListener('abort', () => tools.delete(tool.name), { once: true })
@@ -51,20 +57,28 @@ describe('page-local agent composition', () => {
     runtime.connect(document, actions, () => createTranslator(locale))()
     const stop = runtime.connect(document, actions, () => createTranslator(locale))
     await vi.waitFor(() => expect(runtime.getSnapshot()).toBe('ready'))
+
     expect(tools.size).toBe(10)
     expect(registrations).toBe(10)
+
     const summary = tools.get('reward_get_summary')!
+
     expect(await summary.execute({})).toMatchObject({ error: { message: createTranslator('en-US')('agent.error.no_results') } })
+
     locale = 'zh-CN'
+
     expect(await summary.execute({})).toMatchObject({ error: { message: createTranslator('zh-CN')('agent.error.no_results') } })
     expect(registrations).toBe(10)
+
     store.replace(importedFile(), 'real')
     runtime.access.grant()
     const before = store.getSnapshot()
     stop()
+
     expect(tools.size).toBe(0)
     expect(store.getSnapshot()).toBe(before)
     expect(importer.getSnapshot().active).toBe(false)
+
     runtime.access.dispose()
   })
 
@@ -72,31 +86,47 @@ describe('page-local agent composition', () => {
     const { store, importer, actions, runtime } = setup()
     const stop = runtime.access.connect()
     actions.loadDemo()
+
     expect(store.getSnapshot().mode).toBe('demo')
+
     actions.show('rules')
+
     expect(() => actions.requestAccess()).toThrow('agent.ui_busy')
     expect(actions.getSnapshot().dialog).toBe('rules')
+
     actions.close()
     actions.openImport()
     const same = actions.getSnapshot()
     actions.openImport()
+
     expect(actions.getSnapshot()).toBe(same)
+
     actions.importFiles([{ name: 'synthetic.pdf', size: 20, type: 'application/pdf', arrayBuffer: async () => new TextEncoder().encode('%PDF-synthetic').buffer }])
     await vi.waitFor(() => expect(importer.getSnapshot().items[0].status).toBe('locked'))
+
     expect(store.getSnapshot().mode).toBe('empty')
+
     const itemId = importer.getSnapshot().items[0].id
     actions.openImport(itemId)
+
     expect(actions.getSnapshot()).toMatchObject({ dialog: 'files', focusItemId: itemId })
+
     actions.close()
+
     expect(importer.getSnapshot().active).toBe(true)
+
     actions.show('agent')
     actions.cancelImport()
+
     expect(actions.getSnapshot().dialog).toBe('agent')
     expect(importer.getSnapshot().active).toBe(false)
+
     runtime.access.grant()
     actions.restart()
+
     expect(runtime.access.getSnapshot()).toBe(false)
     expect(actions.getSnapshot().dialog).toBeNull()
+
     stop()
     runtime.access.dispose()
   })

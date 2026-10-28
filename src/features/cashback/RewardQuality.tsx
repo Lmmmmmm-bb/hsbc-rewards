@@ -10,6 +10,7 @@ export function RewardQuality({
   compact?: boolean
 }) {
   const { t } = useI18n()
+
   return (
     <section className="space-y-2" aria-label={t('quality.title')}>
       {!compact && <p className="font-medium">{t('quality.title')}</p>}

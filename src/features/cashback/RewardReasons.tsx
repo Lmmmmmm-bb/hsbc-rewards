@@ -29,10 +29,12 @@ const labels = {
   'transaction.non-positive': 'reason.nonpositive',
   'eligibility.excluded-merchant': 'reason.excluded',
 } as const satisfies Readonly<Record<string, MessageKey>>
+
 const common = (code: string) =>
   code.startsWith('transaction.') ||
   code.startsWith('eligibility.') ||
   code === 'reward.transaction-excluded'
+
 type TierDetails = WorkspaceView['rewardCards'][number]['tiers']
 
 export function RewardReasons({
@@ -44,6 +46,7 @@ export function RewardReasons({
 }) {
   const { t } = useI18n()
   const shared = tiers[0]?.reasons.filter((reason) => common(reason.code)) ?? []
+
   const list = (reasons: TierDetails[number]['reasons']) => (
     <ul className="space-y-2">
       {reasons.map(({ code, count }) => (
@@ -60,6 +63,7 @@ export function RewardReasons({
       ))}
     </ul>
   )
+
   return (
     <Accordion data-reward-reasons>
       <AccordionItem value="reasons">
@@ -75,6 +79,7 @@ export function RewardReasons({
             )}
             {tiers.map(({ tier, reasons }) => {
               const specific = reasons.filter((reason) => !common(reason.code))
+
               return (
                 <section key={tier} className="space-y-2">
                   <h4 className="font-medium">{t(`rewards.${tier}`)}</h4>

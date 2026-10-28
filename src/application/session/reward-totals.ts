@@ -9,6 +9,7 @@ export function deriveRewardTotals(
   const totalRewardMicroRc = rows.some((row) => row.microRc === null)
     ? null
     : knownRewardMicroRc
+
   return {
     totalRewardMicroRc,
     knownRewardMicroRc,
@@ -21,6 +22,7 @@ export function deriveRewardTotals(
         (row) => row.tiers.find((item) => item.tier === tier)!.microRc,
       )
       const knownMicroRc = addMinor(amounts.map((amount) => amount ?? 0))
+
       return {
         tier,
         knownMicroRc,

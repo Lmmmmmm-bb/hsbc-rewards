@@ -5,6 +5,7 @@ import { cardIdentity, evidence, projectPools, resultMeta } from './projections'
 import { AgentError } from './errors'
 
 export interface SummaryInput extends PageInput { readonly periodId?: string; readonly resultToken?: string }
+
 export interface CardRewardInput extends ResultScope { readonly cardRef: string; readonly resultToken: string }
 
 function rewardAmounts(...args: Parameters<typeof deriveRewardTotals>) {
@@ -15,10 +16,12 @@ function rewardAmounts(...args: Parameters<typeof deriveRewardTotals>) {
 
 export function getAgentSummary(snapshots: AgentSnapshots, input: SummaryInput = {}) {
   if (input.cursor && !input.resultToken) throw new AgentError('invalid_arguments')
+
   const snapshot = snapshots.capture(input.resultToken)
   const scope = agentScope(snapshot, input)
   const cards = snapshots.page(scope.cards.map((card) => cardIdentity(snapshot, card)), input,
     JSON.stringify(['cards', scope.periodId]), snapshot.resultToken)
+
   return {
     meta: resultMeta(snapshot, scope),
     data: {
@@ -39,6 +42,7 @@ export function getAgentCardRewards(snapshots: AgentSnapshots, input: CardReward
   const scope = agentScope(snapshot, input)
   const card = scope.cards[0]
   const amounts = rewardAmounts(scope.rewards, snapshot.session.fx.hkdToCnyPpm)
+
   return {
     meta: resultMeta(snapshot, scope),
     data: {

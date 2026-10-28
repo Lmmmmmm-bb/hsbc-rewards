@@ -19,11 +19,13 @@ export function ResultReveal({
 
   useEffect(() => {
     if (trigger === null || reducedMotion !== false) return
+
     const animation = animate(
       scope.current,
       { opacity: [0, 1], y: [6, 0] },
       { duration: 0.24, delay, ease: [0.22, 1, 0.36, 1] },
     )
+
     return () => animation.stop()
   }, [animate, scope, reducedMotion, trigger, delay])
 

@@ -37,6 +37,7 @@ export function createPdfImportController(
 ): PdfImportController {
   if (Boolean(dependencies.parser) !== Boolean(dependencies.commit))
     throw new Error('import.incomplete-pipeline')
+
   let snapshot: ImportSnapshot = {
     batch: 0,
     active: false,
@@ -47,6 +48,7 @@ export function createPdfImportController(
   let baselineRevision = 0
   const listeners = new Set<() => void>()
   const pending = new Map<string, PendingFile>()
+
   const publish = (
     items: readonly ImportItem[],
     rejected: ImportSnapshot['rejected'] = null,
@@ -61,6 +63,7 @@ export function createPdfImportController(
     }
     listeners.forEach((listener) => listener())
   }
+
   const update = (id: string, patch: Partial<ImportItem>) => {
     publish(
       snapshot.items.map((item) =>
@@ -68,6 +71,7 @@ export function createPdfImportController(
       ),
     )
   }
+
   const release = (entry: PendingFile) => {
     entry.abort?.abort()
     entry.pages = undefined
@@ -75,6 +79,7 @@ export function createPdfImportController(
     entry.file = undefined
     entry.reserved = false
   }
+
   const current = (batch: number, id: string, entry: PendingFile) =>
     snapshot.batch === batch &&
     pending.get(id) === entry &&
@@ -83,17 +88,21 @@ export function createPdfImportController(
   const run = async (id: string, password?: string) => {
     const entry = pending.get(id)
     if (!entry || !entry.file || entry.running) return
+
     entry.running = true
     entry.abort = new AbortController()
     const batch = snapshot.batch
     let parsing = false
     update(id, { status: 'reading', problem: null, completedPages: 0 })
+
     try {
       const bytes = await entry.file.arrayBuffer()
       if (!current(batch, id, entry)) return
       if (!hasPdfHeader(bytes)) throw new PdfReadError('invalid-pdf')
+
       const hash = entry.hash ?? (await dependencies.fingerprint(bytes))
       if (!current(batch, id, entry)) return
+
       if (
         dependencies.existing().hashes.includes(hash) ||
         [...pending.entries()].some(
@@ -104,7 +113,9 @@ export function createPdfImportController(
         pending.delete(id)
         return
       }
+
       entry.hash = hash
+
       if (!entry.reserved) {
         const existing = dependencies.existing()
         const reserved = [...pending.values()].filter(
@@ -117,8 +128,10 @@ export function createPdfImportController(
             reserved.reduce((sum, candidate) => sum + candidate.size, 0),
         })
         if (problem) throw new DomainError('import.session-limit')
+
         entry.reserved = true
       }
+
       const reading = dependencies.reader.read(bytes, {
         signal: entry.abort.signal,
         password,
@@ -134,12 +147,15 @@ export function createPdfImportController(
         await document.dispose()
         return
       }
+
       // The original document and Worker are not retained after extraction.
       const pages = document.pages
       await document.dispose()
       if (!current(batch, id, entry)) return
+
       entry.pages = pages
       entry.file = undefined
+
       if (dependencies.parser) {
         parsing = true
         update(id, {
@@ -164,6 +180,7 @@ export function createPdfImportController(
         validateSessionDataset(dataset)
         await dependencies.yieldTask?.()
         if (!current(batch, id, entry)) return
+
         entry.dataset = dataset
         entry.pages = undefined
         update(id, {
@@ -173,6 +190,7 @@ export function createPdfImportController(
         })
         return
       }
+
       update(id, {
         status: 'extracted',
         totalPages: pages.length,
@@ -182,6 +200,7 @@ export function createPdfImportController(
       })
     } catch (error) {
       if (!current(batch, id, entry)) return
+
       entry.pages = undefined
       const problem =
         error instanceof DomainError && error.code === 'import.session-limit'
@@ -213,6 +232,7 @@ export function createPdfImportController(
       pump()
     }
   }
+
   function pump() {
     const capacity = Math.max(
       0,
@@ -222,8 +242,10 @@ export function createPdfImportController(
       .filter((item) => item.status === 'queued')
       .slice(0, capacity))
       void run(item.id)
+
     finish()
   }
+
   function finish() {
     if (
       !dependencies.commit ||
@@ -233,6 +255,7 @@ export function createPdfImportController(
       [...pending.values()].some((entry) => entry.running)
     )
       return
+
     const batch = snapshot.batch
     const files = snapshot.items
       .filter((item) => item.status === 'parsed')
@@ -243,9 +266,11 @@ export function createPdfImportController(
       publish(snapshot.items)
       return
     }
+
     try {
       const outcome = dependencies.commit(files, baselineRevision)
       if (snapshot.batch !== batch) return
+
       pending.forEach(release)
       pending.clear()
       snapshot = { ...snapshot, outcome: { status: 'committed', ...outcome } }
@@ -272,6 +297,7 @@ export function createPdfImportController(
       publish(snapshot.items)
     }
   }
+
   const cancel = () => {
     snapshot = {
       ...snapshot,
@@ -282,20 +308,25 @@ export function createPdfImportController(
     pending.clear()
     publish([])
   }
+
   return {
     getSnapshot: () => snapshot,
+
     subscribe(listener) {
       listeners.add(listener)
       return () => {
         listeners.delete(listener)
       }
     },
+
     start(files) {
       if (!files.length) return
+
       if (snapshot.active) {
         publish(snapshot.items, 'batch-busy')
         return
       }
+
       cancel()
       const existing = dependencies.existing()
       baselineRevision = existing.revision ?? 0
@@ -306,6 +337,7 @@ export function createPdfImportController(
         if (!problem) {
           pending.set(id, { file, size: file.size, running: false })
         }
+
         return {
           id,
           name: file.name,
@@ -322,6 +354,7 @@ export function createPdfImportController(
       publish(items)
       pump()
     },
+
     unlock(id, password) {
       const item = snapshot.items.find((item) => item.id === id)
       if (
@@ -330,8 +363,10 @@ export function createPdfImportController(
         !password
       )
         return
+
       void run(id, password)
     },
+
     retry(id) {
       if (
         snapshot.outcome.status === 'committed' ||
@@ -343,22 +378,26 @@ export function createPdfImportController(
         !pending.has(id)
       )
         return
+
       snapshot = { ...snapshot, outcome: EMPTY_OUTCOME }
       update(id, { status: 'queued' })
       pump()
     },
+
     remove(id) {
       if (
         snapshot.outcome.status === 'committed' ||
         snapshot.outcome.status === 'failed'
       )
         return
+
       const entry = pending.get(id)
       if (entry) release(entry)
       pending.delete(id)
       update(id, { status: 'removed', problem: null })
       pump()
     },
+
     cancel,
     preview: (id) => pending.get(id)?.pages ?? null,
   }

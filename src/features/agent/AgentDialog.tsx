@@ -7,6 +7,7 @@ export function AgentDialog({ status, shared, onGrant, onRevoke, onRetry, onClos
   status: AgentConnectionState; shared: boolean; onGrant: () => void; onRevoke: () => void; onRetry: () => void; onClose: () => void
 }) {
   const { t } = useI18n()
+
   return (
     <Dialog title={t('agent.dialogTitle')} description={t('agent.dialogHint')} onClose={onClose}
       returnFocus={() => document.querySelector<HTMLElement>('[data-agent-access-trigger]') ?? document.getElementById('cashback-main')}

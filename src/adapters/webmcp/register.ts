@@ -27,6 +27,7 @@ export async function registerAgentTools(context: NativeModelContext, service: A
         annotations: tool.annotations, execute: (input, options) => service.execute(name, input, options?.signal) },
       { signal: registration.signal })
     }
+
     return dispose
   } catch (error) {
     dispose()

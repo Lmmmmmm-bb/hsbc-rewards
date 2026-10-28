@@ -10,6 +10,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
       window.history.replaceState(null, '', window.location.pathname + window.location.search)
     }
   }, [])
+
   return (
     <I18nProvider>
       <DocumentMetadata />

@@ -14,6 +14,7 @@ export function deriveRewardCardViews(
   const details = deriveRewardDetails(dataset, rewards)
   const quality = deriveRewardQuality(dataset, rewards, reports)
   const pools = deriveRewardPoolViews(dataset, rewards)
+
   return {
     coverage: details.coverage,
     quality: quality.total,

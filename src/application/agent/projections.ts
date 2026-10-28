@@ -14,6 +14,7 @@ export function componentFlags(tier: TierReward, row: Transaction) {
   const uncertain = tier.reasonCodes.some((code) => ['region.unknown', 'currency.original-unknown'].includes(code)) ||
     row.warnings.some((warning) => warning.code === 'date.outside-period')
   const capped = tier.reasonCodes.includes('reward.cap-applied')
+
   return {
     pending: tier.microRc === null,
     uncertain,
@@ -33,6 +34,7 @@ export function cardIdentity(snapshot: AgentSnapshot, card: AgentScope['cards'][
 export function projectPools(snapshot: AgentSnapshot, scope: AgentScope) {
   const pools = new Map<string, RewardPool>()
   scope.cards.forEach((card) => card.pools.forEach((pool) => pools.set(pool.key, pool)))
+
   return [...pools.values()].map((pool) => {
     const year = pool.period.slice(0, 4)
     const periodEnd = pool.period.endsWith('H1') ? `${year}-06-30` : `${year}-12-31`
@@ -43,6 +45,7 @@ export function projectPools(snapshot: AgentSnapshot, scope: AgentScope) {
     const observedThrough = snapshot.session.dataset.transactions
       .filter((row) => relatedIds.has(row.cardId) && row.transactionDate >= from && row.transactionDate <= asOf)
       .map((row) => row.transactionDate).sort().at(-1) ?? null
+
     return {
       poolRef: snapshot.references.get('pool', pool.key),
       cardRefs: relatedCards.map((card) => snapshot.references.get('card', card.id)),

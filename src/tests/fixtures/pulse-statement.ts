@@ -6,8 +6,11 @@ export const pulseAccounts = {
   cny: '5555 6666 7777 8888',
   additional: '9999 0000 1111 2222',
 }
+
 export type Parts = readonly (readonly [x: number, text: string])[]
+
 export const line = (text: string, x = 137): Parts => [[x, text]]
+
 export function purchase(
   description: string,
   amount: string,
@@ -83,6 +86,7 @@ export function pulsePage({
       bounds: { x, y, width: text.length * 4, height: 10 },
     }))
     const left = Math.min(...spans.map((span) => span.bounds.x))
+
     return {
       row: index + 1,
       text: parts.map((part) => part[1]).join(' '),
@@ -97,6 +101,7 @@ export function pulsePage({
       spans,
     }
   })
+
   return { page, width: 595, height: 842, rows }
 }
 
@@ -106,11 +111,13 @@ export const pulseFile = {
   fileName: 'synthetic.pdf',
   size: 1000,
 }
+
 export function pulseIdentity() {
   const ids = new Map<string, string>()
   return (kind: 'card' | 'account', number: string) => {
     const key = `${kind}:${number}`
     if (!ids.has(key)) ids.set(key, `${kind}-${ids.size + 1}`)
+
     return ids.get(key)!
   }
 }

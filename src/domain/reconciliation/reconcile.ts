@@ -22,6 +22,7 @@ export function reconcileStatement(statement: Statement, transactions: readonly 
     const expectedMinor = account.openingMinor === null ? null : addMinor([account.openingMinor, debitMinor, -creditMinor])
     const closingMinor = account.closingMinor === null ? null : safeInteger(account.closingMinor)
     const deltaMinor = expectedMinor === null || closingMinor === null ? null : safeInteger(closingMinor - expectedMinor)
+
     return { accountId: account.id, currency: account.currency, openingMinor: account.openingMinor, debitMinor, creditMinor, expectedMinor, closingMinor, deltaMinor, status: deltaMinor === null ? 'unverified' : deltaMinor === 0 ? 'matched' : 'mismatch', transactionIds: rows.map(t => t.id) }
   })
 }

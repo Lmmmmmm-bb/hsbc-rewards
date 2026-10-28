@@ -6,11 +6,13 @@ const quote = {
   rateDate: '2026-10-26',
   retrievedAt: Date.parse('2026-10-27T10:00:00Z'),
 }
+
 function storage() {
   const values = new Map<string, string>()
   return {
     values,
     getItem: (key: string) => values.get(key) ?? null,
+
     setItem: (key: string, value: string) => {
       values.set(key, value)
     },
@@ -26,6 +28,7 @@ describe('public reference cache', () => {
       ...{ pdf: 'SYNTHETIC PRIVATE CONTENT', merchant: 'SYNTHETIC STORE' },
     })
     const raw = target.getItem(FX_CACHE_KEY)!
+
     expect(JSON.parse(raw)).toEqual({
       version: 1,
       provider: 'frankfurter-ecb',
@@ -34,6 +37,7 @@ describe('public reference cache', () => {
     expect(raw).not.toContain('PRIVATE')
     expect(createBrowserFxCache(() => target).read()).toEqual(quote)
   })
+
   it('ignores corrupt entries, other providers, unsupported versions and invalid numeric/date fields', () => {
     const target = storage()
     const valid = { version: 1, provider: 'frankfurter-ecb', ...quote }
@@ -54,11 +58,13 @@ describe('public reference cache', () => {
       expect(createBrowserFxCache(() => target).read()).toBeNull()
     }
   })
+
   it('retains a public memory quote if browser storage is denied', () => {
     const cache = createBrowserFxCache(() => {
       throw new Error('storage blocked')
     })
     cache.write(quote)
+
     expect(cache.read()).toEqual(quote)
   })
 })

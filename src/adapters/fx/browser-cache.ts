@@ -3,6 +3,7 @@ import type { CachedFxQuote, FxCache } from '@/ports/fx'
 
 // Keep the storage key compatible; reuse duration is governed by retrievedAt.
 export const FX_CACHE_KEY = 'pulse.fx.daily.v1'
+
 type StoragePort = Pick<Storage, 'getItem' | 'setItem'>
 
 /** Public reference quote only. No PDF, password or session data is accepted by this port. */
@@ -11,11 +12,13 @@ export function createBrowserFxCache(
     typeof window === 'undefined' ? undefined : window.localStorage,
 ): FxCache {
   let memory: CachedFxQuote | null = null
+
   return {
     read() {
       try {
         const raw = storage()?.getItem(FX_CACHE_KEY)
         if (!raw) return memory
+
         const row = JSON.parse(raw) as Record<string, unknown>
         if (
           row === null ||
@@ -29,6 +32,7 @@ export function createBrowserFxCache(
           Number(row.retrievedAt) <= 0
         )
           return memory
+
         memory = {
           rateDate: row.rateDate,
           hkdToCnyPpm: Number(row.hkdToCnyPpm),
@@ -37,14 +41,17 @@ export function createBrowserFxCache(
       } catch {
         /* Blocked or damaged storage falls back to this page's public quote. */
       }
+
       return memory
     },
+
     write(quote) {
       memory = {
         rateDate: quote.rateDate,
         hkdToCnyPpm: quote.hkdToCnyPpm,
         retrievedAt: quote.retrievedAt,
       }
+
       try {
         storage()?.setItem(
           FX_CACHE_KEY,

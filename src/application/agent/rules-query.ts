@@ -9,6 +9,7 @@ export function getAgentRules(input: AgentToolInputs['reward_get_rules'], t: Tra
     rateBasisPoints: component === 'basic' ? LATEST_RULES.basicRateBasisPoints : component === 'abroad'
       ? LATEST_RULES.basicRateBasisPoints * LATEST_RULES.maximumAbroadMultiplier : LATEST_RULES.pulse.rateBasisPoints,
     eligibility: t(`rules.${component}.body`), cap: t(`rules.${component}.cap`) }))
+
   return {
     id: LATEST_RULES.id, verifiedAt: LATEST_RULES.verifiedAt, topic,
     ...(['overview', 'eligibility', 'caps'].includes(topic) ? { components } : {}),

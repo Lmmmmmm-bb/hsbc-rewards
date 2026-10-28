@@ -27,14 +27,17 @@ export async function verifyAgentBuild(directory, { originTrialToken } = {}) {
 
   const sections = [...guide.matchAll(/^### (reward_[a-z_]+)\n([^]*?)(?=^### |^## |$(?![^]))/gm)]
   assert.deepEqual(sections.map(([, name]) => name), Object.keys(AGENT_TOOLS), 'Every callable tool must be documented exactly once.')
+
   for (const [, name, section] of sections) {
     const schema = section.match(/```json\n([^]*?)\n```/)?.[1]
     assert.ok(schema, `${name} must document a machine-readable input schema.`)
     assert.deepEqual(JSON.parse(schema), AGENT_TOOLS[name].inputSchema, `${name} documentation must match its live input schema.`)
     assert.ok(!/\b(?:password|base64|filePath|pdfUrl)\b/.test(JSON.stringify(JSON.parse(schema))), 'Tools must not accept passwords or PDF transport arguments.')
   }
+
   const errors = [...guide.matchAll(/^- agent\.([a-z_]+):/gm)].map(([, code]) => code)
   assert.deepEqual(errors, [...AGENT_PROBLEMS], 'Document stable errors and their recovery guidance.')
+
   for (const target of new Set([...`${overview}\n${guide}`.matchAll(/\]\((\/[^)]*)\)/g)].map(([, path]) => path))) {
     assert.ok(['/', ...Object.values(AGENT_DOCUMENT_PATHS)].includes(target), `Unknown local documentation link: ${target}`)
     if (target !== '/') await readFile(join(directory, target))

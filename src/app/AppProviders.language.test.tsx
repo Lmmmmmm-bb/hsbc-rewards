@@ -44,13 +44,16 @@ function browser(languages: readonly string[] = ['en-GB'], language = 'en-GB') {
   const { window } = dom
   Object.defineProperty(window.navigator, 'languages', { get: () => languages, configurable: true })
   Object.defineProperty(window.navigator, 'language', { get: () => language, configurable: true })
+
   for (const key of ['window', 'document', 'navigator', 'HTMLElement', 'Element', 'Node', 'MutationObserver'] as const) {
     vi.stubGlobal(key, key === 'window' ? window : window[key])
   }
+
   vi.stubGlobal('getComputedStyle', window.getComputedStyle.bind(window))
   vi.stubGlobal('requestAnimationFrame', window.requestAnimationFrame.bind(window))
   vi.stubGlobal('cancelAnimationFrame', window.cancelAnimationFrame.bind(window))
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
+
   return window.document.getElementById('root')!
 }
 
@@ -62,10 +65,12 @@ function query<ElementType extends Element = HTMLElement>(container: ParentNode,
 
 function expectMetadata(locale: Locale) {
   const metadata = pageMetadata(locale)
+
   expect(document.documentElement.lang).toBe(locale)
   expect(document.title).toBe(metadata.title)
   expect(query(document, 'meta[name="description"]').getAttribute('content')).toBe(metadata.description)
   expect(query(document, 'meta[property="og:locale"]').getAttribute('content')).toBe(metadata.socialLocale)
+
   for (const [field, content] of [
     ['title', metadata.title], ['description', metadata.description], ['image:alt', metadata.imageAlt],
   ]) {
@@ -77,11 +82,13 @@ function expectMetadata(locale: Locale) {
 async function clickButton(container: ParentNode, label: string) {
   const button = [...container.querySelectorAll('button')].find((element) => element.textContent === label)
   if (!button) throw new Error(`Missing test button: ${label}`)
+
   await act(async () => button.click())
 }
 
 function Page({ children }: { children?: ReactNode }) {
   const { locale, t, date } = useI18n()
+
   return (
     <>
       <LanguageSwitcher />
@@ -97,6 +104,7 @@ function Session({ store, controller }: { store: SessionStore; controller: PdfIm
   const batch = useSyncExternalStore(controller.subscribe, controller.getSnapshot, controller.getSnapshot)
   const { t, number } = useI18n()
   const item = batch.items[0]
+
   return (
     <Page>
       <p data-result>{number(deriveWorkspace(session).knownRewardMicroRc / 1_000_000, 6)}</p>
@@ -131,14 +139,17 @@ describe('initial language and hydration', () => {
     const languageRead = vi.spyOn(window.navigator, 'languages', 'get')
     const tree = <StrictMode><AppProviders><Page /></AppProviders></StrictMode>
     const staticHtml = renderToString(tree)
+
     expect(staticHtml).toContain(zh['cashback.emptyTitle'])
     expect(localRead).not.toHaveBeenCalled()
     expect(languageRead).not.toHaveBeenCalled()
+
     container.innerHTML = staticHtml
     const heading = query(container, 'h1')
     const onRecoverableError = vi.fn()
     const { hydrateRoot } = await import('react-dom/client')
     await act(async () => { root = hydrateRoot(container, tree, { onRecoverableError }) })
+
     expect(onRecoverableError).not.toHaveBeenCalled()
     expect(query(container, 'h1')).toBe(heading)
     expect(heading.dataset.locale).toBe(expected)
@@ -155,6 +166,7 @@ describe('initial language and hydration', () => {
     const { createRoot } = await import('react-dom/client')
     const mounted = root = createRoot(container)
     await act(async () => mounted.render(<AppProviders><Page /></AppProviders>))
+
     expect(query(container, 'h1').dataset.locale).toBe(expected)
   })
 
@@ -163,10 +175,13 @@ describe('initial language and hydration', () => {
     const { createRoot } = await import('react-dom/client')
     const mounted = root = createRoot(container)
     await act(async () => mounted.render(<AppProviders><Page /></AppProviders>))
+
     expect(document.documentElement.lang).toBe('en-US')
     expect(query(container, '[data-date]').textContent).toBe('Oct 28, 2026')
     expect(query(document, 'meta[property="og:locale"]').getAttribute('content')).toBe('en_US')
+
     await act(async () => query<HTMLButtonElement>(container, '[data-language-switcher]').click())
+
     expect(query(container, '[data-language-switcher] span').lang).toBe('en-US')
   })
 
@@ -182,21 +197,28 @@ describe('initial language and hydration', () => {
     const mounted = root = createRoot(container)
     const tree = (label: string) => <AppProviders><Page><p>{label}</p></Page></AppProviders>
     await act(async () => mounted.render(tree('first')))
+
     expect(document.documentElement.lang).toBe(initial)
     expect(localWrite).not.toHaveBeenCalled()
+
     const button = query<HTMLButtonElement>(container, '[data-language-switcher]')
     button.focus()
     await act(async () => button.click())
+
     expectMetadata(selected)
     expect(document.activeElement).toBe(button)
     expect(button.getAttribute('aria-label')).toBe(createTranslator(selected)(
       selected === 'zh-CN' ? 'language.switchToEnglish' : 'language.switchToChinese',
     ))
+
     await act(async () => mounted.render(tree('second')))
+
     expect(query(container, 'h1').dataset.locale).toBe(selected)
+
     await act(async () => mounted.unmount())
     const reloaded = root = createRoot(container)
     await act(async () => reloaded.render(tree('reloaded')))
+
     expect(document.documentElement.lang).toBe(selected)
     expect(document.title).toBe(pageMetadata(selected).title)
     expect(window.location.href).toBe(url)
@@ -213,8 +235,11 @@ describe('initial language and hydration', () => {
     const { createRoot } = await import('react-dom/client')
     const mounted = root = createRoot(container)
     await act(async () => mounted.render(<AppProviders><Page /></AppProviders>))
+
     expect(document.documentElement.lang).toBe('en-US')
+
     await act(async () => query<HTMLButtonElement>(container, '[data-language-switcher]').click())
+
     expect(window.localStorage.getItem(LOCALE_PREFERENCE_KEY)).toBe('zh-CN')
   })
 
@@ -226,6 +251,7 @@ describe('initial language and hydration', () => {
     const mounted = root = createRoot(container)
     const tree = (label: string) => <StrictMode><AppProviders><Page><p>{label}</p></Page></AppProviders></StrictMode>
     await act(async () => mounted.render(tree('first')))
+
     expect(document.documentElement.lang).toBe('en-US')
 
     window.localStorage.setItem(LOCALE_PREFERENCE_KEY, 'zh-CN')
@@ -233,12 +259,14 @@ describe('initial language and hydration', () => {
       key: LOCALE_PREFERENCE_KEY, newValue: 'zh-CN', storageArea: window.localStorage,
     }))
     await act(async () => mounted.render(tree('second')))
+
     expect(document.documentElement.lang).toBe('en-US')
     expect(localRead).toHaveBeenCalledTimes(1)
 
     await act(async () => mounted.unmount())
     const reloaded = root = createRoot(container)
     await act(async () => reloaded.render(tree('reloaded')))
+
     expect(document.documentElement.lang).toBe('zh-CN')
     expect(localRead).toHaveBeenCalledTimes(2)
   })
@@ -252,9 +280,12 @@ describe('initial language and hydration', () => {
     const mounted = root = createRoot(container)
     const tree = (label: string) => <AppProviders><Page><p>{label}</p></Page></AppProviders>
     await act(async () => mounted.render(tree('first')))
+
     expect(document.documentElement.lang).toBe('en-US')
+
     await act(async () => query<HTMLButtonElement>(container, '[data-language-switcher]').click())
     await act(async () => mounted.render(tree('second')))
+
     expect(document.documentElement.lang).toBe('zh-CN')
   })
 
@@ -264,27 +295,34 @@ describe('initial language and hydration', () => {
     const fetch = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('No network in the example'))
     container.innerHTML = renderToString(<AppRoot />)
     const heading = query(container, 'h1')
+
     expect(heading.textContent).toBe(zh['cashback.emptyTitle'])
+
     const onRecoverableError = vi.fn()
     const { hydrateRoot } = await import('react-dom/client')
     await act(async () => { root = hydrateRoot(container, <AppRoot />, { onRecoverableError }) })
+
     expect(onRecoverableError).not.toHaveBeenCalled()
     expect(query(container, 'h1')).toBe(heading)
     expectMetadata('en-US')
 
     await clickButton(container, createTranslator('en-US')('cashback.tryExample'))
+
     expect([...container.querySelectorAll('button')].some((button) =>
       button.textContent === createTranslator('en-US')('cashback.tryExample'))).toBe(false)
+
     const before = sessionStore.getSnapshot()
     const total = query(container, '[data-reward-total]')
     const amount = total.textContent
     await act(async () => query<HTMLButtonElement>(container, '[data-language-switcher]').click())
+
     expectMetadata('zh-CN')
     expect(sessionStore.getSnapshot()).toBe(before)
     expect(query(container, '[data-reward-total]')).toBe(total)
     expect(total.textContent).toBe(amount)
 
     await act(async () => sessionStore.clear())
+
     expect(sessionStore.getSnapshot().mode).toBe('empty')
     expectMetadata('zh-CN')
     expect(window.localStorage.getItem(LOCALE_PREFERENCE_KEY)).toBe('zh-CN')
@@ -313,14 +351,19 @@ describe('initial language and hydration', () => {
     const firstHalf = buttons.find((button) => button.textContent?.includes('上半年'))!
     await act(async () => firstHalf.click())
     const total = query(container, '[data-reward-total]')
+
     expect(total.textContent).toBe('11.00RC')
     expect(container.querySelectorAll('[data-reward-breakdown]')).toHaveLength(1)
     expect(query(container, '[data-reward-breakdown]').getAttribute('data-period')).toBe('2026-H1')
+
     const reasons = query<HTMLButtonElement>(container, '[data-reward-card] button[aria-expanded]')
     await act(async () => reasons.click())
+
     expect(reasons.getAttribute('aria-expanded')).toBe('true')
+
     firstHalf.focus()
     await act(async () => query<HTMLButtonElement>(container, '[data-language-switcher]').click())
+
     expect(document.documentElement.lang).toBe('en-US')
     expect(document.activeElement).toBe(firstHalf)
     expect(firstHalf.getAttribute('aria-pressed')).toBe('true')
@@ -329,7 +372,9 @@ describe('initial language and hydration', () => {
     expect(query(container, '[data-reward-card] button[aria-expanded]')).toBe(reasons)
     expect(reasons.getAttribute('aria-expanded')).toBe('true')
     expect(sessionStore.getSnapshot()).toBe(before)
+
     await act(async () => buttons[0].click())
+
     expect(total.textContent).toBe('33.00RC')
     expect(container.querySelectorAll('[data-reward-breakdown]')).toHaveLength(2)
     expect(sessionStore.getSnapshot()).toBe(before)
@@ -383,8 +428,10 @@ describe('language changes during an import', () => {
       const amount = query(container, '[data-result]').textContent
       const input = query<HTMLInputElement>(container, 'input')
       input.value = 'synthetic unfinished value'
+
       for (const expectedLocale of ['zh-CN', 'en-US']) {
         await act(async () => query<HTMLButtonElement>(container, '[data-language-switcher]').click())
+
         expect(document.documentElement.lang).toBe(expectedLocale)
         expect(store.getSnapshot()).toBe(beforeSession)
         expect(controller.getSnapshot()).toBe(beforeBatch)
@@ -395,19 +442,23 @@ describe('language changes during an import', () => {
         expect(window.localStorage.length).toBe(1)
         expect(commit).not.toHaveBeenCalled()
       }
+
       if (phase !== 'parsing') expect(signal?.aborted).toBe(false)
+
       if (outcome === 'cancel') {
         await act(async () => {
           controller.cancel()
           gate.resolve()
           if (phase !== 'locked') await vi.waitFor(() => expect(pdf.dispose).toHaveBeenCalledTimes(1))
         })
+
         expect(controller.getSnapshot().active).toBe(false)
         expect(controller.getSnapshot().items).toEqual([])
         expect(store.getSnapshot()).toBe(beforeSession)
         expect(commit).not.toHaveBeenCalled()
         return
       }
+
       await act(async () => {
         if (phase === 'locked') {
           query(container, 'form').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }))
@@ -415,10 +466,12 @@ describe('language changes during an import', () => {
         else gate.resolve()
         await vi.waitFor(() => expect(controller.getSnapshot().outcome.status).toBe('committed'))
       })
+
       expect(commit).toHaveBeenCalledTimes(1)
       expect(store.getSnapshot().dataset.statements).toHaveLength(2)
       expect(store.getSnapshot().dataset.transactions).toHaveLength(2)
       expect(pdf.dispose).toHaveBeenCalledTimes(1)
+
       if (phase === 'locked') {
         expect(unlock).toHaveBeenCalledExactlyOnceWith(beforeBatch.items[0].id, 'synthetic unfinished value')
       }

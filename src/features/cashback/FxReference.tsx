@@ -12,6 +12,7 @@ export function FxReference({
 }) {
   const { t, number, date, dateTime } = useI18n()
   const available = fx.source === 'live' || fx.source === 'cache'
+
   return (
     <section
       data-fx-reference

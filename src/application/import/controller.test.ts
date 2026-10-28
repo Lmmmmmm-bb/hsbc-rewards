@@ -13,6 +13,7 @@ const source = (name = 'synthetic.pdf', body = '%PDF-synthetic') => {
     arrayBuffer: async () => bytes.slice().buffer,
   }
 }
+
 const document = (): LocalPdfDocument => ({
   pages: [
     {
@@ -26,6 +27,7 @@ const document = (): LocalPdfDocument => ({
   ],
   dispose: vi.fn(async () => {}),
 })
+
 function setup(reader: PdfReader, hashes: string[] = []) {
   let now = 1000
   const controller = createPdfImportController({
@@ -34,6 +36,7 @@ function setup(reader: PdfReader, hashes: string[] = []) {
     now: () => now,
     existing: () => ({ hashes, files: hashes.length, bytes: 0 }),
   })
+
   return {
     controller,
     setNow: (value: number) => {
@@ -48,13 +51,19 @@ describe('provisional PDF batch', () => {
     const { controller } = setup({ read: async () => extracted })
     controller.start([source()])
     await vi.waitFor(() => expect(controller.getSnapshot().items[0].status).toBe('extracted'))
+
     expect(extracted.dispose).toHaveBeenCalledTimes(1)
+
     const id = controller.getSnapshot().items[0].id
+
     expect(controller.preview(id)).toEqual(extracted.pages)
+
     controller.cancel()
+
     expect(controller.preview(id)).toBeNull()
     expect(extracted.dispose).toHaveBeenCalledTimes(1)
   })
+
   it('finishes other files while one is locked, then unlocks without retaining the password in snapshots', async () => {
     const read = vi.fn<PdfReader['read']>(async (bytes, options) => {
       if (
@@ -62,6 +71,7 @@ describe('provisional PDF batch', () => {
         options.password !== 'synthetic-password'
       )
         throw new PdfReadError('password-required')
+
       options.onProgress(1, 1)
       return document()
     })
@@ -81,9 +91,11 @@ describe('provisional PDF batch', () => {
     const id = controller.getSnapshot().items[0].id
     controller.unlock(id, 'synthetic-password')
     await vi.waitFor(() => expect(controller.getSnapshot().active).toBe(false))
+
     expect(controller.preview(id)?.[0].rows[0].text).toBe('SYNTHETIC')
     expect(JSON.stringify(controller.getSnapshot())).not.toContain('synthetic-password')
   })
+
   it('enforces a per-file password freeze and accepts a correct retry after expiry', async () => {
     const read = vi.fn<PdfReader['read']>(async (_, options) => {
       if (!options.password) throw new PdfReadError('password-required')
@@ -98,18 +110,24 @@ describe('provisional PDF batch', () => {
       controller.unlock(id, 'wrong')
       await vi.waitFor(() => expect(controller.getSnapshot().items[0].gate.failures).toBe(i + 1))
     }
+
     controller.unlock(id, 'correct')
+
     expect(read).toHaveBeenCalledTimes(6)
+
     setNow(61_000)
     controller.unlock(id, 'correct')
     await vi.waitFor(() => expect(controller.getSnapshot().items[0].status).toBe('extracted'))
+
     expect(controller.getSnapshot().items[0].gate.failures).toBe(0)
   })
+
   it('skips fingerprint duplicates both within a batch and against prior imports', async () => {
     const read = vi.fn<PdfReader['read']>(async () => document())
     const { controller } = setup({ read }, ['%PDF-prior'])
     controller.start([source('a.pdf'), source('copy.pdf'), source('prior.pdf', '%PDF-prior')])
     await vi.waitFor(() => expect(controller.getSnapshot().active).toBe(false))
+
     expect(controller.getSnapshot().items.map((item) => item.status)).toEqual([
       'extracted',
       'duplicate',
@@ -117,6 +135,7 @@ describe('provisional PDF batch', () => {
     ])
     expect(read).toHaveBeenCalledTimes(1)
   })
+
   it('cancel disposes successful documents and rejects late results from abandoned work', async () => {
     const first = document(),
       late = document()
@@ -131,9 +150,11 @@ describe('provisional PDF batch', () => {
     controller.cancel()
     pending.resolve(late)
     await vi.waitFor(() => expect(late.dispose).toHaveBeenCalledTimes(1))
+
     expect(first.dispose).toHaveBeenCalledTimes(1)
     expect(controller.getSnapshot().items).toEqual([])
   })
+
   it('removes a locked file without affecting a successful file and rejects a new batch while locked', async () => {
     const reader: PdfReader = {
       async read(bytes) {
@@ -151,11 +172,15 @@ describe('provisional PDF batch', () => {
       ]),
     )
     controller.start([source('replacement.pdf')])
+
     expect(controller.getSnapshot().rejected).toBe('batch-busy')
+
     controller.remove(controller.getSnapshot().items[0].id)
+
     expect(controller.getSnapshot().active).toBe(false)
     expect(controller.getSnapshot().items[1].status).toBe('extracted')
   })
+
   it('reports invalid file bytes before PDF reading, and retries recoverable reader failures', async () => {
     const read = vi
       .fn<PdfReader['read']>()
@@ -164,11 +189,13 @@ describe('provisional PDF batch', () => {
     const { controller } = setup({ read })
     controller.start([source('invalid.pdf', 'not-pdf'), source('retry.pdf', '%PDF-retry')])
     await vi.waitFor(() => expect(controller.getSnapshot().active).toBe(false))
+
     expect(controller.getSnapshot().items.map((item) => item.problem)).toEqual([
       'invalid-pdf',
       'read-failed',
     ])
     expect(read).toHaveBeenCalledTimes(1)
+
     controller.retry(controller.getSnapshot().items[1].id)
     await vi.waitFor(() => expect(controller.getSnapshot().items[1].status).toBe('extracted'))
   })

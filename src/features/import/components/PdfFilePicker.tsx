@@ -17,6 +17,7 @@ export function PdfFilePicker({
   pageTrigger?: boolean
 }) {
   const input = useRef<HTMLInputElement>(null)
+
   return (
     <>
       <Input

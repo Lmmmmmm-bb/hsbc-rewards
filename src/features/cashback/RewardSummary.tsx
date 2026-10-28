@@ -35,6 +35,7 @@ export function RewardSummary({
     { label: 'cashback.cards', value: cardCount },
     { label: 'cashback.purchases', value: view.expenseCount },
   ] as const
+
   return (
     <Card data-reward-summary className="ring-primary/20">
       <CardContent>

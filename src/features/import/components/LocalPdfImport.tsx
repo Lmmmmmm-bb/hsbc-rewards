@@ -14,6 +14,7 @@ export function LocalPdfImport({
 }) {
   const { batch } = usePdfImport()
   const { t } = useI18n()
+
   return (
     <div data-import-drop className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">

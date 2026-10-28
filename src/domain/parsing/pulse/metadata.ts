@@ -28,6 +28,7 @@ const monthNames = [
 export function pulseDate(value: string): string {
   const match = /^(\d{1,2})\s*([A-Z]{3})\s*(20\d{2})$/i.exec(value.trim())
   if (!match) throw new DomainError('parse.invalid-statement-date')
+
   const month = monthNames.indexOf(match[2].toUpperCase()) + 1
   return requireIsoDate(
     `${match[3]}-${String(month).padStart(2, '0')}-${match[1].padStart(2, '0')}`,
@@ -54,6 +55,7 @@ function inferredPeriod(date: string) {
       day + 1,
     ),
   )
+
   return { from: previous.toISOString().slice(0, 10), to: date }
 }
 
@@ -81,6 +83,7 @@ export function readPulseMetadata(input: readonly TextPage[]): PulseMetadata {
     )
   )
     throw new DomainError('parse.unsupported-template')
+
   const dates = new Set<string>()
   const associations = new Map<
     string,
@@ -103,6 +106,7 @@ export function readPulseMetadata(input: readonly TextPage[]): PulseMetadata {
       if (label) {
         const next = page.rows[index + 1]
         if (!next) throw new DomainError('parse.missing-statement-date')
+
         const adjacent = row.spans.find(
           (span) =>
             /^Statement balance$/i.test(span.text.trim()) &&
@@ -112,6 +116,7 @@ export function readPulseMetadata(input: readonly TextPage[]): PulseMetadata {
           pulseDate(rightText(next, label.bounds.x - 24, adjacent?.bounds.x)),
         )
       }
+
       const accountLabel = row.spans.find((span) =>
         /^Account Number$/i.test(span.text.trim()),
       )
@@ -123,6 +128,7 @@ export function readPulseMetadata(input: readonly TextPage[]): PulseMetadata {
           []
         for (const candidate of page.rows.slice(index + 1, index + 4)) {
           if (/Sub-account\s+Statement balance/i.test(candidate.text)) break
+
           const numberText = rightText(
             candidate,
             accountLabel.bounds.x - 12,
@@ -132,13 +138,16 @@ export function readPulseMetadata(input: readonly TextPage[]): PulseMetadata {
             rightText(candidate, limitLabel.bounds.x),
           )
           if (!currency) break
+
           pair.push({
             number: numberOf(numberText),
             currency: normalizeAccountCurrency(currency[1]),
           })
         }
+
         const card = pair.find((account) => account.currency === 'HKD')
         if (!card) throw new DomainError('parse.missing-card-association')
+
         for (const account of pair) {
           const prior = associations.get(account.number)
           if (
@@ -147,17 +156,20 @@ export function readPulseMetadata(input: readonly TextPage[]): PulseMetadata {
               prior.currency !== account.currency)
           )
             throw new DomainError('parse.conflicting-account-association')
+
           associations.set(account.number, {
             currency: account.currency,
             cardNumber: card.number,
           })
         }
       }
+
       const header = subAccount.exec(row.text.trim())
       if (header) {
         const currency = normalizeAccountCurrency(header[2])
         if (normalizeAccountCurrency(header[3]) !== currency)
           throw new DomainError('parse.conflicting-currency')
+
         headers.push({
           page: page.page,
           number: numberOf(header[1]),
@@ -165,6 +177,7 @@ export function readPulseMetadata(input: readonly TextPage[]): PulseMetadata {
           closingMinor: parseMinor(header[4]),
         })
       }
+
       const role = new RegExp(
         `^(PRIMARY|ADDITIONAL) CARD(?: NUMBER)?\\s+${accountToken}$`,
         'i',
@@ -176,6 +189,7 @@ export function readPulseMetadata(input: readonly TextPage[]): PulseMetadata {
         )
     }
   }
+
   if (dates.size !== 1)
     throw new DomainError(
       dates.size
@@ -183,12 +197,14 @@ export function readPulseMetadata(input: readonly TextPage[]): PulseMetadata {
         : 'parse.missing-statement-date',
     )
   if (headers.length === 0) throw new DomainError('parse.missing-subaccounts')
+
   const accounts = new Map<string, PulseAccount>()
   const pageAccounts = new Map<number, string>()
   for (const header of headers) {
     const association = associations.get(header.number)
     if (!association || association.currency !== header.currency)
       throw new DomainError('parse.missing-card-association')
+
     const prior = accounts.get(header.number)
     if (
       prior &&
@@ -198,6 +214,7 @@ export function readPulseMetadata(input: readonly TextPage[]): PulseMetadata {
       throw new DomainError('parse.conflicting-balances')
     if (pageAccounts.has(header.page))
       throw new DomainError('parse.multiple-subaccounts-on-page')
+
     pageAccounts.set(header.page, header.number)
     accounts.set(
       header.number,
@@ -209,10 +226,12 @@ export function readPulseMetadata(input: readonly TextPage[]): PulseMetadata {
       },
     )
   }
+
   const programs = new Map<string, PulseProgram>()
   for (const page of pages) {
     const number = pageAccounts.get(page.page)
     if (!number) continue
+
     const account = accounts.get(number)!
     for (let index = 0; index < page.rows.length; index++) {
       const text = page.rows[index].text.trim()
@@ -221,11 +240,14 @@ export function readPulseMetadata(input: readonly TextPage[]): PulseMetadata {
         const minor = parseMinor(opening[1])
         if (account.openingMinor !== null && account.openingMinor !== minor)
           throw new DomainError('parse.conflicting-balances')
+
         account.openingMinor = minor
       }
+
       const closing = /^STATEMENT BALANCE\s+(.+)$/i.exec(text)
       if (closing && parseMinor(closing[1]) !== account.closingMinor)
         throw new DomainError('parse.conflicting-balances')
+
       const multiplier =
         /^(\d+)X REWARDCASH IN OVERSEAS\s*&\s*MAINLAND CN[- ]20\d{2}$/i.exec(
           text,
@@ -234,6 +256,7 @@ export function readPulseMetadata(input: readonly TextPage[]): PulseMetadata {
         const value = Number(multiplier[1])
         if (value > 5)
           throw new DomainError('parse.unsupported-reward-allocation')
+
         const effective = /^THE EFFECTIVE PERIOD IS FROM (.+) TO (.+)\.$/i.exec(
           page.rows[index + 1]?.text.trim() ?? '',
         )
@@ -248,13 +271,16 @@ export function readPulseMetadata(input: readonly TextPage[]): PulseMetadata {
           program.effectivePeriod.from > program.effectivePeriod.to
         )
           throw new DomainError('parse.invalid-program-period')
+
         const prior = programs.get(account.cardNumber)
         if (prior && prior.multiplier !== value)
           throw new DomainError('parse.conflicting-reward-allocation')
+
         programs.set(account.cardNumber, program)
       }
     }
   }
+
   const date = [...dates][0]
   return {
     date,

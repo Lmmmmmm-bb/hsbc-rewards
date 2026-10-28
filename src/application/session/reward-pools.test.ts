@@ -21,6 +21,7 @@ describe('reward pool views', () => {
       statements: [statement()],
       transactions: [local],
     })
+
     expect(rewards.pools).toEqual([])
     expect(pools.get(testCard.id)).toHaveLength(2)
     expect(
@@ -44,6 +45,7 @@ describe('reward pool views', () => {
       },
       null,
     )
+
     expect(
       pools.get(testCard.id)?.find((pool) => pool.tier === 'abroad'),
     ).toEqual(rewards.pools.find((pool) => pool.tier === 'abroad'))
@@ -63,6 +65,7 @@ describe('reward pool views', () => {
       { ...testCard, pool },
       { ...testCard, id: 'second-card', pool },
     ]
+
     const local = (id: string, cardId: string, date: string) =>
       transaction({
         id,
@@ -72,6 +75,7 @@ describe('reward pool views', () => {
         account: { currency: 'HKD', minor: 25000 },
         classification: { ...transaction().classification, region: 'HK' },
       })
+
     const { rewards, pools } = inspect({
       cards,
       statements: [statement()],
@@ -80,6 +84,7 @@ describe('reward pool views', () => {
         local('new', 'second-card', '2026-01-01'),
       ],
     })
+
     expect(rewards.pools).toHaveLength(0)
     expect(pools.get(testCard.id)).toEqual(pools.get('second-card'))
     expect(pools.get(testCard.id)?.map((pool) => pool.period)).toEqual([
@@ -103,6 +108,7 @@ describe('reward pool views', () => {
       statements: [statement()],
       transactions: [],
     }
+
     expect(inspect(dataset).pools.get(testCard.id)).toHaveLength(2)
     expect(
       inspect({ ...dataset, cards: [testCard] }).pools.get(testCard.id),

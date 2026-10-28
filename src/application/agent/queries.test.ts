@@ -17,6 +17,7 @@ function setup(dataset: Dataset = { cards: [testCard], statements: [statement()]
   let id = 0
   const snapshots = createAgentSnapshots(store, () => `synthetic-${++id}`)
   disposers.push(() => snapshots.dispose())
+
   return { store, snapshots }
 }
 
@@ -24,16 +25,21 @@ describe('agent result queries', () => {
   it('separates known amounts, missing calculation inputs, and uncertain eligibility', () => {
     const { store, snapshots } = setup()
     const pending = getAgentSummary(snapshots)
+
     expect(pending.data).toMatchObject({ calculationStatus: 'partial', totalRewardMicroRc: null,
       pendingTransactionCount: 1, uncertainEligibilityCount: 0 })
     expect(pending.data.knownRewardMicroRc).toBeGreaterThan(0)
+
     store.replace({ ...store.getSnapshot().dataset, transactions: [transaction({
       classification: { ...transaction().classification, region: null },
     })] }, 'real')
     const uncertain = getAgentSummary(snapshots)
+
     expect(uncertain.data).toMatchObject({ calculationStatus: 'calculated', pendingTransactionCount: 0, uncertainEligibilityCount: 1 })
     expect(uncertain.data.totalRewardMicroRc).toBeGreaterThan(0)
+
     const rows = listAgentTransactions(snapshots, { resultToken: uncertain.meta.resultToken, flags: ['uncertain'], component: 'pulse' })
+
     expect(rows.data.items[0]).toMatchObject({ matchedComponents: ['pulse'] })
     expect(rows.data.items[0].components.find((component) => component.component === 'pulse')).toMatchObject({
       microRc: 0, flags: { pending: false, uncertain: true, excluded: false },
@@ -59,6 +65,7 @@ describe('agent result queries', () => {
     const second = getAgentCardRewards(snapshots, { cardRef, periodId: '2026-H2', resultToken: summary.meta.resultToken })
     const first = getAgentCardRewards(snapshots, { cardRef, periodId: '2026-H1', resultToken: summary.meta.resultToken })
     const existing = deriveWorkspace(store.getSnapshot()).periods.find((period) => period.id === '2026-H2')!
+
     expect(second.data.totalRewardMicroRc).toBe(existing.totalRewardMicroRc)
     expect(second.data.pools.filter((pool) => pool.component === 'abroad')).toEqual([
       expect.objectContaining({ shared: true, period: '2026', basisCode: 'hkd-equivalent', asOf: '2026-12-31', usedMinor: 10_000_000, remainingMinor: 0,
@@ -72,12 +79,17 @@ describe('agent result queries', () => {
     const { store, snapshots } = setup({ cards: [testCard], statements: [statement()], transactions: Array.from({ length: 23 }, (_, i) => transaction({ id: `row-${i}`, postingDate: `2026-10-${String(i + 1).padStart(2, '0')}` })) })
     const resultToken = getAgentSummary(snapshots).meta.resultToken
     const first = listAgentTransactions(snapshots, { resultToken })
+
     expect(first.data.items).toHaveLength(10)
     expect(first.data.totalCount).toBe(23)
+
     const second = listAgentTransactions(snapshots, { resultToken, cursor: first.data.nextCursor! })
+
     expect(new Set([...first.data.items, ...second.data.items].map((row) => row.transactionRef)).size).toBe(20)
     expect(() => listAgentTransactions(snapshots, { resultToken, cursor: first.data.nextCursor!, includeDescription: true })).toThrow('agent.cursor_invalid')
+
     store.setFx({ source: 'live', hkdToCnyPpm: 900000, stale: false, rateDate: '2026-10-27', retrievedAt: 1 })
+
     expect(() => listAgentTransactions(snapshots, { resultToken, cursor: first.data.nextCursor! })).toThrow('agent.result_changed')
     expect(getAgentSummary(snapshots).meta.resultToken).not.toBe(resultToken)
   })
@@ -90,6 +102,7 @@ describe('agent result queries', () => {
     const resultToken = summary.meta.resultToken
     const cardRef = summary.data.cards.items[0].cardRef
     const encoded = JSON.stringify([summary, getAgentCardRewards(snapshots, { cardRef, resultToken }), listAgentTransactions(snapshots, { resultToken }), getAgentQuality(snapshots, { resultToken })])
+
     expect(encoded).not.toContain('PRIVATE_')
     expect(listAgentTransactions(snapshots, { resultToken, includeDescription: true }).data.items[0].description).toBe('PRIVATE_DESCRIPTION')
   })
@@ -100,6 +113,7 @@ describe('agent result queries', () => {
       statements: [statement({ date: '2026-07-20', accounts: [{ id: 'account-cny', currency: 'CNY', openingMinor: 0, closingMinor: 50_000 }] })], transactions: rows })
     const resultToken = getAgentSummary(snapshots).meta.resultToken
     const quality = getAgentQuality(snapshots, { resultToken, periodId: '2026-H1' })
+
     expect(quality.data.issues.items).toContainEqual(expect.objectContaining({ kind: 'reconciliation', scope: 'full-source-statement', status: 'matched', deltaMinor: 0 }))
     expect(quality.data.issues.items.filter((item) => item.kind === 'transaction')).toHaveLength(1)
   })
@@ -107,6 +121,7 @@ describe('agent result queries', () => {
   it('does not return a fabricated original amount when original currency is unknown', () => {
     const { snapshots } = setup({ cards: [testCard], statements: [statement()], transactions: [transaction({ original: { currency: 'XXX', minor: 25000 } })] })
     const resultToken = getAgentSummary(snapshots).meta.resultToken
+
     expect(listAgentTransactions(snapshots, { resultToken }).data.items[0]).toMatchObject({ original: null, account: { currency: 'CNY', minor: 25000 } })
   })
 
@@ -157,13 +172,16 @@ describe('agent result queries', () => {
   it('retains zero-transaction statement checks and distinguishes empty sessions from zero estimates', () => {
     const { store, snapshots } = setup({ cards: [testCard], statements: [statement()], transactions: [] })
     const summary = getAgentSummary(snapshots)
+
     expect(summary.data).toMatchObject({ totalRewardMicroRc: 0, pendingTransactionCount: 0 })
     expect(getAgentQuality(snapshots, { resultToken: summary.meta.resultToken }).data.issues.items)
       .toContainEqual(expect.objectContaining({ kind: 'reconciliation', scope: 'full-source-statement' }))
     expect(getAgentQuality(snapshots, { resultToken: summary.meta.resultToken, periodId: '2026-H2' }).data.issues.items)
       .toContainEqual(expect.objectContaining({ kind: 'reconciliation', statementDate: '2026-10-20' }))
     expect(() => getAgentSummary(snapshots, { cursor: 'cursor_without_version' })).toThrow('agent.invalid_arguments')
+
     store.clear()
+
     expect(() => getAgentSummary(snapshots)).toThrow('agent.no_results')
   })
 
@@ -174,6 +192,7 @@ describe('agent result queries', () => {
     store.clear()
     store.replace(dataset, 'real')
     const current = getAgentSummary(snapshots)
+
     expect(current.data.cards.items[0].cardRef).not.toBe(old.data.cards.items[0].cardRef)
     expect(() => getAgentCardRewards(snapshots, { cardRef: old.data.cards.items[0].cardRef, resultToken: current.meta.resultToken })).toThrow('agent.card_not_found')
     expect(() => getAgentCardRewards(snapshots, { cardRef: current.data.cards.items[0].cardRef, resultToken: old.meta.resultToken })).toThrow('agent.result_changed')

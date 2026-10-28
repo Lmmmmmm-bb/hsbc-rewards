@@ -46,6 +46,7 @@ describe('workspace reward queries', () => {
     const abroad = deriveRewardDetails(dataset, rewards).cards[0].tiers.find(
       (tier) => tier.tier === 'abroad',
     )!
+
     expect(abroad.knownMicroRc).toBe(2000000)
     expect(abroad.eligibleSpend).toEqual([
       { currency: 'HKD', minor: 10000 },
@@ -55,12 +56,14 @@ describe('workspace reward queries', () => {
       { code: 'fx.required-for-cap', count: 1 },
       { code: 'reward.eligible', count: 1 },
     ])
+
     const view = deriveWorkspace({
       revision: 0,
       mode: 'real',
       dataset,
       fx: { source: 'unavailable', hkdToCnyPpm: null, stale: false },
     })
+
     expect(
       view.tierTotals.find((tier) => tier.tier === 'abroad'),
     ).toMatchObject({ microRc: null, knownMicroRc: 2000000 })

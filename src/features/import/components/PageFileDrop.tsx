@@ -17,6 +17,7 @@ export function PageFileDrop({
   const dragging = usePageFileDrop(onFiles)
   const { t } = useI18n()
   const Icon = busy ? RiTimeLine : RiFileUploadLine
+
   return (
     <>
       {children}

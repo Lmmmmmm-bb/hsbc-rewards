@@ -11,6 +11,7 @@ if (files.length === 0) {
   console.error('Usage: node scripts/verify-pulse-samples.mjs <local.pdf> ...')
   process.exit(1)
 }
+
 const root = fileURLToPath(new URL('../', import.meta.url))
 const server = await createServer({
   root,
@@ -52,6 +53,7 @@ try {
           .map((item) => {
             const transform = Util.transform(viewport.transform, item.transform)
             const height = Math.hypot(transform[2], transform[3])
+
             return {
               text: item.str,
               bounds: {
@@ -70,6 +72,7 @@ try {
         })
         page.cleanup()
       }
+
       const dataset = parsePulseStatement(
         pages,
         {
@@ -111,6 +114,7 @@ try {
           row.sources.every((source) => {
             const page = pages.find((page) => page.page === source.page)
             const bounds = source.bounds
+
             return (
               page &&
               bounds &&
@@ -143,6 +147,7 @@ try {
           sourceLocationsValid,
         }),
       )
+
       if (
         !rowCountMatches ||
         !sourceLocationsValid ||

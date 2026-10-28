@@ -4,6 +4,7 @@ import type { calculateRewards, RewardTier } from '@/domain/rewards/calculate'
 import { LATEST_RULES } from '@/domain/rewards/rules'
 
 type RewardResult = ReturnType<typeof calculateRewards>
+
 const tiers: readonly RewardTier[] = ['basic', 'abroad', 'pulse']
 const currencies: readonly AccountCurrency[] = ['HKD', 'CNY']
 
@@ -52,6 +53,7 @@ export function deriveRewardDetails(dataset: Dataset, rewards: RewardResult) {
         row,
         reward: rewards.byTransaction.get(row.id)!,
       }))
+
       return {
         cardId: card.id,
         transactionCount: rows.length,
@@ -80,6 +82,7 @@ export function deriveRewardDetails(dataset: Dataset, rewards: RewardResult) {
                 : LATEST_RULES.basicRateBasisPoints *
                   (card.abroadMultiplier ??
                     LATEST_RULES.maximumAbroadMultiplier)
+
           return {
             tier,
             knownMicroRc: addMinor(
@@ -100,6 +103,7 @@ export function deriveRewardDetails(dataset: Dataset, rewards: RewardResult) {
               const amounts = entries
                 .filter((entry) => entry.currency === currency)
                 .map((entry) => entry.result.eligibleMinor)
+
               return {
                 currency,
                 minor: amounts.some((amount) => amount === null)

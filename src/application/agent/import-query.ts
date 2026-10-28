@@ -13,12 +13,14 @@ export function currentBatchRef(batch: ImportSnapshot, references: AgentReferenc
 export function summarizeAgentImport(batch: ImportSnapshot, references: AgentReferences, now: number, expectedBatch?: string) {
   const batchRef = currentBatchRef(batch, references)
   if (expectedBatch !== undefined && expectedBatch !== batchRef) throw new AgentError('batch_changed')
+
   const items = batch.items.filter((item) => item.status !== 'removed')
   const locked = items.filter((item) => item.status === 'locked')
   const failedFiles = items.filter((item) => item.status === 'error').length
   const processing = batch.outcome.status === 'idle' && items.some((item) => ['queued', 'reading', 'parsing', 'parsed'].includes(item.status))
   const nextAction = locked.length ? locked.some((item) => passwordWaitSeconds(item.gate, now) === 0) ? 'user_unlock' : 'wait_for_cooldown'
     : processing ? 'wait' : failedFiles || batch.outcome.status === 'failed' ? 'review_failed_files' : batch.outcome.status === 'committed' ? 'read_summary' : 'provide_files'
+
   return {
     batchRef,
     active: batch.active || processing,

@@ -12,6 +12,7 @@ export function commitImportedBatch(
   const snapshot = store.getSnapshot()
   if (snapshot.revision !== expectedRevision)
     throw new DomainError('import.session-changed')
+
   const previous =
     snapshot.mode === 'real'
       ? snapshot.dataset
@@ -31,5 +32,6 @@ export function commitImportedBatch(
       snapshot.mode === 'real' ? snapshot.fx : undefined,
     )
   }
+
   return { files: fileCount, transactions: Math.max(0, transactionCount) }
 }

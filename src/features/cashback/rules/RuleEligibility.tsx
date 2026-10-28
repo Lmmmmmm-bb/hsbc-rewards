@@ -13,6 +13,7 @@ export function RuleEligibility({ rules }: { rules: WorkspaceView['rules'] }) {
     },
     { tier: 'pulse', rate: rules.pulse.rateBasisPoints },
   ] as const
+
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">{t('rules.subtitle')}</p>

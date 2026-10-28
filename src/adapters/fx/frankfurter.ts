@@ -13,6 +13,7 @@ export function createFrankfurterProvider(
   return {
     async latest(signal) {
       if (signal.aborted) throw new FxError('aborted')
+
       const timeout = new AbortController()
       const timer = setTimeout(() => timeout.abort(), FX_TIMEOUT_MS)
       try {
@@ -26,12 +27,14 @@ export function createFrankfurterProvider(
           signal: AbortSignal.any([signal, timeout.signal]),
         })
         if (!response.ok) throw new FxError('http')
+
         let data: unknown
         try {
           data = await response.json()
         } catch {
           throw new FxError('invalid-response')
         }
+
         if (signal.aborted) throw new FxError('aborted')
         if (timeout.signal.aborted) throw new FxError('timeout')
         return decodeFxQuote(data, now())

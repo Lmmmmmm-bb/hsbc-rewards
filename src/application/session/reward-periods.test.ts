@@ -8,6 +8,7 @@ const shared = {
   id: 'confirmed-family',
   evidence: 'statement-account' as const,
 }
+
 const card = (id = testCard.id): Card => ({
   ...testCard,
   id,
@@ -15,6 +16,7 @@ const card = (id = testCard.id): Card => ({
   statementIds: ['statement-a'],
   accountIds: ['account-cny'],
 })
+
 function inspect(dataset: Dataset, rate: number | null = 850000) {
   const { rewards, reports } = rewardContext(dataset, rate)
   return {
@@ -22,6 +24,7 @@ function inspect(dataset: Dataset, rate: number | null = 850000) {
     periods: deriveRewardPeriods(dataset, rewards, reports, rate),
   }
 }
+
 function abroad(id: string, cardId: string, date: string, minor: number) {
   return transaction({
     id,
@@ -62,8 +65,11 @@ describe('natural half-year reward views', () => {
       ],
     }
     const { periods } = inspect(dataset)
+
     expect(periods.map((period) => period.id)).toEqual(['2026-H2', '2026-H1'])
+
     const [second, first] = periods
+
     expect(first.totalRewardMicroRc).toBe(3760000000)
     expect(second.totalRewardMicroRc).toBe(920000000)
     expect(
@@ -83,6 +89,7 @@ describe('natural half-year reward views', () => {
     expect(first.cardCount).toBe(1)
     expect(second.quality.matchedAccounts).toBe(1)
   })
+
   it('uses transaction date instead of posting date and resets annual caps when the year changes', () => {
     const { periods } = inspect({
       cards: [card()],
@@ -92,6 +99,7 @@ describe('natural half-year reward views', () => {
         abroad('new', testCard.id, '2026-01-01', 10000000),
       ],
     })
+
     expect(periods.map((period) => period.id)).toEqual(['2026-H1', '2025-H2'])
     expect(
       periods.every(
@@ -106,6 +114,7 @@ describe('natural half-year reward views', () => {
       ),
     ).toEqual(['2026', '2025'])
   })
+
   it('retains missing-FX uncertainty across the annual pool instead of inventing an unused second-half pool', () => {
     const row = transaction()
     const { periods } = inspect(
@@ -119,6 +128,7 @@ describe('natural half-year reward views', () => {
       },
       null,
     )
+
     expect(periods.every((period) => period.totalRewardMicroRc === null)).toBe(
       true,
     )
@@ -133,6 +143,7 @@ describe('natural half-year reward views', () => {
       ),
     ).toBe(true)
   })
+
   it('keeps genuine empty-card sources and full untouched caps in their associated half-year', () => {
     const { periods } = inspect({
       cards: [card()],
@@ -150,6 +161,7 @@ describe('natural half-year reward views', () => {
       ],
       transactions: [],
     })
+
     expect(periods).toHaveLength(1)
     expect(periods[0]).toMatchObject({
       id: '2026-H2',
@@ -163,12 +175,14 @@ describe('natural half-year reward views', () => {
       periods[0].rewardCards[0].pools.every((pool) => pool.usedMinor === 0),
     ).toBe(true)
   })
+
   it('does not assign an empty card to an earlier half just because another card used the same source statement', () => {
     const { periods } = inspect({
       cards: [card(), card('empty')],
       statements: [statement({ date: '2026-07-20' })],
       transactions: [transaction({ transactionDate: '2026-06-30' })],
     })
+
     expect(
       periods
         .find((period) => period.id === '2026-H1')
@@ -180,6 +194,7 @@ describe('natural half-year reward views', () => {
         ?.rewardCards.map((card) => card.cardId),
     ).toEqual(['empty'])
   })
+
   it('aggregates unrounded awards, so two fractional periods still sum exactly to the complete result', () => {
     const local = transaction({
       original: { currency: 'HKD', minor: 100 },
@@ -194,6 +209,7 @@ describe('natural half-year reward views', () => {
         { ...local, id: 'b', transactionDate: '2026-07-01' },
       ],
     })
+
     expect(periods.map((period) => period.totalRewardMicroRc)).toEqual([
       4000, 4000,
     ])

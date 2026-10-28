@@ -2,6 +2,7 @@ import type { PdfSource } from '@/ports/pdf'
 import { IMPORT_LIMITS } from './policy'
 
 export { IMPORT_LIMITS } from './policy'
+
 export type InputError = 'not-pdf' | 'file-too-large' | 'empty-file' | 'session-limit'
 
 export function validatePdfSource(
@@ -26,6 +27,7 @@ export interface PasswordGate {
   readonly failures: number
   readonly until: number
 }
+
 export const EMPTY_GATE: PasswordGate = Object.freeze({ failures: 0, until: 0 })
 
 export function recordPasswordFailure(gate: PasswordGate, now: number): PasswordGate {

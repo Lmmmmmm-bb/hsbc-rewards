@@ -3,6 +3,7 @@ import type { calculateRewards } from '@/domain/rewards/calculate'
 import type { AccountReconciliation } from '@/domain/reconciliation/reconcile'
 
 type RewardResult = ReturnType<typeof calculateRewards>
+
 export interface StatementReport {
   readonly statement: Statement
   readonly accounts: readonly AccountReconciliation[]
@@ -16,6 +17,7 @@ function summarize(
   const warningCount = (code: string) =>
     rows.filter((row) => row.warnings.some((warning) => warning.code === code))
       .length
+
   return {
     matchedAccounts: accounts.filter((account) => account.status === 'matched')
       .length,
@@ -35,6 +37,7 @@ function summarize(
     ).length,
     uncertainEligibilityCount: rows.filter((row) => {
       const result = rewards.byTransaction.get(row.id)!
+
       return (
         result.tiers.some((tier) =>
           tier.reasonCodes.some((code) =>
@@ -81,6 +84,7 @@ export function deriveRewardQuality(
               accountIds.has(account.accountId),
             ),
           )
+
         return [card.id, summarize(rows, accounts, rewards)]
       }),
     ),

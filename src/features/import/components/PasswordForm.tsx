@@ -17,12 +17,16 @@ export function PasswordForm({
     id = useId()
   const { t } = useI18n()
   const [now, setNow] = useState(() => Date.now())
+
   useEffect(() => {
     if (!item.gate.until) return
+
     const timer = setInterval(() => setNow(Date.now()), 1000)
     return () => clearInterval(timer)
   }, [item.gate.until])
+
   const wait = passwordWaitSeconds(item.gate, now)
+
   return (
     <form
       data-password-form

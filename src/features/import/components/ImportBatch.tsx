@@ -15,6 +15,7 @@ export function ImportBatch({
 }) {
   const { t } = useI18n()
   if (!batch.items.length) return null
+
   const items = batch.items.filter((item) => item.status !== 'removed')
   const finished = items.filter((item) =>
     ['extracted', 'parsed', 'imported', 'error', 'duplicate'].includes(
@@ -24,6 +25,7 @@ export function ImportBatch({
   const problems = items.filter((item) =>
     ['locked', 'error'].includes(item.status),
   ).length
+
   return (
     <section data-batch aria-label={t('pdf.batchTitle')} className="space-y-2">
       <div className="flex flex-wrap items-center justify-between gap-2">

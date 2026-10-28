@@ -23,6 +23,7 @@ function loadContents(): Promise<Contents> {
       throw error
     },
   )
+
   return pending
 }
 
@@ -37,6 +38,7 @@ export function DeferredDialogContent({
     contents ? { status: 'ready', contents } : { status: 'loading' },
   )
   const [attempt, setAttempt] = useState(0)
+
   useEffect(() => {
     let current = true
     void loadContents().then(
@@ -47,6 +49,7 @@ export function DeferredDialogContent({
         if (current) setState({ status: 'error' })
       },
     )
+
     return () => {
       current = false
     }

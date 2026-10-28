@@ -3,6 +3,7 @@ import type { Card, Dataset, DomainWarning } from '@/domain/model/types'
 import { deduplicateTransactions } from '@/domain/normalization/deduplicate'
 
 const unique = (values: readonly string[]) => [...new Set(values)].sort()
+
 const uniqueWarnings = (warnings: readonly DomainWarning[]) => [
   ...new Map(
     warnings.map((warning) => [
@@ -20,22 +21,27 @@ const uniqueWarnings = (warnings: readonly DomainWarning[]) => [
 function mergeCard(prior: Card, incoming: Card): Card {
   if (prior.lastFour !== incoming.lastFour)
     throw new DomainError('import.card-identity-conflict')
+
   const warnings = uniqueWarnings([
     ...(prior.warnings ?? []),
     ...(incoming.warnings ?? []),
   ])
+
   const conflict = (code: string) => {
     if (!warnings.some((warning) => warning.code === code))
       warnings.push({ code })
   }
+
   if (
     prior.role !== 'unknown' &&
     incoming.role !== 'unknown' &&
     prior.role !== incoming.role
   )
     conflict('card.role-conflict')
+
   if (prior.pool && incoming.pool && prior.pool.id !== incoming.pool.id)
     conflict('card.pool-conflict')
+
   const role = warnings.some((warning) => warning.code === 'card.role-conflict')
     ? 'unknown'
     : incoming.role === 'unknown'
@@ -46,6 +52,7 @@ function mergeCard(prior: Card, incoming: Card): Card {
   const pool = warnings.some((warning) => warning.code === 'card.pool-conflict')
     ? undefined
     : (incoming.pool ?? prior.pool)
+
   return {
     ...base,
     role,
@@ -85,14 +92,17 @@ export function mergeImportedDatasets(
   )) {
     if (dataset.statements.length !== 1)
       throw new DomainError('import.invalid-parsed-file')
+
     const statement = dataset.statements[0]
     if (hashes.has(statement.fileHash)) continue
     if (statementMap.has(statement.id))
       throw new DomainError('import.statement-identity-conflict')
+
     statementMap.set(statement.id, statement)
     hashes.add(statement.fileHash)
     accepted.push(dataset)
   }
+
   const rawTransactions = [
     ...previous.transactions,
     ...accepted.flatMap((dataset) => dataset.transactions),
@@ -102,7 +112,9 @@ export function mergeImportedDatasets(
     rawTransactions.length
   )
     throw new DomainError('import.transaction-identity-conflict')
+
   const cards = new Map<string, Card>()
+
   const cardDate = (card: Card, dataset: Dataset) => {
     const sourceIds = new Set([
       ...(card.statementIds ?? []),
@@ -110,6 +122,7 @@ export function mergeImportedDatasets(
         .filter((row) => row.cardId === card.id)
         .flatMap((row) => row.sources.map((source) => source.statementId)),
     ])
+
     return (
       dataset.statements
         .filter((statement) => sourceIds.has(statement.id))
@@ -118,6 +131,7 @@ export function mergeImportedDatasets(
         .at(-1) ?? ''
     )
   }
+
   const evidence = [previous, ...accepted]
     .flatMap((dataset) =>
       dataset.cards.map((card) => ({ card, order: cardDate(card, dataset) })),
@@ -131,6 +145,7 @@ export function mergeImportedDatasets(
       card.id,
       cards.has(card.id) ? mergeCard(cards.get(card.id)!, card) : card,
     )
+
   const accountCurrency = new Map<string, string>()
   for (const statement of statementMap.values())
     for (const account of statement.accounts) {
@@ -141,6 +156,7 @@ export function mergeImportedDatasets(
         throw new DomainError('import.account-currency-conflict')
       accountCurrency.set(account.id, account.currency)
     }
+
   for (const row of rawTransactions) {
     if (
       !cards.has(row.cardId) ||
@@ -148,6 +164,7 @@ export function mergeImportedDatasets(
       row.sources.length === 0 ||
       row.sources.some((source) => {
         const statement = statementMap.get(source.statementId)
+
         return (
           !statement ||
           !statement.accounts.some(
@@ -166,6 +183,7 @@ export function mergeImportedDatasets(
     )
       throw new DomainError('import.invalid-source-association')
   }
+
   const cleaned = rawTransactions.map((row) => ({
     ...row,
     warnings: row.warnings.filter(
@@ -176,6 +194,7 @@ export function mergeImportedDatasets(
         ].includes(warning.code),
     ),
   }))
+
   return {
     cards: [...cards.values()].sort((a, b) => a.id.localeCompare(b.id)),
     statements: [...statementMap.values()].sort(

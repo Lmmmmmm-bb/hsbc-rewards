@@ -3,6 +3,7 @@ export const AGENT_PROBLEMS = [
   'card_not_found', 'file_not_found', 'batch_changed', 'batch_not_active',
   'result_changed', 'cursor_invalid', 'ui_busy', 'cancelled', 'unavailable', 'query_too_broad',
 ] as const
+
 export type AgentProblem = typeof AGENT_PROBLEMS[number]
 
 export class AgentError extends Error {

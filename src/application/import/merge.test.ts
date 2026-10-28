@@ -12,6 +12,7 @@ describe('statement dataset merge', () => {
       next = file('b', '2026-11-20')
     const before = JSON.stringify([prior, next])
     const dataset = mergeImportedDatasets(prior, [next])
+
     expect(dataset.cards).toHaveLength(1)
     expect(dataset.cards[0].statementIds).toEqual(['a', 'b'])
     expect(dataset.transactions).toHaveLength(2)
@@ -21,6 +22,7 @@ describe('statement dataset merge', () => {
   it('uses statement date instead of arrival order for latest explicit allocation', () => {
     const old = file('a', '2026-09-20', { abroadMultiplier: 2 }),
       latest = file('b', '2026-10-20', { abroadMultiplier: 5 })
+
     expect(mergeImportedDatasets(empty, [latest, old])).toEqual(
       mergeImportedDatasets(empty, [old, latest]),
     )
@@ -36,6 +38,7 @@ describe('statement dataset merge', () => {
         lastFour: testCard.lastFour,
       }),
     ])
+
     expect(dataset.cards).toHaveLength(2)
     expect(dataset.cards.every((card) => !card.pool)).toBe(true)
   })
@@ -49,6 +52,7 @@ describe('statement dataset merge', () => {
         { ...duplicate.statements[0], fileHash: prior.statements[0].fileHash },
       ],
     }
+
     expect(mergeImportedDatasets(prior, [copy]).transactions).toHaveLength(1)
     expect(mergeImportedDatasets(prior, [copy]).statements).toHaveLength(1)
   })
@@ -56,6 +60,7 @@ describe('statement dataset merge', () => {
   it('merges only proven bank references and preserves both source statements', () => {
     const first = file(),
       second = file('b')
+
     const proven = (dataset: Dataset) => ({
       ...dataset,
       transactions: [
@@ -65,7 +70,9 @@ describe('statement dataset merge', () => {
         },
       ],
     })
+
     const dataset = mergeImportedDatasets(proven(first), [proven(second)])
+
     expect(dataset.transactions).toHaveLength(1)
     expect(
       dataset.transactions[0].sources.map((source) => source.statementId),
@@ -74,6 +81,7 @@ describe('statement dataset merge', () => {
 
   it('keeps unproven lookalikes and does not accumulate duplicate warnings on later merges', () => {
     const dataset = mergeImportedDatasets(file(), [file('b')])
+
     expect(dataset.transactions).toHaveLength(2)
     expect(
       dataset.transactions.every((row) =>
@@ -82,7 +90,9 @@ describe('statement dataset merge', () => {
         ),
       ),
     ).toBe(true)
+
     const repeated = mergeImportedDatasets(dataset, [])
+
     expect(repeated.transactions.map((row) => row.warnings)).toEqual(
       dataset.transactions.map((row) => row.warnings),
     )
@@ -96,6 +106,7 @@ describe('statement dataset merge', () => {
       pool: { id: 'two', evidence: 'statement-account' },
     })
     const dataset = mergeImportedDatasets(first, [second])
+
     expect(dataset.cards[0].pool).toBeUndefined()
     expect(dataset.cards[0].warnings).toContainEqual({
       code: 'card.pool-conflict',

@@ -4,6 +4,7 @@ import type { AgentSnapshots, PageInput } from './snapshots'
 import { componentFlags, resultMeta } from './projections'
 
 export type TransactionFlag = 'pending' | 'uncertain' | 'excluded' | 'capped'
+
 export interface TransactionInput extends ResultScope, PageInput {
   readonly resultToken: string
   readonly component?: RewardTier
@@ -27,6 +28,7 @@ export function listAgentTransactions(snapshots: AgentSnapshots, input: Transact
   const binding = JSON.stringify(['transactions', scope.periodId, input.cardRef ?? null,
     input.component ?? null, [...new Set(input.flags ?? [])].sort(), input.includeDescription ?? false])
   const page = snapshots.page(rows, input, binding, snapshot.resultToken)
+
   return {
     meta: resultMeta(snapshot, scope),
     data: {

@@ -24,6 +24,7 @@ function App() {
   const { dialog, focusItemId } = useSyncExternalStore(actions.subscribe, actions.getSnapshot, actions.getSnapshot)
   const agent = useAgentRuntime(actions)
   const fx = useFx()
+
   return (
     <PageFileDrop onFiles={actions.importFiles} busy={batch.active}>
       <CashbackPage
@@ -75,4 +76,5 @@ function App() {
     </PageFileDrop>
   )
 }
+
 export default App

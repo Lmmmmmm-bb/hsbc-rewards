@@ -33,10 +33,12 @@ export function groupTextRows(spans: readonly TextSpan[]): TextRow[] {
     if (group) group.spans.push(span)
     else groups.push({ baseline, spans: [span] })
   }
+
   return groups.map((group, index) => {
     const ordered = group.spans.sort((a, b) => a.bounds.x - b.bounds.x)
     const x = Math.min(...ordered.map((span) => span.bounds.x))
     const y = Math.min(...ordered.map((span) => span.bounds.y))
+
     return {
       row: index + 1,
       text: ordered.map((span) => span.text.trim()).join(' '),

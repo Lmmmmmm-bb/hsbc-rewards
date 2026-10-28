@@ -11,7 +11,10 @@ export function useAgentRuntime(actions: WorkspaceActions) {
   const [runtime] = useState(() => createAgentRuntime(sessionStore, pdfImport))
   const status = useSyncExternalStore(runtime.subscribe, runtime.getSnapshot, runtime.getSnapshot)
   const shared = useSyncExternalStore(runtime.access.subscribe, runtime.access.getSnapshot, runtime.access.getSnapshot)
+
   useEffect(() => { translate.current = t }, [t])
+
   useEffect(() => runtime.connect(document, actions, () => translate.current), [runtime, actions])
+
   return { status, shared, grant: runtime.access.grant, revoke: runtime.access.revoke, retry: runtime.retry }
 }

@@ -15,6 +15,7 @@ export type ImportProblem =
   | 'batch-busy'
   | 'unsupported-statement'
   | 'invalid-statement'
+
 export interface ImportItem {
   readonly id: string
   readonly name: string
@@ -37,6 +38,7 @@ export interface ImportItem {
   readonly transactions: number
   readonly gate: PasswordGate
 }
+
 export interface ImportSnapshot {
   readonly batch: number
   readonly active: boolean
@@ -49,6 +51,7 @@ export interface ImportSnapshot {
     readonly problem?: 'session-changed' | 'commit-failed'
   }
 }
+
 export interface ImportDependencies {
   readonly reader: PdfReader
   readonly fingerprint: (bytes: ArrayBuffer) => Promise<string>
@@ -66,6 +69,7 @@ export interface ImportDependencies {
     expectedRevision: number,
   ) => { files: number; transactions: number }
 }
+
 export interface PdfImportController {
   getSnapshot(): ImportSnapshot
   subscribe(listener: () => void): () => void

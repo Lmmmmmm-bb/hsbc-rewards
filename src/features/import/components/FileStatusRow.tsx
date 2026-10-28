@@ -21,6 +21,7 @@ export function FileStatusRow({
   editable: boolean
 }) {
   const { t, number } = useI18n()
+
   return (
     <li data-batch-item data-file-id={item.id} tabIndex={-1}>
       <Card size="sm" className="border ring-0">

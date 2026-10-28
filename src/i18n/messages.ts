@@ -13,6 +13,7 @@ export function createTranslator(locale: Locale): Translate {
   return (key: MessageKey, values: MessageValues = {}) => {
     const message = messages[key]
     const template = typeof message === 'function' ? message(values) : message
+
     return template.replace(/\{(\w+)\}/g, (_, name: string) => {
       if (values[name] === undefined) throw new Error('i18n.missing-parameter')
       return String(values[name])

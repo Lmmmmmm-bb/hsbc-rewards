@@ -32,6 +32,7 @@ export function Dialog({
 }) {
   const { t } = useI18n()
   const descriptionId = useId()
+
   return (
     <ShadcnDialog
       open

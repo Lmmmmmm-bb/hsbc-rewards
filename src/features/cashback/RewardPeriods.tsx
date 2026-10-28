@@ -23,6 +23,7 @@ export function RewardPeriods({
       amount: rc(period.totalRewardMicroRc),
     })),
   ]
+
   return (
     <nav
       data-reward-periods

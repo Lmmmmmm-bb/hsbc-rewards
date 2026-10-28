@@ -7,19 +7,24 @@ import type { MessageValues } from './message-types'
 
 describe('message catalogs', () => {
   const keys = Object.keys(zh) as MessageKey[]
+
   const parameters = (template: string) =>
     [...new Set([...template.matchAll(/\{(\w+)\}/g)].map((match) => match[1]))].sort()
 
   it('keeps both catalogs complete with identical interpolation parameters', () => {
     expect(Object.keys(en).sort()).toEqual([...keys].sort())
+
     for (const key of keys) {
       const expected = parameters(zh[key])
       for (const count of [0, 1, 2]) {
         const values = Object.fromEntries(expected.map((name) => [name, count]))
         const message = en[key]
         const template = typeof message === 'function' ? message(values) : message
+
         expect(parameters(template), key).toEqual(expected)
+
         const t = createTranslator('en-US') as (key: MessageKey, values: MessageValues) => string
+
         expect(t(key, values), key).not.toMatch(/\{\w+\}/)
       }
     }
@@ -27,6 +32,7 @@ describe('message catalogs', () => {
 
   it('does not reinterpret parameter values as templates or HTML', () => {
     const name = '<synthetic>{pages}$&.pdf'
+
     expect(createTranslator('en-US')('pdf.remove', { name })).toBe(`Remove ${name}`)
     expect(createTranslator('zh-CN')('pdf.remove', { name })).toBe(`移除 ${name}`)
   })
@@ -51,6 +57,7 @@ describe('English cardinal agreement', () => {
 
   it.each([0, 1, 2])('handles %i statements, transactions and purchases', (count) => {
     const suffix = count === 1 ? '' : 's'
+
     expect(t('card.coverage', { count, from: 'A', to: 'B' })).toBe(`${count} statement${suffix} · A — B`)
     expect(t('card.transactions', { count, purchases: 1 })).toBe(`${count} transaction${suffix} · 1 purchase`)
     expect(t('pdf.committed', { files: 1, transactions: count })).toBe(`Added 1 statement and ${count} new transaction${suffix}.`)

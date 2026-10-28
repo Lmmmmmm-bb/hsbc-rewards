@@ -9,10 +9,12 @@ export function summarizeCardRewards(
 ): CardRewards[] {
   return cards.map((card) => {
     const rows = transactions.filter((row) => row.cardId === card.id)
+
     const totalFor = (tier: RewardTier) => {
       const values = rows.map(
         (row) => row.tiers.find((item) => item.tier === tier)?.microRc ?? null,
       )
+
       return values.some((value) => value === null)
         ? null
         : values.reduce<number>(
@@ -20,6 +22,7 @@ export function summarizeCardRewards(
             0,
           )
     }
+
     const basicMicroRc = totalFor('basic') ?? 0,
       abroadMicroRc = totalFor('abroad'),
       pulseMicroRc = totalFor('pulse')
@@ -31,6 +34,7 @@ export function summarizeCardRewards(
       abroadMicroRc === null || pulseMicroRc === null
         ? null
         : safeInteger(basicMicroRc + abroadMicroRc + pulseMicroRc)
+
     return {
       cardId: card.id,
       basicMicroRc,

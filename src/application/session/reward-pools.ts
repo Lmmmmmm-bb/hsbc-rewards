@@ -34,6 +34,7 @@ export function deriveRewardPoolViews(
             pools.some((pool) => pool.tier === tier && pool.period === period)
           )
             continue
+
           pools.push({
             key: `unused:${ownerId}:${tier}:${period}`,
             ownerId,
@@ -47,6 +48,7 @@ export function deriveRewardPoolViews(
           })
         }
       }
+
       return [
         card.id,
         pools.sort(

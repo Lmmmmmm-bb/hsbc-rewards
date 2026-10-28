@@ -5,6 +5,7 @@ import { useI18n } from '@/i18n/use-i18n'
 export function LanguageSwitcher() {
   const { locale, setLocale, t } = useI18n()
   const nextLocale = locale === 'zh-CN' ? 'en-US' : 'zh-CN'
+
   return (
     <Button
       data-language-switcher

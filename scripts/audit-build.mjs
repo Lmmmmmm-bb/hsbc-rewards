@@ -13,6 +13,7 @@ import { zh } from '../src/i18n/zh.ts'
 // source files, the normal dist directory and business data are never changed.
 const [directory] = process.argv.slice(2)
 if (!directory) throw new Error('Usage: node scripts/audit-build.mjs <output-dir-outside-repository>')
+
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const output = resolve(directory)
 const fromRoot = relative(root, output)
@@ -35,11 +36,14 @@ async function snapshot(name, probe = false) {
       generateBundle(_options, bundle) {
         const entry = Object.values(bundle).find(item => item.type === 'chunk' && item.isEntry)
         assert.ok(entry?.facadeModuleId, 'The browser entry must have a source module.')
+
         const visit = (id) => {
           if (staticModules.has(id)) return
+
           staticModules.add(id)
           this.getModuleInfo(id)?.importedIds.forEach(visit)
         }
+
         visit(entry.facadeModuleId)
       },
     }, ...(probe ? [{
@@ -47,9 +51,11 @@ async function snapshot(name, probe = false) {
       enforce: 'pre',
       transform(code, id) {
         if (id !== join(root, 'src/i18n/zh.ts')) return
+
         const changed = code.replace(`'cashback.emptyTitle': '${heading}'`, `'cashback.emptyTitle': '${probeHeading}'`)
         assert.notEqual(changed, code, 'The copy probe must change a rendered message.')
         transformed = true
+
         return { code: changed, map: null }
       },
     }] : [])],
@@ -61,13 +67,16 @@ async function snapshot(name, probe = false) {
   const entry = chunks.find(chunk => chunk.isEntry)
   assert.ok(entry, 'A browser entry must exist.')
   const initial = new Set()
+
   function visit(file) {
     if (initial.has(file)) return
+
     const chunk = byFile.get(file)
     assert.ok(chunk, `Missing eager import: ${file}`)
     initial.add(file)
     chunk.imports.forEach(visit)
   }
+
   visit(entry.fileName)
   const runtime = chunks.find(chunk => chunk.name === 'react-runtime')
   const ui = chunks.find(chunk => chunk.name === 'ui-runtime')
@@ -83,33 +92,42 @@ async function snapshot(name, probe = false) {
   assert.ok(initial.has(ui.fileName), 'Shared UI code must be available on initial navigation.')
   assert.ok(!initial.has(engine.fileName), 'PDF.js must stay lazy.')
   assert.equal(engine.imports.length, 0, 'The PDF engine must not depend on the app entry.')
+
   for (const chunk of [runtime, ui, engine]) {
     assert.ok(!Object.keys(chunk.modules).some(id => id.startsWith(join(root, 'src/'))), `${chunk.name} must contain no business modules.`)
   }
+
   for (const file of initial) {
     for (const id of Object.keys(byFile.get(file).modules)) {
       if (id === '\0rolldown/runtime.js') continue
       assert.ok(staticModules.has(id), `A lazy-only module must not be promoted into the initial graph: ${id}`)
     }
+
     assert.ok(!Object.keys(byFile.get(file).modules).some(id => /[\\/]pdfjs-dist[\\/]/.test(id)), 'No PDF.js module may enter the initial graph.')
     assert.ok(!Object.keys(byFile.get(file).modules).some(id => /[\\/](?:PrivacyDetails|RewardRules|FileStatusList|FileStatusRow|PasswordForm)\.tsx$/.test(id)), 'Deferred dialog bodies must not enter the initial graph.')
   }
+
   const pdfResources = result.output.filter(item => item.type === 'asset' && item.originalFileNames.some(name => /[\\/]pdfjs-dist[\\/](?:cmaps|standard_fonts|wasm)[\\/]/.test(name)))
   assert.ok(pdfResources.some(item => item.fileName.endsWith('.bcmap')), 'CMaps must be emitted as independent resources.')
+
   for (const id of Object.keys(reader.modules).filter(id => /[\\/]pdfjs-dist[\\/](?:cmaps|standard_fonts|wasm)[\\/]/.test(id))) {
     assert.ok(id.includes('no-inline'), 'All PDF support URLs must explicitly opt out of inlining.')
   }
+
   assert.ok(!/["'`]data:/.test(reader.code), 'The PDF reader must not embed support data URLs.')
+
   for (const chunk of chunks) {
     assert.ok(!Object.keys(chunk.modules).some(id => /[\\/]app[\\/]prerender\.tsx$|[\\/]react-dom[\\/].*server/.test(id)), 'Build-time rendering must not enter any browser chunk.')
     assert.ok(!Object.keys(chunk.modules).some(id => /[\\/]app[\\/]agent-documents\.ts$|[\\/]scripts[\\/]/.test(id)), 'Public-document rendering and verification must stay outside browser chunks.')
   }
+
   await verifySeoBuild(join(work, name), {
     indexable: process.env.VERCEL_ENV !== 'preview',
     expectedHeading: probe ? probeHeading : heading,
   })
   await verifyAgentBuild(join(work, name), { originTrialToken: process.env.WEBMCP_ORIGIN_TRIAL_TOKEN })
   const files = {}
+
   async function collect(folder) {
     for (const item of await readdir(folder, { withFileTypes: true })) {
       const path = join(folder, item.name)
@@ -120,6 +138,7 @@ async function snapshot(name, probe = false) {
       }
     }
   }
+
   await collect(join(work, name))
   return {
     directory: join(work, name),
@@ -144,11 +163,13 @@ async function snapshot(name, probe = false) {
 const baseline = await snapshot('baseline')
 const probe = await snapshot('copy-edit', true)
 assert.notEqual(baseline.entry, probe.entry, 'The changed copy must invalidate the business entry.')
+
 for (const kind of ['react', 'ui', 'pdf']) {
   assert.equal(baseline.stable[kind], probe.stable[kind], `${kind} must retain its content hash.`)
   const file = baseline.stable[kind]
   assert.deepEqual(baseline.files[file], probe.files[file], `${kind} must remain byte-identical.`)
 }
+
 const chunkFiles = new Set(baseline.chunks.map(chunk => chunk.file))
 const resources = Object.keys(baseline.files).filter(file => file.startsWith('assets/') && !chunkFiles.has(file))
 for (const file of resources) assert.deepEqual(baseline.files[file], probe.files[file], `${file} must remain byte-identical.`)

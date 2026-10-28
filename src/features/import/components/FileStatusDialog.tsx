@@ -30,6 +30,7 @@ export function FileStatusDialog({
       item.status,
     ),
   ).length
+
   return (
     <Dialog
       title={t('pdf.dialogTitle')}

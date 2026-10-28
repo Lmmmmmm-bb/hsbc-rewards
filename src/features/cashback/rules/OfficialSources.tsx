@@ -6,6 +6,7 @@ import { HsbcLogo } from '@/components/workspace/HsbcLogo'
 
 export function OfficialSources({ rules }: { rules: WorkspaceView['rules'] }) {
   const { t, date } = useI18n()
+
   return (
     <div className="space-y-4">
       <HsbcLogo />

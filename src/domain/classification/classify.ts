@@ -13,6 +13,7 @@ export function identifyRegion(description: string): string | null {
   for (const alias of Object.keys(regionAliases).sort((a, b) => b.length - a.length)) {
     if (text === alias || text.endsWith(` ${alias}`) || text.endsWith(`*${alias}`)) return regionAliases[alias]
   }
+
   return null
 }
 
@@ -46,6 +47,7 @@ export function classify(transaction: NormalizedTransaction): Classification {
   const text = transaction.description, kind = kindOf(text, transaction.account.minor)
   const excluded = /\b(?:TOP[ -]?UP|RELOAD|WIRE TRANSFER|TAX PAYMENT|BILL PAYMENT|BETTING|GAMBLING|QUASI CASH|CRYPTO)\b/i.test(text)
   const region = identifyRegion(text)
+
   return {
     kind,
     category: categoryOf(text, kind),
@@ -59,6 +61,7 @@ export function classify(transaction: NormalizedTransaction): Classification {
 export function classifyTransaction(transaction: NormalizedTransaction): Transaction {
   const classification = classify(transaction)
   const missingRegion = !classification.region && classification.kind === 'purchase'
+
   return {
     ...transaction,
     classification,

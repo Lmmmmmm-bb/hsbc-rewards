@@ -15,14 +15,17 @@ export function FileStatusList({
 }) {
   const { t } = useI18n()
   const host = useRef<HTMLUListElement>(null)
+
   useEffect(() => {
     if (!focusItemId) return
+
     const item = [...(host.current?.querySelectorAll<HTMLElement>('[data-file-id]') ?? [])]
       .find((element) => element.dataset.fileId === focusItemId)
     const password = item?.querySelector<HTMLInputElement>('input[type="password"]:not(:disabled)')
     const target = password ?? item
     target?.focus()
   }, [focusItemId])
+
   return (
     <ul
       ref={host}
@@ -41,4 +44,5 @@ export function FileStatusList({
     </ul>
   )
 }
+
 import { useEffect, useRef } from 'react'

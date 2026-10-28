@@ -23,6 +23,7 @@ const source = (
   size: size ?? body.length,
   arrayBuffer: async () => new TextEncoder().encode(body).buffer,
 })
+
 const document = (): LocalPdfDocument => ({
   pages: [
     pulsePage({
@@ -32,6 +33,7 @@ const document = (): LocalPdfDocument => ({
   ],
   dispose: vi.fn(async () => {}),
 })
+
 const parser: StatementParser = {
   parse: async (pages, file) =>
     parsePulseStatement(
@@ -40,6 +42,7 @@ const parser: StatementParser = {
       (kind, number) => `${kind}-${number.slice(-4)}`,
     ),
 }
+
 function setup(
   reader: PdfReader = { read: async () => document() },
   processor = parser,
@@ -58,6 +61,7 @@ function setup(
     now: () => 1000,
     existing: () => {
       const current = store.getSnapshot()
+
       return {
         revision: current.revision,
         files: current.dataset.statements.length,
@@ -71,6 +75,7 @@ function setup(
       }
     },
   })
+
   return { store, controller, commit }
 }
 
@@ -125,15 +130,18 @@ describe('parsed PDF batch pipeline', () => {
     paused.resolve()
     await paused.promise
     await Promise.resolve()
+
     expect(store.getSnapshot()).toBe(current)
     expect(
       current.dataset.statements.map((statement) => statement.fileName),
     ).toEqual(['replacement.pdf'])
   })
+
   it('rejects an individually parseable but uncomputable amount without blocking other files', async () => {
     const { store, controller } = setup({
       async read(bytes) {
         const overflow = new TextDecoder().decode(bytes).includes('overflow')
+
         return {
           pages: [
             pulsePage({
@@ -152,6 +160,7 @@ describe('parsed PDF batch pipeline', () => {
     })
     controller.start([source('overflow.pdf'), source('valid.pdf')])
     await vi.waitFor(() => expect(controller.getSnapshot().active).toBe(false))
+
     expect(controller.getSnapshot().items.map((item) => item.status)).toEqual([
       'error',
       'imported',
@@ -160,6 +169,7 @@ describe('parsed PDF batch pipeline', () => {
     expect(store.getSnapshot().dataset.statements).toHaveLength(1)
     expect(deriveWorkspace(store.getSnapshot()).expenseCount).toBe(1)
   })
+
   it('imports structurally valid balance mismatches and keeps the warning in the rewards view', async () => {
     const { store, controller } = setup({
       read: async () => ({
@@ -176,11 +186,13 @@ describe('parsed PDF batch pipeline', () => {
     await vi.waitFor(() =>
       expect(controller.getSnapshot().outcome.status).toBe('committed'),
     )
+
     expect(deriveWorkspace(store.getSnapshot())).toMatchObject({
       mismatchCount: 1,
       expenseCount: 1,
     })
   })
+
   it('waits for a locked file and publishes all successful files exactly once', async () => {
     const documents: LocalPdfDocument[] = []
     const { store, controller, commit } = setup({
@@ -190,6 +202,7 @@ describe('parsed PDF batch pipeline', () => {
           !options.password
         )
           throw new PdfReadError('password-required')
+
         const result = document()
         documents.push(result)
         return result
@@ -203,6 +216,7 @@ describe('parsed PDF batch pipeline', () => {
         ['parsed', 'locked'],
       ),
     )
+
     expect(commit).not.toHaveBeenCalled()
     expect(store.getSnapshot().dataset.statements).toHaveLength(0)
     expect(documents[0].dispose).toHaveBeenCalledTimes(1)
@@ -210,6 +224,7 @@ describe('parsed PDF batch pipeline', () => {
     expect(JSON.stringify(controller.getSnapshot())).not.toContain(
       'PRIVATE STORE',
     )
+
     controller.unlock(
       controller.getSnapshot().items[1].id,
       'synthetic-password',
@@ -217,6 +232,7 @@ describe('parsed PDF batch pipeline', () => {
     await vi.waitFor(() =>
       expect(controller.getSnapshot().outcome.status).toBe('committed'),
     )
+
     expect(changed).toHaveBeenCalledTimes(1)
     expect(commit).toHaveBeenCalledTimes(1)
     expect(store.getSnapshot().dataset.statements).toHaveLength(2)
@@ -230,7 +246,9 @@ describe('parsed PDF batch pipeline', () => {
         (result) => vi.mocked(result.dispose).mock.calls.length === 1,
       ),
     ).toBe(true)
+
     controller.cancel()
+
     expect(store.getSnapshot().dataset.statements).toHaveLength(2)
   })
 
@@ -241,6 +259,7 @@ describe('parsed PDF batch pipeline', () => {
       async parse(pages, file, signal) {
         const dataset = await parser.parse(pages, file, signal)
         if (file.fileName !== 'late.pdf') return dataset
+
         lateDataset = dataset
         return pending.promise
       },
@@ -258,12 +277,15 @@ describe('parsed PDF batch pipeline', () => {
       ),
     )
     controller.cancel()
+
     expect(store.getSnapshot()).toBe(previous)
+
     pending.resolve(lateDataset!)
     controller.start([source('fresh.pdf')])
     await vi.waitFor(() =>
       expect(controller.getSnapshot().outcome.status).toBe('committed'),
     )
+
     expect(
       store
         .getSnapshot()
@@ -292,6 +314,7 @@ describe('parsed PDF batch pipeline', () => {
     await vi.waitFor(() =>
       expect(controller.getSnapshot().outcome.status).toBe('committed'),
     )
+
     expect(controller.getSnapshot().items.map((item) => item.problem)).toEqual([
       null,
       'unsupported-statement',
@@ -316,11 +339,14 @@ describe('parsed PDF batch pipeline', () => {
     await vi.waitFor(() =>
       expect(controller.getSnapshot().outcome.status).toBe('empty'),
     )
+
     expect(controller.getSnapshot().items[0].status).toBe('duplicate')
+
     controller.start([source('not.pdf', 'invalid')])
     await vi.waitFor(() =>
       expect(controller.getSnapshot().outcome.status).toBe('empty'),
     )
+
     expect(store.getSnapshot()).toBe(previous)
     expect(read).toHaveBeenCalledTimes(1)
     expect(commit).toHaveBeenCalledTimes(1)
@@ -341,9 +367,12 @@ describe('parsed PDF batch pipeline', () => {
       ),
     )
     controller.remove(controller.getSnapshot().items[1].id)
+
     expect(controller.getSnapshot().outcome.status).toBe('committed')
+
     const id = controller.getSnapshot().items[0].id
     controller.remove(id)
+
     expect(controller.getSnapshot().items[0].status).toBe('imported')
     expect(store.getSnapshot().dataset.transactions).toHaveLength(1)
   })
@@ -367,6 +396,7 @@ describe('parsed PDF batch pipeline', () => {
     await vi.waitFor(() =>
       expect(controller.getSnapshot().outcome.status).toBe('failed'),
     )
+
     expect(controller.getSnapshot().outcome.problem).toBe('session-changed')
     expect(store.getSnapshot()).toBe(current)
     expect(controller.getSnapshot().items[0].status).toBe('parsed')
@@ -397,6 +427,7 @@ describe('parsed PDF batch pipeline', () => {
     await vi.waitFor(() =>
       expect(controller.getSnapshot().items[0].problem).toBe('session-limit'),
     )
+
     expect(store.getSnapshot().dataset).toBe(prior)
   })
 
@@ -419,6 +450,7 @@ describe('parsed PDF batch pipeline', () => {
     await vi.waitFor(() =>
       expect(controller.getSnapshot().outcome.status).toBe('empty'),
     )
+
     expect(controller.getSnapshot().items[0].status).toBe('duplicate')
     expect(read).not.toHaveBeenCalled()
     expect(commit).not.toHaveBeenCalled()
@@ -444,6 +476,7 @@ describe('parsed PDF batch pipeline', () => {
     await vi.waitFor(() =>
       expect(controller.getSnapshot().outcome.status).toBe('committed'),
     )
+
     expect(controller.getSnapshot().items.map((item) => item.status)).toEqual([
       'duplicate',
       'imported',

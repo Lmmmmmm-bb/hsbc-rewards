@@ -11,6 +11,7 @@ describe('atomic batch publication', () => {
     const localFile = (id: string): Dataset => {
       const input = file(id)
       const amount = 120000000000000
+
       return {
         ...input,
         statements: input.statements.map((statement) => ({
@@ -29,9 +30,11 @@ describe('atomic batch publication', () => {
         })),
       }
     }
+
     const store = createMemorySession()
     commitImportedBatch(store, [localFile('a')], store.getSnapshot().revision)
     const previous = store.getSnapshot()
+
     expect(() =>
       commitImportedBatch(store, [localFile('b')], previous.revision),
     ).toThrow('money.out-of-range')
@@ -52,6 +55,7 @@ describe('atomic batch publication', () => {
       [file(), file('b')],
       store.getSnapshot().revision,
     )
+
     expect(outcome).toEqual({ files: 2, transactions: 2 })
     expect(changed).toHaveBeenCalledTimes(1)
     expect(store.getSnapshot().mode).toBe('real')
@@ -64,10 +68,13 @@ describe('atomic batch publication', () => {
     const snapshot = store.getSnapshot(),
       changed = vi.fn()
     store.subscribe(changed)
+
     expect(() =>
       commitImportedBatch(store, [file('b')], snapshot.revision - 1),
     ).toThrow('import.session-changed')
+
     const invalid = file('b')
+
     expect(() =>
       commitImportedBatch(
         store,
@@ -81,6 +88,7 @@ describe('atomic batch publication', () => {
       ),
     ).toThrow('import.invalid-source-association')
     expect(store.getSnapshot()).toBe(snapshot)
+
     const foreignAccount = {
       ...invalid,
       statements: [
@@ -97,6 +105,7 @@ describe('atomic batch publication', () => {
         },
       ],
     }
+
     expect(() =>
       commitImportedBatch(store, [foreignAccount], snapshot.revision),
     ).toThrow('import.invalid-source-association')

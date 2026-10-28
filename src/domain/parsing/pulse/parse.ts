@@ -46,6 +46,7 @@ export function parsePulseStatement(
     file.size < 0
   )
     throw new DomainError('parse.invalid-file-metadata')
+
   const metadata = readPulseMetadata(pages)
   const rows = readPulseTransactions(pages, metadata)
   const cardNumbers = new Set(
@@ -59,6 +60,7 @@ export function parsePulseStatement(
     owners.add(owner)
     cardOwners.set(row.cardNumber, owners)
   }
+
   const sharedOwners = new Set(
     [...metadata.accounts.values()]
       .map((account) => account.cardNumber)
@@ -76,15 +78,18 @@ export function parsePulseStatement(
           ]).size > 1,
       ),
   )
+
   const opaque = (kind: 'card' | 'account', number: string) => {
     const id = identify(kind, number)
     if (!id || id.includes(number))
       throw new DomainError('parse.invalid-opaque-identity')
     return id
   }
+
   const cards: Card[] = [...cardNumbers].map((number) => {
     const owners = cardOwners.get(number) ?? new Set([number])
     if (owners.size > 1) throw new DomainError('parse.conflicting-card-account')
+
     const owner = [...owners][0]
     const program = metadata.programs.get(owner)
     return {
@@ -113,6 +118,7 @@ export function parsePulseStatement(
   })
   if (new Set(cards.map((card) => card.id)).size !== cards.length)
     throw new DomainError('parse.identity-collision')
+
   const transactions: Transaction[] = rows.map((row) => {
     const account = metadata.accounts.get(row.accountNumber)!
     const region = identifyRegion(row.description)
@@ -179,11 +185,13 @@ export function parsePulseStatement(
   )
   if (new Set(accountIds).size !== accountIds.length)
     throw new DomainError('parse.identity-collision')
+
   const earliestPosted = transactions.map((row) => row.postingDate).sort()[0]
   const from =
     earliestPosted && earliestPosted < metadata.period.from
       ? earliestPosted
       : metadata.period.from
+
   return {
     cards,
     transactions,

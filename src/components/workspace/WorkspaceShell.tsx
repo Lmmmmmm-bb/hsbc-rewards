@@ -26,6 +26,7 @@ export function WorkspaceShell({
   onAgent: () => void
 }) {
   const { t } = useI18n()
+
   return (
     <div
       data-workspace-shell

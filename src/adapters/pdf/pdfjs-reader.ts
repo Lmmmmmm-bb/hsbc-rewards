@@ -8,6 +8,7 @@ import { BundledPdfAssets } from './bundled-assets'
 
 async function read(bytes: ArrayBuffer, options: PdfReadOptions): Promise<LocalPdfDocument> {
   if (options.signal.aborted) throw new PdfReadError('aborted')
+
   // An explicit port guarantees real worker parsing instead of PDF.js's main-thread fallback.
   let port: Worker
   try {
@@ -15,6 +16,7 @@ async function read(bytes: ArrayBuffer, options: PdfReadOptions): Promise<LocalP
   } catch {
     throw new PdfReadError('engine-unavailable')
   }
+
   const worker = PDFWorker.create({ port, verbosity: 0 })
   const task = getDocument({
     worker,
@@ -32,11 +34,14 @@ async function read(bytes: ArrayBuffer, options: PdfReadOptions): Promise<LocalP
   })
   let candidate = options.password
   let disposed = false
+
   const dispose = async () => {
     if (disposed) return
+
     disposed = true
     candidate = undefined
     task.onPassword = () => {}
+
     try {
       await task.destroy()
     } finally {
@@ -44,16 +49,19 @@ async function read(bytes: ArrayBuffer, options: PdfReadOptions): Promise<LocalP
       port.terminate()
     }
   }
+
   let rejectInterruption: (reason: PdfReadError) => void = () => {}
   const interruption = new Promise<never>((_, reject) => {
     rejectInterruption = reject
   })
   const onWorkerError = () => rejectInterruption(new PdfReadError('engine-unavailable'))
   port.addEventListener('error', onWorkerError)
+
   const onAbort = () => {
     rejectInterruption(new PdfReadError('aborted'))
     void dispose().catch(() => {})
   }
+
   options.signal.addEventListener('abort', onAbort, { once: true })
   task.onPassword = (updatePassword: (password: string) => void, reason: number) => {
     if (reason === PasswordResponses.NEED_PASSWORD && candidate !== undefined) {
@@ -70,21 +78,26 @@ async function read(bytes: ArrayBuffer, options: PdfReadOptions): Promise<LocalP
       )
     }
   }
+
   try {
     const document = await Promise.race([task.promise, interruption])
     candidate = undefined
     task.onPassword = () => {}
     if (document.numPages > options.maxPages) throw new PdfReadError('too-many-pages')
+
     const pages: PdfTextPage[] = []
     options.onProgress(0, document.numPages)
+
     for (let index = 1; index <= document.numPages; index++) {
       if (options.signal.aborted) throw new PdfReadError('aborted')
+
       const page = await document.getPage(index)
       const viewport = page.getViewport({ scale: 1 })
       const content = await page.getTextContent()
       const spans: TextSpan[] = []
       for (const item of content.items) {
         if (!('str' in item) || !item.str.trim()) continue
+
         const transform = Util.transform(viewport.transform, item.transform)
         const height = Math.hypot(transform[2], transform[3])
         spans.push({
@@ -97,6 +110,7 @@ async function read(bytes: ArrayBuffer, options: PdfReadOptions): Promise<LocalP
           },
         })
       }
+
       pages.push({
         page: index,
         width: viewport.width,
@@ -106,6 +120,7 @@ async function read(bytes: ArrayBuffer, options: PdfReadOptions): Promise<LocalP
       page.cleanup()
       options.onProgress(index, document.numPages)
     }
+
     if (!pages.some((page) => page.rows.length)) throw new PdfReadError('no-text')
     return { pages, dispose }
   } catch (error) {

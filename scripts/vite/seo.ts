@@ -34,9 +34,11 @@ function structuredData(metadata: ReturnType<typeof pageMetadata>) {
 /** Build adapters for document metadata, social tags and crawler discovery. */
 export function seo({ indexable }: { indexable: boolean }): PluginOption[] {
   const metadata = pageMetadata()
+
   const meta = (name: string, content: string): HtmlTagDescriptor => ({
     tag: 'meta', attrs: { name, content }, injectTo: 'head',
   })
+
   return [
     {
       name: 'reward-seo',

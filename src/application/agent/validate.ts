@@ -16,6 +16,7 @@ function matches(value: unknown, schema: FieldSchema): boolean {
 
 export function validateAgentInput<Name extends AgentToolName>(name: Name, value: unknown): AgentToolInputs[Name] {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new AgentError('invalid_arguments')
+
   const schema = AGENT_TOOLS[name].inputSchema
   const object = value as Record<string, unknown>
   if (schema.required.some((key) => !Object.hasOwn(object, key)) ||

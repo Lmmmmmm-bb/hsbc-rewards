@@ -11,6 +11,7 @@ export function RulesDialog({
   onClose: () => void
 }) {
   const { t } = useI18n()
+
   return (
     <Dialog
       title={t('rules.dialogTitle')}

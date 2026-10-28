@@ -16,6 +16,7 @@ describe('fixed public FX adapter', () => {
     const request = vi
       .fn<typeof fetch>()
       .mockResolvedValue(new Response(JSON.stringify(data)))
+
     await expect(
       createFrankfurterProvider(request, now).latest(signal()),
     ).resolves.toMatchObject({ hkdToCnyPpm: 850124 })
@@ -30,10 +31,13 @@ describe('fixed public FX adapter', () => {
         cache: 'no-store',
       }),
     )
+
     const options = request.mock.calls[0][1]!
+
     expect(options.body).toBeUndefined()
     expect(options.headers).toBeUndefined()
   })
+
   it('distinguishes HTTP, network and invalid JSON failures', async () => {
     for (const [response, code] of [
       [
@@ -47,13 +51,16 @@ describe('fixed public FX adapter', () => {
         createFrankfurterProvider(request, now).latest(signal()),
       ).rejects.toMatchObject({ code })
     }
+
     const request = vi
       .fn<typeof fetch>()
       .mockRejectedValue(new Error('raw connection failure'))
+
     await expect(
       createFrankfurterProvider(request, now).latest(signal()),
     ).rejects.toMatchObject({ code: 'network' })
   })
+
   it('aborts at the timeout and does not keep the request timer alive afterwards', async () => {
     vi.useFakeTimers()
     const request = vi
@@ -72,23 +79,28 @@ describe('fixed public FX adapter', () => {
     const checked = expect(result).rejects.toMatchObject({ code: 'timeout' })
     await vi.advanceTimersByTimeAsync(FX_TIMEOUT_MS)
     await checked
+
     expect(vi.getTimerCount()).toBe(0)
   })
+
   it('does not fetch an already aborted request and rejects late results from cancelled requests', async () => {
     const request = vi
       .fn<typeof fetch>()
       .mockResolvedValue(new Response(JSON.stringify(data)))
     const active = new AbortController()
     active.abort()
+
     await expect(
       createFrankfurterProvider(request, now).latest(active.signal),
     ).rejects.toEqual(new FxError('aborted'))
     expect(request).not.toHaveBeenCalled()
+
     const later = new AbortController()
     const late = vi.fn<typeof fetch>().mockImplementation(async () => {
       later.abort()
       return new Response(JSON.stringify(data))
     })
+
     await expect(
       createFrankfurterProvider(late, now).latest(later.signal),
     ).rejects.toMatchObject({ code: 'aborted' })

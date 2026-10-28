@@ -9,9 +9,11 @@ import { readLocalePreference, saveLocalePreference } from './browser-preference
 // No cross-tab subscription: the current page retains its explicit selection.
 const subscribe = () => () => {}
 const getServerLocale = () => DEFAULT_LOCALE
+
 const readBrowserLocale = () => {
   const saved = readLocalePreference()
   if (saved) return saved
+
   const preferences = globalThis.navigator
   return resolveLocale(
     preferences?.languages?.length
@@ -26,21 +28,26 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     let snapshot: Locale | undefined
     return () => (snapshot ??= readBrowserLocale())
   })
+
   // Hydration first matches the static HTML, then React reads browser preferences.
   const preferredLocale = useSyncExternalStore(
     subscribe,
     getInitialLocale,
     getServerLocale,
   )
+
   const [selection, setSelection] = useState<Locale | null>(null)
   const locale = selection ?? preferredLocale
+
   const setLocale = useCallback((next: Locale) => {
     setSelection(next)
     saveLocalePreference(next)
   }, [])
+
   const value = useMemo(
     () => ({ locale, setLocale, t: createTranslator(locale) }),
     [locale, setLocale],
   )
+
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>
 }

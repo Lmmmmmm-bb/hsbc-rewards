@@ -11,6 +11,7 @@ function referenceKey(transaction: Transaction): string | null {
 function mergeSources(a: readonly SourceReference[], b: readonly SourceReference[]) {
   const sources = new Map<string, SourceReference>()
   for (const source of [...a, ...b]) sources.set(`${source.fileHash}:${source.page}:${source.row}`, source)
+
   return [...sources.values()].sort((x, y) => x.fileHash.localeCompare(y.fileHash) || x.page - y.page || x.row - y.row)
 }
 
@@ -27,25 +28,31 @@ export function deduplicateTransactions(input: readonly Transaction[]) {
       transactions.push(transaction)
     }
   }
+
   const signatures = new Map<string, Transaction[]>()
   for (const transaction of transactions) {
     const key = signature(transaction)
     signatures.set(key, [...(signatures.get(key) ?? []), transaction])
   }
+
   const possibleDuplicateIds = new Set<string>()
   for (const group of signatures.values()) {
     if (group.length > 1 && group.some(t => !t.bankReference)) group.forEach(t => possibleDuplicateIds.add(t.id))
   }
+
   const referenceGroups = new Map<string, Transaction[]>()
   for (const transaction of transactions) {
     if (!transaction.bankReference) continue
+
     const key = JSON.stringify([transaction.cardId, transaction.accountId, transaction.bankReference])
     referenceGroups.set(key, [...(referenceGroups.get(key) ?? []), transaction])
   }
+
   const conflictingReferenceIds = new Set<string>()
   for (const group of referenceGroups.values()) {
     if (group.length > 1) group.forEach(t => conflictingReferenceIds.add(t.id))
   }
+
   return {
     transactions: transactions.map(t => {
       const code = conflictingReferenceIds.has(t.id) ? 'transaction.reference-conflict' : possibleDuplicateIds.has(t.id) ? 'transaction.possible-duplicate' : null

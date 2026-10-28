@@ -19,6 +19,7 @@ export class BundledPdfAssets {
     )[kind]
     const url = directory && assetUrls[`/node_modules/pdfjs-dist/${directory}/${filename}`]
     if (!url) throw new Error('pdf-resource-unavailable')
+
     const response = await fetch(url, { credentials: 'omit' })
     if (!response.ok) throw new Error('pdf-resource-unavailable')
     return new Uint8Array(await response.arrayBuffer())

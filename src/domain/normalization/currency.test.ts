@@ -8,6 +8,7 @@ describe('currency contracts', () => {
     expect(normalizeCurrency('mop')).toBe('MOP')
     expect(normalizeCurrency('JPY')).toBe('JPY')
   })
+
   it('rejects an unsupported account instead of guessing HKD', () => {
     expect(() => normalizeAccountCurrency('USD')).toThrow()
     expect(() => normalizeCurrency('dollar')).toThrow()

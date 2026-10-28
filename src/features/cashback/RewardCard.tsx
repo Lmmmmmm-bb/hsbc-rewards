@@ -26,6 +26,7 @@ export function RewardCard({
     card.assumptions.includes('assumption.cap-reference-fx') &&
       'card.fxAssumed',
   ] as const
+
   return (
     <Card data-reward-card>
       <CardContent className="@container/reward space-y-3">

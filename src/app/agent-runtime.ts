@@ -17,16 +17,20 @@ export function createAgentRuntime(store: SessionStore, importer: PdfImportContr
   let generation = 0
   let retryCurrent: (() => void) | undefined
   const listeners = new Set<() => void>()
+
   const publish = (next: AgentConnectionState) => {
     if (status === next) return
+
     status = next
     listeners.forEach((listener) => listener())
   }
+
   return {
     access,
     retry: () => retryCurrent?.(),
     getSnapshot: () => status,
     subscribe(listener: () => void) { listeners.add(listener); return () => { listeners.delete(listener) } },
+
     connect(document: Document, ui: WorkspaceActions, translate: () => Translate) {
       const token = ++generation
       const disconnect = access.connect()
@@ -64,6 +68,7 @@ export function createAgentRuntime(store: SessionStore, importer: PdfImportContr
       const retry = () => { if (status === 'error') start() }
       retryCurrent = retry
       start()
+
       return () => {
         stopAttempt()
         disconnect()
