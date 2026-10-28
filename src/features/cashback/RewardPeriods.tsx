@@ -1,3 +1,5 @@
+import { useId } from 'react'
+import * as m from 'motion/react-m'
 import type { WorkspaceView } from '@/application/session/selectors'
 import { Button } from '@/components/ui/button'
 import { useI18n } from '@/i18n/use-i18n'
@@ -12,32 +14,40 @@ export function RewardPeriods({
   onSelect: (id: string) => void
 }) {
   const { t, rc } = useI18n()
+  const selectionId = useId()
+  const options = [
+    { id: 'all', label: t('period.all'), amount: null },
+    ...periods.map((period) => ({
+      id: period.id,
+      label: t(period.half === 1 ? 'period.h1' : 'period.h2', { year: period.year }),
+      amount: rc(period.totalRewardMicroRc),
+    })),
+  ]
   return (
     <nav
       data-reward-periods
       aria-label={t('period.results')}
       className="flex flex-wrap gap-2"
     >
-      <Button
-        variant={selected === 'all' ? 'default' : 'outline'}
-        size="sm"
-        aria-pressed={selected === 'all'}
-        onClick={() => onSelect('all')}
-      >
-        {t('period.all')}
-      </Button>
-      {periods.map((period) => (
+      {options.map((option) => (
         <Button
-          key={period.id}
-          variant={selected === period.id ? 'default' : 'outline'}
+          key={option.id}
+          variant="outline"
           size="sm"
-          aria-pressed={selected === period.id}
-          onClick={() => onSelect(period.id)}
+          className="relative isolate aria-pressed:border-primary aria-pressed:text-primary-foreground aria-pressed:hover:bg-transparent"
+          aria-pressed={selected === option.id}
+          onClick={() => onSelect(option.id)}
         >
-          {t(period.half === 1 ? 'period.h1' : 'period.h2', {
-            year: period.year,
-          })}
-          <span className="tabular-nums">{rc(period.totalRewardMicroRc)}</span>
+          {selected === option.id && (
+            <m.span
+              aria-hidden="true"
+              layoutId={selectionId}
+              className="pointer-events-none absolute inset-0 -z-10 bg-primary"
+              transition={{ type: 'tween', duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            />
+          )}
+          <span>{option.label}</span>
+          {option.amount !== null && <span className="tabular-nums">{option.amount}</span>}
         </Button>
       ))}
     </nav>

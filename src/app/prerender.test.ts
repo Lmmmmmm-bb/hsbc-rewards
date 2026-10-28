@@ -15,6 +15,8 @@ it('renders a crawlable empty page without requests or session changes', async (
   expect(html.match(/<h1\b/g)).toHaveLength(1)
   expect(html).toContain(zh['pdf.choose'])
   expect(html).toContain(zh['cashback.memory'])
+  expect(html).toContain('data-statement-illustration="true" aria-hidden="true"')
+  expect(html).not.toMatch(/style="[^"]*(?:opacity:\s*0(?:[;"]|$)|translateY\()/)
   expect(renderPage()).toBe(html)
   expect(sessionStore.getSnapshot()).toBe(before)
   expect(before.mode).toBe('empty')

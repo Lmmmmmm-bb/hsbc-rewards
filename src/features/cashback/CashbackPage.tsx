@@ -44,6 +44,7 @@ export function CashbackPage({
   const period = view.periods.find((item) => item.id === periodId)
   const scope = period ?? view
   const hasResults = session.dataset.statements.length > 0
+  const revealKey = `${session.revision}:${period?.id ?? 'all'}`
   return (
     <WorkspaceShell
       mode={session.mode}
@@ -80,6 +81,7 @@ export function CashbackPage({
       )}
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
         <RewardSummary
+          revealKey={revealKey}
           view={scope}
           hasResults={hasResults}
           statementCount={
@@ -125,13 +127,18 @@ export function CashbackPage({
           {(period ? [period] : view.periods).map((item) => (
             <RewardBreakdown
               key={item.id}
+              revealKey={revealKey}
               cards={item.rewardCards}
               period={item}
             />
           ))}
         </section>
       ) : (
-        <RewardBreakdown cards={view.rewardCards} period={view.periods[0]} />
+        <RewardBreakdown
+          revealKey={revealKey}
+          cards={view.rewardCards}
+          period={view.periods[0]}
+        />
       )}
     </WorkspaceShell>
   )

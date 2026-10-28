@@ -1,4 +1,3 @@
-import { RiBankCardLine } from '@remixicon/react'
 import type { WorkspaceView } from '@/application/session/selectors'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -10,13 +9,17 @@ import {
 } from '@/components/ui/empty'
 import { useI18n } from '@/i18n/use-i18n'
 import { RewardCard } from './RewardCard'
+import { ResultReveal } from './ResultReveal'
+import { StatementIllustration } from './StatementIllustration'
 
 export function RewardBreakdown({
   cards,
   period,
+  revealKey,
 }: {
   cards: WorkspaceView['rewardCards']
   period?: WorkspaceView['periods'][number]
+  revealKey: string
 }) {
   const { t, rc } = useI18n()
   return (
@@ -49,8 +52,8 @@ export function RewardBreakdown({
           <CardContent>
             <Empty className="py-4">
               <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <RiBankCardLine aria-hidden="true" />
+                <EmptyMedia>
+                  <StatementIllustration />
                 </EmptyMedia>
                 <EmptyTitle>{t('card.empty')}</EmptyTitle>
                 <EmptyDescription>{t('card.emptyBody')}</EmptyDescription>
@@ -66,8 +69,15 @@ export function RewardBreakdown({
               : 'grid items-start gap-4 xl:grid-cols-2'
           }
         >
-          {cards.map((card) => (
-            <RewardCard key={card.cardId} card={card} />
+          {cards.map((card, index) => (
+            <ResultReveal
+              key={card.cardId}
+              trigger={revealKey}
+              delay={Math.min(index, 4) * 0.04}
+              className="min-w-0"
+            >
+              <RewardCard card={card} />
+            </ResultReveal>
           ))}
         </div>
       )}

@@ -33,7 +33,7 @@ pnpm dev
 
 ## 架构与依赖方向
 
-技术栈为 React、TypeScript、Vite、Tailwind CSS、shadcn/ui（Base UI）和 Vitest。
+技术栈为 React、TypeScript、Vite、Tailwind CSS、shadcn/ui（Base UI）、Motion for React 和 Vitest。
 
 | 位置 | 职责 |
 | --- | --- |
@@ -80,6 +80,7 @@ pnpm dev
 - 沿用 shadcn `b4hZZS5Uu` preset、Base UI 和 Remix Icon，优先组合已有控件及 Tailwind 工具类，不新增业务样式表、行内视觉样式或额外主题。
 - 新控件通过 `pnpm dlx shadcn@4.22.1 add <component>` 生成并检查差异。项目不常驻安装 shadcn CLI；已有控件需要的状态变体与折叠动画保留在 `src/index.css`，新增控件时核对所需 CSS，不盲目恢复整个 CSS 包。
 - 保持主色 `#D90012`、HSBC 六边形、正文 Inter、品牌标题 Roboto 500 和系统字体回退。
+- 页面通过 `prefers-color-scheme` 自动跟随系统浅色、深色模式及其变化；主题变量与 Tailwind `dark:` 变体统一采用媒体查询，`color-scheme` 同步原生控件外观。首屏和预渲染共用样式，不增加主题切换控件、浏览器状态读取或主题持久化，也不因模式变化重建账单会话。
 - 修改用户文案同步更新 `src/i18n/zh.ts` 和 `src/i18n/en.ts`，不要在组件中硬编码。
 - 用户文案采用中国内地简体中文与美式英语。中文使用「账单」「账单余额」「符合条件」，英语统一美式拼写；保留银行产品及活动名称，赏世界在英文简短标签中称 `Outside Hong Kong`，官方类别全名在规则来源中说明。三项奖励称 reward components，消费额度称 spending cap，人民币金额称 CNY reference value；已计入估算不得暗示银行已发放，待计算不得写成零。双语对齐条件、范围和后果，避免为逐字对应牺牲自然表达。
 - i18n 保持轻量实现：`src/i18n/locale.ts` 负责纯语言匹配，词典和 `messages.ts` 负责模板与插值，`browser-preference.ts` 仅负责语言偏好的本机存储，`I18nProvider.tsx` 负责初始语言和页面内选择，公共布局中的 `LanguageSwitcher` 只负责交互。英语单复数及主谓一致留在英文词典中，不把语言判断分散到业务组件。
@@ -89,6 +90,7 @@ pnpm dev
 - 弹窗外壳同步打开，由 Base UI 管理焦点；规则、隐私和文件明细通过 `src/app/DialogContents.tsx` 共用按需加载入口，清空确认保持同步。
 - 内容加载失败在原弹窗内重试，不刷新页面。关闭文件状态弹窗后导入继续，取消仍撤销未提交的整批；迟到的加载不能重开弹窗或改写批次。本批结束后才能补充文件。
 - 保持键盘操作、焦点恢复、减少动态效果支持与窄屏可用性。
+- 空态账单插画保持静态，结果出现和周期切换使用克制动效；静态预渲染保持内容可见，结果动效仅随会话提交和周期选择触发，不因切换语言重播或重建结果组件。Motion 遵循系统减少动态效果偏好，静态视觉仍使用 Tailwind 类。
 
 ## 构建与部署
 

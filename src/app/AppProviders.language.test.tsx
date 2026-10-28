@@ -288,6 +288,48 @@ describe('initial language and hydration', () => {
     expect(window.localStorage.getItem(LOCALE_PREFERENCE_KEY)).toBe('zh-CN')
     expect(fetch).not.toHaveBeenCalled()
   })
+
+  it('keeps the selected half, focused period button, and expanded result when the language changes', async () => {
+    const container = browser(['zh-CN'])
+    const dataset = importedFile('two-halves')
+    const row = dataset.transactions[0]
+    sessionStore.replace({
+      ...dataset,
+      transactions: [
+        { ...row, id: 'first-half', transactionDate: '2026-06-19', postingDate: '2026-06-20' },
+        { ...row, id: 'second-half', account: { currency: 'CNY', minor: 50_000 }, original: { currency: 'CNY', minor: 50_000 } },
+      ],
+    }, 'demo', { hkdToCnyPpm: 900000, source: 'demo', stale: false })
+    const before = sessionStore.getSnapshot()
+    const { createRoot } = await import('react-dom/client')
+    const mounted = root = createRoot(container)
+    await act(async () => mounted.render(<AppRoot />))
+    const periods = query(container, '[data-reward-periods]')
+    const buttons = [...periods.querySelectorAll('button')]
+    const firstHalf = buttons.find((button) => button.textContent?.includes('上半年'))!
+    await act(async () => firstHalf.click())
+    const total = query(container, '[data-reward-total]')
+    expect(total.textContent).toBe('11.00RC')
+    expect(container.querySelectorAll('[data-reward-breakdown]')).toHaveLength(1)
+    expect(query(container, '[data-reward-breakdown]').getAttribute('data-period')).toBe('2026-H1')
+    const reasons = query<HTMLButtonElement>(container, '[data-reward-card] button[aria-expanded]')
+    await act(async () => reasons.click())
+    expect(reasons.getAttribute('aria-expanded')).toBe('true')
+    firstHalf.focus()
+    await act(async () => query<HTMLButtonElement>(container, '[data-language-switcher]').click())
+    expect(document.documentElement.lang).toBe('en-US')
+    expect(document.activeElement).toBe(firstHalf)
+    expect(firstHalf.getAttribute('aria-pressed')).toBe('true')
+    expect(query(container, '[data-reward-total]')).toBe(total)
+    expect(total.textContent).toBe('11.00RC')
+    expect(query(container, '[data-reward-card] button[aria-expanded]')).toBe(reasons)
+    expect(reasons.getAttribute('aria-expanded')).toBe('true')
+    expect(sessionStore.getSnapshot()).toBe(before)
+    await act(async () => buttons[0].click())
+    expect(total.textContent).toBe('33.00RC')
+    expect(container.querySelectorAll('[data-reward-breakdown]')).toHaveLength(2)
+    expect(sessionStore.getSnapshot()).toBe(before)
+  })
 })
 
 describe('language changes during an import', () => {

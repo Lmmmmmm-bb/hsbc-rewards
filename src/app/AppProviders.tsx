@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import type { ReactNode } from 'react'
+import { LazyMotion, MotionConfig, domMax } from 'motion/react'
 import { I18nProvider } from '@/i18n/I18nProvider'
 import { DocumentMetadata } from './DocumentMetadata'
 
@@ -12,7 +13,11 @@ export function AppProviders({ children }: { children: ReactNode }) {
   return (
     <I18nProvider>
       <DocumentMetadata />
-      {children}
+      <MotionConfig reducedMotion="user">
+        <LazyMotion features={domMax} strict>
+          {children}
+        </LazyMotion>
+      </MotionConfig>
     </I18nProvider>
   )
 }

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import * as m from 'motion/react-m'
 import { RiArrowGoBackLine, RiBookOpenLine } from '@remixicon/react'
 import { Button } from '@/components/ui/button'
 import { useI18n } from '@/i18n/use-i18n'
@@ -79,7 +80,8 @@ export function WorkspaceShell({
           </div>
         </div>
       </header>
-      <main
+      <m.main
+        layoutScroll
         id="cashback-main"
         tabIndex={-1}
         className="min-h-0 overflow-y-auto overscroll-y-contain outline-none"
@@ -87,7 +89,7 @@ export function WorkspaceShell({
         <div className="mx-auto max-w-6xl space-y-5 px-4 py-5 sm:px-6">
           {children}
         </div>
-      </main>
+      </m.main>
       <footer
         data-shell-footer
         className="z-10 border-t bg-background/95 backdrop-blur-xs"
