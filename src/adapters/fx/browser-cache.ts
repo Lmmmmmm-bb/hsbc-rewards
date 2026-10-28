@@ -1,6 +1,7 @@
 import { isIsoDate } from '@/domain/normalization/dates'
 import type { CachedFxQuote, FxCache } from '@/ports/fx'
 
+// Keep the storage key compatible; reuse duration is governed by retrievedAt.
 export const FX_CACHE_KEY = 'pulse.fx.daily.v1'
 type StoragePort = Pick<Storage, 'getItem' | 'setItem'>
 

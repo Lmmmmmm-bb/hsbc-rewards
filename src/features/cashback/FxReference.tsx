@@ -34,15 +34,11 @@ export function FxReference({
             <span className="font-mono font-medium tabular-nums">
               1 HKD = {number(fx.hkdToCnyPpm / 1_000_000, 6)} CNY
             </span>
-            <Badge variant={fx.stale ? 'secondary' : 'outline'}>
-              {t(
-                fx.stale
-                  ? 'fx.stale'
-                  : fx.source === 'cache'
-                    ? 'fx.cachedToday'
-                    : 'fx.available',
-              )}
-            </Badge>
+            {(fx.stale || fx.source === 'live') && (
+              <Badge variant={fx.stale ? 'secondary' : 'outline'}>
+                {t(fx.stale ? 'fx.stale' : 'fx.available')}
+              </Badge>
+            )}
           </p>
           <p className="text-muted-foreground">
             <a
@@ -82,7 +78,7 @@ export function FxReference({
         {available && fx.stale && <p>{t('fx.staleHint')}</p>}
       </div>
       <div className="space-y-1 text-muted-foreground">
-        <p>{t(fx.source === 'demo' ? 'fx.demoHint' : 'fx.dailyPolicy')}</p>
+        <p>{t(fx.source === 'demo' ? 'fx.demoHint' : 'fx.cachePolicy')}</p>
       </div>
     </section>
   )

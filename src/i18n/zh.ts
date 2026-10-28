@@ -36,7 +36,7 @@ export const zh = {
   'privacy.resultsValue': '仅保留在当前页面；刷新、关闭或重新开始后清空。',
   'privacy.cacheLabel': '公开汇率',
   'privacy.cacheValue':
-    '缓存报价、参考日期和获取时间，按香港自然日复用。清除返现结果不会清除这项缓存。',
+    '缓存报价、参考日期和获取时间，自获取起复用 6 小时。清除返现结果不会清除这项缓存。',
   'pdf.dialogTitle': '文件状态',
   'pdf.dialogHint': '查看本批处理进度、解锁文件及失败原因。',
   'pdf.inProgressHint':
@@ -238,8 +238,7 @@ export const zh = {
   'fx.title': '港币 → 人民币参考汇率',
   'fx.loading': '获取中…',
   'fx.available': '参考汇率已获取',
-  'fx.cachedToday': '今日缓存',
-  'fx.dailyPolicy': '参考汇率按香港自然日缓存复用，跨日自动更新。',
+  'fx.cachePolicy': '参考汇率自获取起缓存 6 小时，到期自动更新。',
   'fx.stale': '较早参考汇率',
   'fx.rateDate': '参考日期 {date}',
   'fx.retrievedAt': '获取于 {time}',

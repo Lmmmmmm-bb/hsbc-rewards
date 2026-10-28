@@ -17,7 +17,7 @@ function storage() {
   }
 }
 
-describe('public daily reference cache', () => {
+describe('public reference cache', () => {
   it('persists only the explicit public quote fields and can be read by a new page instance', () => {
     const target = storage()
     const first = createBrowserFxCache(() => target)

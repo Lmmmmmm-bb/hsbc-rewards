@@ -34,7 +34,7 @@ export function CalculationDetails() {
       </InfoSection>
       <InfoSection title={t('rules.fxTitle')} className="md:col-span-2">
         <p className="text-muted-foreground">{t('rewards.fxEffect')}</p>
-        <p className="text-muted-foreground">{t('fx.dailyPolicy')}</p>
+        <p className="text-muted-foreground">{t('fx.cachePolicy')}</p>
         <p className="text-xs text-muted-foreground">
           {t('fx.publicationHint')}
         </p>

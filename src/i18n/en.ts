@@ -42,7 +42,7 @@ export const en = {
     'Stay on this page and clear on reload, close or starting again.',
   'privacy.cacheLabel': 'Public FX',
   'privacy.cacheValue':
-    'The quote, rate date and retrieval time are cached by Hong Kong calendar day. Clearing reward results keeps this cache.',
+    'The quote, rate date and retrieval time are cached for 6 hours after retrieval. Clearing reward results keeps this cache.',
   'pdf.dialogTitle': 'File status',
   'pdf.dialogHint':
     'Review progress, unlock files and check failures in this batch.',
@@ -269,9 +269,8 @@ export const en = {
   'fx.title': 'HKD → CNY reference rate',
   'fx.loading': 'Fetching…',
   'fx.available': 'Reference rate available',
-  'fx.cachedToday': 'Cached today',
-  'fx.dailyPolicy':
-    'Reference FX is cached by Hong Kong calendar day and updates automatically the next day.',
+  'fx.cachePolicy':
+    'Reference FX is cached for 6 hours after retrieval, then refreshed automatically.',
   'fx.stale': 'Older reference rate',
   'fx.rateDate': 'Rate date {date}',
   'fx.retrievedAt': 'Retrieved {time}',

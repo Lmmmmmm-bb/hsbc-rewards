@@ -6,7 +6,7 @@ import {
   type CachedFxQuote,
 } from '@/ports/fx'
 import type { FxSnapshot, SessionStore } from '@/application/session/types'
-import { isDailyFx, isFxStale, msUntilNextFxDay } from './freshness'
+import { isFxFresh, isFxStale, msUntilFxExpiry } from './freshness'
 import { validateSessionDataset } from '@/application/session/validate'
 
 export interface FxRequestState {
@@ -86,8 +86,8 @@ export function createFxController({
   async function ensure() {
     if (!isReal() || request) return
     const currentFx = store.getSnapshot().fx
-    if (available(currentFx) && isDailyFx(currentFx, now())) {
-      if (!timer) schedule(msUntilNextFxDay(now()))
+    if (available(currentFx) && isFxFresh(currentFx, now())) {
+      if (!timer) schedule(msUntilFxExpiry(currentFx, now()))
       publish({ status: 'ready', problem: null })
       return
     }
@@ -99,16 +99,12 @@ export function createFxController({
       stored.rateDate <= new Date(now()).toISOString().slice(0, 10)
         ? stored
         : null
-    if (
-      cached &&
-      isDailyFx(cached, now()) &&
-      cached.rateDate <= new Date(now()).toISOString().slice(0, 10)
-    ) {
+    if (cached && isFxFresh(cached, now())) {
       try {
         adopt(cached, 'cache')
         failures = 0
         publish({ status: 'ready', problem: null })
-        schedule(msUntilNextFxDay(now()))
+        schedule(msUntilFxExpiry(cached, now()))
         return
       } catch {
         /* Fetch again if a cached quote cannot be used with this dataset. */
@@ -139,7 +135,7 @@ export function createFxController({
       failures = 0
       retryAt = 0
       publish({ status: 'ready', problem: null })
-      schedule(msUntilNextFxDay(now()))
+      schedule(msUntilFxExpiry(next, now()))
     } catch (error) {
       if (!current()) return
       const delay =
