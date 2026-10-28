@@ -20,6 +20,18 @@
       "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
     },
     {
+      "source": "/robots.txt",
+      "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+    },
+    {
+      "source": "/sitemap.xml",
+      "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+    },
+    {
+      "source": "/social-card.png",
+      "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+    },
+    {
       "source": "/licenses/:path*",
       "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
     }

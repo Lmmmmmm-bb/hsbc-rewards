@@ -59,8 +59,13 @@ export function CashbackPage({
             {t('cashback.subtitle')}
           </p>
           <h1 className="text-3xl font-semibold tracking-tight">
-            {t('cashback.title')}
+            {t(hasResults ? 'cashback.title' : 'cashback.emptyTitle')}
           </h1>
+          {!hasResults && (
+            <p className="max-w-2xl text-sm text-muted-foreground">
+              {t('cashback.intro')}
+            </p>
+          )}
         </div>
         {session.mode === 'demo' && (
           <Badge variant="outline">{t('cashback.example')}</Badge>

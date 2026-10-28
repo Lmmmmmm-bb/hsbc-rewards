@@ -1,4 +1,4 @@
-import type { MessageKey } from './zh'
+import type { MessageKey } from './zh.ts'
 
 export const en = {
   'dialogContent.loading': 'Loading content…',
@@ -98,8 +98,15 @@ export const en = {
   'pdf.needsAttention': '{count} need attention',
   'pdf.showFiles': 'View file status',
   'app.brand': 'Reward+',
-  'app.title': 'Your rewards companion',
+  'seo.title': 'HSBC PULSE RewardCash Calculator · Reward+',
+  'seo.description':
+    'An independent HSBC PULSE RewardCash estimator. Import English PDF statements locally to view estimated rewards, card breakdowns and remaining spending caps. PDFs and passwords are never uploaded.',
+  'seo.imageAlt': 'Reward+ — HSBC PULSE RewardCash calculator with local English PDF processing.',
+  'seo.noScript': 'Enable JavaScript to import PDF statements locally and estimate RewardCash.',
   'cashback.title': 'Your rewards',
+  'cashback.emptyTitle': 'HSBC PULSE RewardCash calculator',
+  'cashback.intro':
+    'Import English PDF statements locally to estimate RewardCash, view rewards by card and check remaining spending caps.',
   'cashback.subtitle': 'HSBC PULSE UnionPay Dual Currency Diamond Card',
   'cashback.total': 'Estimated rewards (RewardCash)',
   'cashback.knownHeading': 'Calculated reward estimate',

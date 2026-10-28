@@ -5,6 +5,8 @@ import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { gzipSync } from 'node:zlib'
 import { build } from 'vite'
+import { verifySeoBuild } from './audit-seo.mjs'
+import { zh } from '../src/i18n/zh.ts'
 
 // Explicit build/cache audit. The copy edit exists only in a build transform;
 // source files, the normal dist directory and business data are never changed.
@@ -16,6 +18,8 @@ const fromRoot = relative(root, output)
 assert.ok(fromRoot === '..' || fromRoot.startsWith('../'), 'Use an output directory outside the repository.')
 await mkdir(output, { recursive: true })
 const work = await mkdtemp(join(output, 'build-'))
+const heading = zh['cashback.emptyTitle']
+const probeHeading = `${heading}（缓存验收）`
 
 async function snapshot(name, probe = false) {
   let transformed = false
@@ -29,7 +33,7 @@ async function snapshot(name, probe = false) {
       enforce: 'pre',
       transform(code, id) {
         if (id !== join(root, 'src/i18n/zh.ts')) return
-        const changed = code.replace("'app.title': '个人返现助手'", "'app.title': '个人返现助手（缓存验收）'")
+        const changed = code.replace(`'cashback.emptyTitle': '${heading}'`, `'cashback.emptyTitle': '${probeHeading}'`)
         assert.notEqual(changed, code, 'The copy probe must change a rendered message.')
         transformed = true
         return { code: changed, map: null }
@@ -66,6 +70,13 @@ async function snapshot(name, probe = false) {
     assert.ok(!Object.keys(byFile.get(file).modules).some(id => /[\\/]pdfjs-dist[\\/]/.test(id)), 'No PDF.js module may enter the initial graph.')
     assert.ok(!Object.keys(byFile.get(file).modules).some(id => /[\\/](?:PrivacyDetails|RewardRules|FileStatusList|FileStatusRow|PasswordForm)\.tsx$/.test(id)), 'Deferred dialog bodies must not enter the initial graph.')
   }
+  for (const chunk of chunks) {
+    assert.ok(!Object.keys(chunk.modules).some(id => /[\\/]app[\\/]prerender\.tsx$|[\\/]react-dom[\\/].*server/.test(id)), 'Build-time rendering must not enter any browser chunk.')
+  }
+  await verifySeoBuild(join(work, name), {
+    indexable: process.env.VERCEL_ENV !== 'preview',
+    expectedHeading: probe ? probeHeading : heading,
+  })
   const files = {}
   async function collect(folder) {
     for (const item of await readdir(folder, { withFileTypes: true })) {
@@ -110,8 +121,8 @@ const chunkFiles = new Set(baseline.chunks.map(chunk => chunk.file))
 const resources = Object.keys(baseline.files).filter(file => file.startsWith('assets/') && !chunkFiles.has(file))
 for (const file of resources) assert.deepEqual(baseline.files[file], probe.files[file], `${file} must remain byte-identical.`)
 const report = {
-  probe: 'In-memory edit to app.title in zh.ts; source files are untouched.',
-  checks: { pdfStaysLazy: true, dialogsStayLazy: true, stableDependenciesUnchanged: true, unchangedResources: resources.length },
+  probe: 'In-memory edit to cashback.emptyTitle in zh.ts; source files are untouched.',
+  checks: { pdfStaysLazy: true, dialogsStayLazy: true, prerenderStaysBuildOnly: true, staticSeo: true, stableDependenciesUnchanged: true, unchangedResources: resources.length },
   baseline,
   copyEdit: { entry: probe.entry, stable: probe.stable, directory: probe.directory },
 }

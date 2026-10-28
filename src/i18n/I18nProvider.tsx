@@ -1,23 +1,14 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import { en } from './en'
-import { zh } from './zh'
 import { I18nContext } from './context'
-import type { Locale, Translate } from './context'
+import { createTranslator, DEFAULT_LOCALE } from './messages'
+import type { Locale } from './messages'
 
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocale] = useState<Locale>('zh-CN')
-  const value = useMemo(() => {
-    const messages = locale === 'zh-CN' ? zh : en
-    const t: Translate = (key, values = {}) =>
-      messages[key].replace(/\{(\w+)\}/g, (token, name: string) =>
-        values[name] === undefined ? token : String(values[name]),
-      )
-    return { locale, setLocale, t }
-  }, [locale])
-  useEffect(() => {
-    document.documentElement.lang = locale
-    document.title = `${value.t('app.brand')} · ${value.t('app.title')}`
-  }, [locale, value])
+  const [locale, setLocale] = useState<Locale>(DEFAULT_LOCALE)
+  const value = useMemo(
+    () => ({ locale, setLocale, t: createTranslator(locale) }),
+    [locale],
+  )
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>
 }

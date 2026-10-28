@@ -87,8 +87,15 @@ export const zh = {
   'pdf.needsAttention': '{count} 份需处理',
   'pdf.showFiles': '查看文件状态',
   'app.brand': 'Reward+',
-  'app.title': '个人返现助手',
+  'seo.title': 'HSBC PULSE 返现计算器 · Reward+',
+  'seo.description':
+    'Reward+ 是独立的 HSBC PULSE 银联双币钻石卡返现估算工具。导入英文 PDF 结单，在本机查看预计返现（RewardCash）、逐卡奖励明细和剩余消费额度。PDF 与密码不上传，结果仅保留在当前页面。',
+  'seo.imageAlt': 'Reward+：HSBC PULSE 预计返现（RewardCash）计算器，英文 PDF 在本机处理。',
+  'seo.noScript': '请启用 JavaScript，以在本机导入 PDF 结单和估算预计返现。',
   'cashback.title': '返现总览',
+  'cashback.emptyTitle': 'PULSE 返现计算器',
+  'cashback.intro':
+    '在本机导入英文 PDF 结单，估算预计返现（RewardCash），查看逐卡奖励和剩余消费额度。',
   'cashback.subtitle': 'HSBC PULSE 银联双币钻石卡',
   'cashback.total': '预计返现（RewardCash）',
   'cashback.knownHeading': '已算出的预计返现',

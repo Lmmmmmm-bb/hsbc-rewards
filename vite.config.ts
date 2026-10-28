@@ -2,9 +2,16 @@ import { fileURLToPath, URL } from 'node:url'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
+import { prerender } from './scripts/vite/prerender.ts'
+import { seo } from './scripts/vite/seo.ts'
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    prerender(),
+    seo({ indexable: process.env.VERCEL_ENV !== 'preview' }),
+  ],
   build: {
     rolldownOptions: {
       output: {

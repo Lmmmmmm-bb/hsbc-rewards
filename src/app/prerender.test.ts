@@ -1,0 +1,22 @@
+import { expect, it, vi } from 'vitest'
+import { zh } from '../i18n/zh'
+
+it('renders a crawlable empty page without requests or session changes', async () => {
+  const fetch = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('No build-time network access'))
+  const { sessionStore } = await import('../store/memory-session')
+  const before = sessionStore.getSnapshot()
+  const { renderPage } = await import('./prerender')
+
+  const html = renderPage()
+
+  expect(html).toContain('<main')
+  expect(html).toContain(zh['cashback.emptyTitle'])
+  expect(html).toContain(zh['cashback.intro'])
+  expect(html.match(/<h1\b/g)).toHaveLength(1)
+  expect(html).toContain(zh['pdf.choose'])
+  expect(html).toContain(zh['cashback.memory'])
+  expect(renderPage()).toBe(html)
+  expect(sessionStore.getSnapshot()).toBe(before)
+  expect(before.mode).toBe('empty')
+  expect(fetch).not.toHaveBeenCalled()
+})

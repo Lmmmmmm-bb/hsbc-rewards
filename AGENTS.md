@@ -88,7 +88,13 @@ pnpm dev
 
 ## 构建与部署
 
-项目使用 Vercel 部署，配置为 `vercel.json`。`/assets/` 下的内容哈希资源缓存一年且不可变；HTML、favicon 和授权文本使用 `no-cache`。压缩由平台处理；本地 `vite preview` 不读取 Vercel 配置，实际响应头需部署后验证。
+项目使用 Vercel 部署，配置为 `vercel.json`。`/assets/` 下的内容哈希资源缓存一年且不可变；HTML、favicon、分享预览图、robots.txt、sitemap.xml 和授权文本使用 `no-cache`。压缩由平台处理；本地 `vite preview` 不读取 Vercel 配置，实际响应头需部署后验证。
+
+正式站点为 `https://rewards.lmmmmmm.dev/`。`src/app/seo.ts` 只维护规范网址、分享图规格和本地化元信息；`src/i18n/messages.ts` 提供不依赖 React 的语言与翻译逻辑，i18n 不反向依赖应用层或操作 DOM。`src/app/DocumentMetadata.tsx` 负责浏览器文档同步。
+
+`scripts/vite/prerender.ts` 仅负责构建时预渲染与渲染资源释放；浏览器和预渲染共用 `src/app/AppRoot.tsx`，保持组件树一致。预渲染不运行副作用、不读取结单或请求汇率，服务端渲染入口不得进入浏览器包。`scripts/vite/seo.ts` 负责静态元信息、结构化数据、抓取文件及 `vite-plugin-open-graph` 接入，`vite.config.ts` 只组合插件并传入索引策略。仅为实际存在的单页生成站点地图，不为无独立网址的语言添加 hreflang；Vercel 预览构建使用 `noindex`，正式站点保持可索引。
+
+标题、描述和分享元信息采用 i18n 文案。Open Graph 和 Twitter Card 仅由 `vite-plugin-open-graph` 生成，不重复注入。分享图使用 [OG Image Playground](https://og-playground.vercel.app/) 制作，PNG 统一为 1200 × 630，保存到 `public/social-card.png`；只保留最终图片，不提交一次性生成或验收文件。
 
 生产构建仅显式隔离 React 运行时与 PDF.js 引擎。PDF 引擎、Worker、辅助资源及弹窗内容保持按需加载，不合并为首屏 vendor 包。
 
@@ -99,7 +105,7 @@ pnpm dev
 - Vitest 在 Node 环境下仅收集 `src/**/*.test.{ts,tsx}`，显式从 `vitest` 导入 API。测试与模块相邻，按 `<module>.test.ts` 或 `<module>.<scenario>.test.ts` 命名；跨模块用例归到主要验证入口。
 - 重点覆盖金额、封顶、去重、缺失数据和异步取消；不写复刻实现的测试或无意义快照。共用合成数据放 `src/tests/fixtures/`，共用辅助函数放 `src/tests/helpers/`；单文件专用准备逻辑留在测试内，不用全局 setup 隐式注入依赖，业务代码不得导入测试支持模块。
 - UI 或样式变更实际走查相关流程及 320 / 360 / 768 / 1280 / 1440 宽度，检查错误状态、键盘和减少动态效果。涉及弹窗时覆盖慢速加载、关闭、取消、后台导入、失败重试、Escape、Tab 限制及关闭后的焦点恢复。浏览器产物仅用合成数据并存到仓库外。
-- 分包或缓存变更运行 `node scripts/audit-build.mjs /tmp/pulse-build-audit`。工具在仓库外构建，通过内存中的文案修改检查稳定资源哈希及 PDF、弹窗的懒加载边界，不修改源码或常规 `dist/`。性能比较使用手机、桌面各至少三轮冷启动的中位数；重复访问和部署更新后的请求另行核验。
+- 分包、缓存或 SEO 构建变更运行 `node scripts/audit-build.mjs /tmp/pulse-build-audit`。工具在仓库外构建，通过内存中的文案修改检查稳定资源哈希、PDF 与弹窗的懒加载边界；`scripts/audit-seo.mjs` 独立验证生成的预渲染 HTML、搜索元信息与分享图。验证不修改源码或常规 `dist/`。性能比较使用手机、桌面各至少三轮冷启动的中位数；重复访问和部署更新后的请求另行核验。
 - 结单解析验证入口为 `node scripts/verify-pulse-samples.mjs /path/to/statement.pdf`，只输出匿名计数及状态；读取真实样本前须已有明确授权。
 - 不保留只服务一次验收的生成器、报告或浏览器脚本；可复用的检查才进入仓库，且不进入应用包。
 - 按变更同步用户文档和本文。交付说明实际改动、已执行验证及未验证项；不要把历史样本、浏览器覆盖或性能结果当作本次结论，也不要将类型检查视为浏览器验收。
