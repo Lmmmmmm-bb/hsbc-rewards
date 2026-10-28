@@ -86,6 +86,7 @@ export const zh = {
   'pdf.batchCount': '本次文件 · {count} 份',
   'pdf.needsAttention': '{count} 份需处理',
   'pdf.showFiles': '查看文件状态',
+  'app.brand': 'Reward+',
   'app.title': '个人返现助手',
   'cashback.title': '返现总览',
   'cashback.subtitle': 'HSBC PULSE 银联双币钻石卡',
@@ -317,7 +318,7 @@ export const zh = {
     '有真实导入数据时，自动向 Frankfurter 获取 ECB 的 HKD→CNY 参考汇率。仅缓存公开报价、参考日期和获取时间，不发送结单、密码、卡号、商户或金额；不使用埋点统计。示例不请求公开汇率。',
   'privacy.independentTitle': '独立产品与品牌标识',
   'privacy.independentBody':
-    'Rewards 是独立的个人返现估算工具，与 HSBC 无隶属、授权或背书关系。HSBC 名称与标识用于识别支持的卡片及规则来源，商标归其所有。返现实际发放以银行记录为准。',
+    'Reward+ 是独立的个人返现估算工具，与 HSBC 无隶属、授权或背书关系。HSBC 名称与标识用于识别支持的卡片及规则来源，商标归其所有。返现实际发放以银行记录为准。',
   'clear.title': '清除本次数据？',
   'clear.body':
     '清空当前文件状态和返现结果。公开汇率缓存会保留；之后可重新选择 PDF 或查看示例。',
