@@ -18,7 +18,7 @@ export function OfficialSources({ rules }: { rules: WorkspaceView['rules'] }) {
                 href={url}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex max-w-full items-start gap-1 p-0 text-sm font-medium text-primary underline-offset-4 outline-none hover:underline focus-visible:underline focus-visible:ring-2 focus-visible:ring-ring dark:text-destructive"
+                className="inline-flex max-w-full items-start gap-1 p-0 text-sm font-medium text-primary underline-offset-4 outline-none hover:underline focus-visible:underline focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <span>{t(`rules.source.${index as 0 | 1 | 2 | 3}`)}</span>
                 <RiExternalLinkLine

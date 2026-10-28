@@ -80,7 +80,7 @@ pnpm dev
 - 沿用 shadcn `b4hZZS5Uu` preset、Base UI 和 Remix Icon，优先组合已有控件及 Tailwind 工具类，不新增业务样式表、行内视觉样式或额外主题。
 - 新控件通过 `pnpm dlx shadcn@4.22.1 add <component>` 生成并检查差异。项目不常驻安装 shadcn CLI；已有控件需要的状态变体与折叠动画保留在 `src/index.css`，新增控件时核对所需 CSS，不盲目恢复整个 CSS 包。
 - 保持主色 `#D90012`、HSBC 六边形、正文 Inter、品牌标题 Roboto 500 和系统字体回退。
-- 页面通过 `prefers-color-scheme` 自动跟随系统浅色、深色模式及其变化；主题变量与 Tailwind `dark:` 变体统一采用媒体查询，`color-scheme` 同步原生控件外观。首屏和预渲染共用样式，不增加主题切换控件、浏览器状态读取或主题持久化，也不因模式变化重建账单会话。
+- 页面固定使用浅色模式；HTML 颜色方案声明与 CSS `color-scheme` 同步限制原生控件为浅色。不引入系统配色检测、深色变体、主题切换或主题偏好持久化。
 - 修改用户文案同步更新 `src/i18n/zh.ts` 和 `src/i18n/en.ts`，不要在组件中硬编码。
 - 用户文案采用中国内地简体中文与美式英语。中文使用「账单」「账单余额」「符合条件」，英语统一美式拼写；保留银行产品及活动名称，赏世界在英文简短标签中称 `Outside Hong Kong`，官方类别全名在规则来源中说明。三项奖励称 reward components，消费额度称 spending cap，人民币金额称 CNY reference value；已计入估算不得暗示银行已发放，待计算不得写成零。双语对齐条件、范围和后果，避免为逐字对应牺牲自然表达。
 - i18n 保持轻量实现：`src/i18n/locale.ts` 负责纯语言匹配，词典和 `messages.ts` 负责模板与插值，`browser-preference.ts` 仅负责语言偏好的本机存储，`I18nProvider.tsx` 负责初始语言和页面内选择，公共布局中的 `LanguageSwitcher` 只负责交互。英语单复数及主谓一致留在英文词典中，不把语言判断分散到业务组件。
