@@ -36,7 +36,7 @@ export function WorkspaceShell({
         data-fixed-dots
         className="pointer-events-none fixed inset-0 -z-10 bg-background"
       >
-        <div className="absolute inset-0 bg-[radial-gradient(var(--muted-foreground)_0.8px,transparent_0.8px)] bg-size-[18px_18px] opacity-15" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_9px_9px,var(--muted-foreground)_0.8px,transparent_0.8px),radial-gradient(circle_at_9px_9px,var(--muted-foreground)_0.8px,transparent_0.8px)] bg-size-[18px_36px] bg-position-[0_0,9px_18px] opacity-15" />
       </div>
       <Button
         variant="outline"
