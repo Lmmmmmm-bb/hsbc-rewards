@@ -21,7 +21,7 @@ export const en = {
   'agent.tool.rules': 'Read the rules actually used by this application, their verification date, estimate assumptions, and official sources.',
   'agent.tool.access': 'Open the page-local result-sharing dialog. A page action enables sharing; calling this tool does not grant access.',
   'agent.tool.openImport': 'Open file status to select PDFs or handle a referenced file. Provide files through browser upload controls and enter passwords in the page.',
-  'agent.tool.importStatus': 'Read anonymous file progress, batch commit outcomes, problem codes, and next actions. Real results require page-local sharing.',
+  'agent.tool.importStatus': 'Read batch-wide outcomes and paginated anonymous file progress, problem codes, and next actions. Keep batchRef when paging. Real results require page-local sharing.',
   'agent.tool.cancelImport': 'Cancel the current uncommitted batch identified by batchRef, discarding its work while retaining earlier results. Stale references cannot cancel a newer batch.',
   'agent.tool.summary': 'Read committed reward totals, key limitations, periods, and a paginated card index. Returns resultToken for consistent follow-up queries.',
   'agent.tool.card': 'Read one card’s estimated rewards and spending caps using cardRef, period, and resultToken. Each cap includes its basis and cumulative cutoff.',

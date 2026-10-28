@@ -15,7 +15,7 @@ export const zh = {
   'agent.tool.rules': '查看应用实际采用的返现规则、核实日期、估算假设和官方来源。',
   'agent.tool.access': '打开本页结果共享弹窗，由页面操作开启共享；调用本工具不会自动授权。',
   'agent.tool.openImport': '打开文件状态弹窗以选择 PDF 或处理指定文件；文件通过浏览器上传能力传入，密码在页面输入。',
-  'agent.tool.importStatus': '读取当前批次的匿名文件进度、提交结果、问题代码和下一步操作。需要开启真实结果共享。',
+  'agent.tool.importStatus': '读取当前批次汇总，并分页获取匿名文件进度、问题代码和下一步操作。翻页需保留 batchRef；需要开启真实结果共享。',
   'agent.tool.cancelImport': '取消 batchRef 指定的当前未提交批次，丢弃本批工作并保留此前结果。过期引用不能取消新批次。',
   'agent.tool.summary': '获取已提交结果的总览、关键限制、周期和分页卡片索引；返回 resultToken，供后续一致性查询。',
   'agent.tool.card': '按 cardRef、周期和 resultToken 获取一张卡的预计奖励及消费额度；额度带独立口径和累计截止点。',

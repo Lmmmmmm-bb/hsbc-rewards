@@ -44,7 +44,7 @@ export const AGENT_TOOLS = {
   reward_get_rules: tool('agent.tool.rules', { topic: { type: 'string', enum: ['overview', 'eligibility', 'caps', 'assumptions', 'sources'] } }),
   reward_request_access: tool('agent.tool.access', {}, [], { write: true }),
   reward_open_import: tool('agent.tool.openImport', { fileRef: ref }, [], { write: true }),
-  reward_get_import_status: tool('agent.tool.importStatus', { batchRef: ref }, [], { dataAccess: true }),
+  reward_get_import_status: tool('agent.tool.importStatus', { batchRef: ref, ...page }, [], { dataAccess: true }),
   reward_cancel_import: tool('agent.tool.cancelImport', { batchRef: ref }, ['batchRef'], { dataAccess: true, write: true, consequential: true }),
   reward_get_summary: tool('agent.tool.summary', { periodId, resultToken: ref, ...page }, [], { dataAccess: true }),
   reward_get_card_rewards: tool('agent.tool.card', { ...scope, resultToken: ref }, ['cardRef', 'resultToken'], { dataAccess: true }),

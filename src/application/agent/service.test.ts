@@ -8,6 +8,7 @@ import { createPdfImportController } from '../import/controller'
 import { createAgentAccess } from './access'
 import { createAgentService } from './service'
 import { commitImportedBatch } from '../import/commit'
+import type { readAgentImport } from './import-query'
 
 const disposers: Array<() => void> = []
 afterEach(() => disposers.splice(0).forEach((dispose) => dispose()))
@@ -22,7 +23,7 @@ function setup() {
   access.connect()
   const ui = { requestAccess: vi.fn(), openImport: vi.fn(), cancelImport: vi.fn(() => importer.cancel()) }
   let id = 0
-  const service = createAgentService({ store, importer, access, ui, nextId: () => `synthetic-${++id}`, now: () => 1000,
+  const service = createAgentService({ store, importer, access, ui, nextId: () => `synthetic-${String(++id).padStart(6, '0')}`, now: () => 1000,
     translate: () => createTranslator('en-US') })
   disposers.push(() => { service.dispose(); access.dispose(); importer.cancel() })
   return { store, importer, access, ui, service }
@@ -95,6 +96,8 @@ describe('agent tool service', () => {
     ['reward_get_summary', { limit: 0 }], ['reward_get_summary', { limit: 21 }],
     ['reward_get_summary', { limit: 1.5 }], ['reward_get_summary', { periodId: '2026-Q2' }],
     ['reward_get_summary', { cursor: 'cursor_x' }],
+    ['reward_get_import_status', { cursor: 'cursor_x' }],
+    ['reward_get_import_status', { limit: 21 }],
     ['reward_list_transactions', { resultToken: 'result_x', includeDescription: 'true' }],
     ['reward_list_transactions', { resultToken: 'result_x', flags: ['pending', 'pending'] }],
     ['reward_list_transactions', { resultToken: 'result_x', flags: ['unverified'] }],
@@ -159,6 +162,53 @@ describe('agent tool service', () => {
     expect(rules.data).toMatchObject({ id: LATEST_RULES.id, topic: 'eligibility', components: expect.arrayContaining([
       expect.objectContaining({ component: 'pulse', eligibility: expect.stringContaining('mainland China') }),
     ]) })
+  })
+
+  it('keeps a large rejected batch readable through status pages and bounded result metadata', async () => {
+    const { service, access, importer } = setup()
+    access.grant()
+    importer.start(Array.from({ length: 200 }, (_, index) => ({ ...source(`PRIVATE_${index}.pdf`),
+      arrayBuffer: async () => new TextEncoder().encode('invalid').buffer,
+    })))
+    await vi.waitFor(() => expect(importer.getSnapshot().items.every((item) => item.status === 'error')).toBe(true))
+    let response = await service.execute('reward_get_import_status')
+    expect(response.status).toBe('ok')
+    let status = response.data as ReturnType<typeof readAgentImport>
+    const files = [...status.files]
+    while (status.nextCursor) {
+      response = await service.execute('reward_get_import_status', { batchRef: status.batchRef, cursor: status.nextCursor })
+      expect(response.status).toBe('ok')
+      expect(JSON.stringify(response).length).toBeLessThanOrEqual(24000)
+      expect(JSON.stringify(response)).not.toContain('PRIVATE_')
+      status = response.data as ReturnType<typeof readAgentImport>
+      files.push(...status.files)
+    }
+    expect(new Set(files.map((file) => file.fileRef)).size).toBe(200)
+    expect(await service.execute('reward_get_summary')).toMatchObject({ status: 'ok', meta: {
+      latestImport: { failedFiles: 200, uncommittedFiles: 0 },
+    }, data: { statementCount: 1 } })
+  })
+
+  it.each([23999, 24000, 24001])('checks the complete %i-character response including metadata', async (target) => {
+    const { service, access, store } = setup()
+    access.grant()
+    const dataset = store.getSnapshot().dataset
+    const row = { ...dataset.transactions[0], description: 'x' }
+    store.replace({ ...dataset, transactions: [row] }, 'real')
+    let summary = await service.execute('reward_get_summary')
+    const sample = await service.execute('reward_list_transactions', { resultToken: summary.meta!.resultToken, includeDescription: true, limit: 1 })
+    expect(sample.status).toBe('ok')
+    const description = 'x'.repeat(1 + target - JSON.stringify(sample).length)
+    store.replace({ ...dataset, transactions: [{ ...row, description }] }, 'real')
+    summary = await service.execute('reward_get_summary')
+    const response = await service.execute('reward_list_transactions', { resultToken: summary.meta!.resultToken, includeDescription: true, limit: 1 })
+    if (target <= 24000) {
+      expect(response.status).toBe('ok')
+      expect(JSON.stringify(response).length).toBe(target)
+    } else {
+      expect(response).toMatchObject({ status: 'error', error: { code: 'agent.query_too_broad' } })
+      expect(JSON.stringify(response).length).toBeLessThanOrEqual(24000)
+    }
   })
 
   it('retains page sharing across append and FX updates but resets it on restart and demo transitions', () => {

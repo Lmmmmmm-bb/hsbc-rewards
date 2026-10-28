@@ -22,5 +22,6 @@ export function validateAgentInput<Name extends AgentToolName>(name: Name, value
     Object.keys(object).some((key) => !Object.hasOwn(schema.properties, key) || !matches(object[key], schema.properties[key])))
     throw new AgentError('invalid_arguments')
   if (name === 'reward_get_summary' && object.cursor && !object.resultToken) throw new AgentError('invalid_arguments')
+  if (name === 'reward_get_import_status' && object.cursor && !object.batchRef) throw new AgentError('invalid_arguments')
   return object as AgentToolInputs[Name]
 }

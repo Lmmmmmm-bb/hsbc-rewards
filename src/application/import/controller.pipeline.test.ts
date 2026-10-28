@@ -75,6 +75,38 @@ function setup(
 }
 
 describe('parsed PDF batch pipeline', () => {
+  it.each(['session-changed', 'commit-failed', 'money.out-of-range'])(
+    'releases provisional resources after terminal %s without changing earlier results', async (problem) => {
+      const signals: AbortSignal[] = []
+      const read = vi.fn<PdfReader['read']>(async (_, options) => {
+        signals.push(options.signal)
+        return document()
+      })
+      const { store, controller, commit } = setup({ read })
+      controller.start([source('previous.pdf')])
+      await vi.waitFor(() => expect(controller.getSnapshot().outcome.status).toBe('committed'))
+      const previous = store.getSnapshot()
+      signals.splice(0)
+      commit.mockImplementationOnce(() => { throw problem === 'commit-failed'
+        ? new Error('Synthetic commit failure') : new DomainError(problem === 'session-changed' ? 'import.session-changed' : problem) })
+      controller.start([source('first.pdf'), source('second.pdf')])
+      await vi.waitFor(() => expect(controller.getSnapshot().outcome.status).toBe('failed'))
+      expect(store.getSnapshot()).toBe(previous)
+      expect(signals).toHaveLength(2)
+      expect(signals.every((signal) => signal.aborted)).toBe(true)
+      expect(controller.getSnapshot()).toMatchObject({ active: false, outcome: {
+        files: 0, problem: problem === 'session-changed' ? 'session-changed' : 'commit-failed',
+      } })
+      for (const item of controller.getSnapshot().items) {
+        expect(controller.preview(item.id)).toBeNull()
+        controller.retry(item.id)
+      }
+      expect(read).toHaveBeenCalledTimes(3)
+      controller.cancel()
+      expect(store.getSnapshot()).toBe(previous)
+    },
+  )
+
   it('ignores a cancelled result paused at a task boundary even after a replacement batch commits', async () => {
     const paused = deferred<void>()
     const yieldTask = vi

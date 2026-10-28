@@ -255,6 +255,8 @@ export function createPdfImportController(
         ),
       )
     } catch (error) {
+      pending.forEach(release)
+      pending.clear()
       snapshot = {
         ...snapshot,
         outcome: {

@@ -10,11 +10,12 @@ import { createAgentSnapshots } from './snapshots'
 import { getAgentCardRewards, getAgentSummary } from './reward-queries'
 import { listAgentTransactions } from './transaction-query'
 import { getAgentQuality } from './quality-query'
-import { currentBatchRef, readAgentImport } from './import-query'
+import { currentBatchRef, readAgentImport, summarizeAgentImport } from './import-query'
 import { getAgentRules } from './rules-query'
 import { validateAgentInput } from './validate'
 import { AGENT_RESPONSE_CHAR_LIMIT } from './contract'
 import { createAgentReferences } from './references'
+import { createAgentPagination } from './pagination'
 
 export interface AgentUiActions {
   requestAccess(): void | Promise<void>
@@ -36,17 +37,18 @@ export function createAgentService(deps: {
 }) {
   const snapshots = createAgentSnapshots(deps.store, deps.nextId)
   const importReferences = createAgentReferences(deps.nextId)
+  const importPages = createAgentPagination(deps.nextId)
   let importBatch = deps.importer.getSnapshot().batch
   function currentImport() {
     const batch = deps.importer.getSnapshot()
     if (batch.batch !== importBatch) {
       importReferences.clear()
+      importPages.clear()
       importBatch = batch.batch
     }
     return batch
   }
-  const importStatus = (expectedBatch?: string) =>
-    readAgentImport(currentImport(), importReferences, deps.now(), expectedBatch)
+  const importSummary = () => summarizeAgentImport(currentImport(), importReferences, deps.now())
   let disposed = false
   const allowed = () => { if (!deps.access.allowed()) throw new AgentError('access_required') }
   function context() {
@@ -77,7 +79,7 @@ export function createAgentService(deps: {
         return { data: { opened: true, fileInputSelector: AGENT_FILE_INPUT_SELECTOR, nextAction: fileRef ? 'handle_file' : 'provide_files' } }
       }
       case 'reward_get_import_status':
-        return { data: importStatus(validateAgentInput(name, value).batchRef) }
+        return { data: readAgentImport(currentImport(), importReferences, deps.now(), validateAgentInput(name, value), importPages) }
       case 'reward_cancel_import': {
         const { batchRef } = validateAgentInput(name, value)
         const batch = currentImport()
@@ -107,15 +109,16 @@ export function createAgentService(deps: {
         if (disposed) throw new AgentError('unavailable')
         if (AGENT_TOOLS[name].dataAccess) allowed()
         if (result.meta) snapshots.capture(result.meta.resultToken)
-        if (JSON.stringify(result).length > AGENT_RESPONSE_CHAR_LIMIT) throw new AgentError('query_too_broad')
         const needsAction = name === 'reward_request_access' && !deps.access.allowed()
-        const latest = result.meta ? importStatus() : null
+        const latest = result.meta ? importSummary() : null
         const meta = result.meta && latest ? { ...result.meta, latestImport: {
           batchRef: latest.batchRef, active: latest.active, outcome: latest.outcome,
-          uncommittedFiles: latest.files.filter((file) => ['queued', 'reading', 'locked', 'parsing', 'parsed', 'extracted'].includes(file.status)).length,
+          uncommittedFiles: latest.uncommittedFiles,
           failedFiles: latest.failedFiles, skippedFiles: latest.skippedFiles, partialSuccess: latest.partialSuccess,
         } } : undefined
-        return { schemaVersion: AGENT_SCHEMA_VERSION, status: needsAction ? 'needs_user_action' : 'ok', ...result, ...(meta ? { meta } : {}) }
+        const response: AgentResponse = { schemaVersion: AGENT_SCHEMA_VERSION, status: needsAction ? 'needs_user_action' : 'ok', ...result, ...(meta ? { meta } : {}) }
+        if (JSON.stringify(response).length > AGENT_RESPONSE_CHAR_LIMIT) throw new AgentError('query_too_broad')
+        return response
       } catch (error) {
         const code: AgentProblem = error instanceof AgentError ? error.code : 'unavailable'
         const nextAction = code === 'access_required' ? 'request_access' : code === 'no_results' ? 'provide_files'
@@ -124,7 +127,7 @@ export function createAgentService(deps: {
           error: { code: `agent.${code}`, message: deps.translate()(`agent.error.${code}`), nextAction } }
       }
     },
-    dispose() { disposed = true; snapshots.dispose(); importReferences.clear() },
+    dispose() { disposed = true; snapshots.dispose(); importReferences.clear(); importPages.clear() },
   }
 }
 export type AgentService = ReturnType<typeof createAgentService>
