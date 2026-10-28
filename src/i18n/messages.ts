@@ -1,10 +1,8 @@
 import { en } from './en.ts'
 import { zh } from './zh.ts'
 import type { MessageKey } from './zh.ts'
-
-export type Locale = 'zh-CN' | 'en-HK'
-export type Translate = (key: MessageKey, values?: Record<string, string | number>) => string
-export const DEFAULT_LOCALE: Locale = 'zh-CN'
+import type { Locale } from './locale.ts'
+import type { MessageValues, Translate } from './message-types.ts'
 
 export function messagesFor(locale: Locale) {
   return locale === 'zh-CN' ? zh : en
@@ -12,8 +10,12 @@ export function messagesFor(locale: Locale) {
 
 export function createTranslator(locale: Locale): Translate {
   const messages = messagesFor(locale)
-  return (key, values = {}) =>
-    messages[key].replace(/\{(\w+)\}/g, (token, name: string) =>
-      values[name] === undefined ? token : String(values[name]),
-    )
+  return (key: MessageKey, values: MessageValues = {}) => {
+    const message = messages[key]
+    const template = typeof message === 'function' ? message(values) : message
+    return template.replace(/\{(\w+)\}/g, (_, name: string) => {
+      if (values[name] === undefined) throw new Error('i18n.missing-parameter')
+      return String(values[name])
+    })
+  }
 }

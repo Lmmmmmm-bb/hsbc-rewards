@@ -10,14 +10,18 @@ export function RewardRules({ rules }: { rules: WorkspaceView['rules'] }) {
   return (
     <Tabs defaultValue="rewards" data-reward-rules className="gap-4">
       <TabsList
-        className="sticky top-0 z-10 w-full"
+        className="sticky top-0 z-10 grid w-full grid-cols-3 items-stretch group-data-horizontal/tabs:h-auto"
         aria-label={t('rules.dialogTitle')}
       >
-        <TabsTrigger value="rewards">{t('rules.tabRewards')}</TabsTrigger>
-        <TabsTrigger value="calculation">
+        <TabsTrigger value="rewards" className="h-auto min-w-0 py-1 whitespace-normal">
+          {t('rules.tabRewards')}
+        </TabsTrigger>
+        <TabsTrigger value="calculation" className="h-auto min-w-0 py-1 whitespace-normal">
           {t('rules.tabCalculation')}
         </TabsTrigger>
-        <TabsTrigger value="sources">{t('rules.tabSources')}</TabsTrigger>
+        <TabsTrigger value="sources" className="h-auto min-w-0 py-1 whitespace-normal">
+          {t('rules.tabSources')}
+        </TabsTrigger>
       </TabsList>
       <TabsContent value="rewards">
         <RuleEligibility rules={rules} />

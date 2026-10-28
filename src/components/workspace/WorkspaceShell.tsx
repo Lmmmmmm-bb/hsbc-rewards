@@ -3,6 +3,7 @@ import { RiArrowGoBackLine, RiBookOpenLine } from '@remixicon/react'
 import { Button } from '@/components/ui/button'
 import { useI18n } from '@/i18n/use-i18n'
 import { HsbcLogo } from './HsbcLogo'
+import { LanguageSwitcher } from './LanguageSwitcher'
 
 export function WorkspaceShell({
   children,
@@ -55,7 +56,7 @@ export function WorkspaceShell({
               {t('app.brand')}
             </span>
           </a>
-          <div className="flex flex-wrap items-center gap-1">
+          <div className="flex flex-wrap items-center gap-2">
             <Button variant="outline" size="sm" onClick={onRules}>
               <RiBookOpenLine aria-hidden="true" />
               {t('rules.dialogTitle')}
@@ -74,6 +75,7 @@ export function WorkspaceShell({
                 {t('cashback.restart')}
               </Button>
             )}
+            <LanguageSwitcher />
           </div>
         </div>
       </header>

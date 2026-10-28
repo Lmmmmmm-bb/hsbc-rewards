@@ -1,5 +1,6 @@
-import { DEFAULT_LOCALE, messagesFor } from '../i18n/messages.ts'
-import type { Locale } from '../i18n/messages.ts'
+import { messagesFor } from '../i18n/messages.ts'
+import { DEFAULT_LOCALE } from '../i18n/locale.ts'
+import type { Locale } from '../i18n/locale.ts'
 
 export const SITE_URL = 'https://rewards.lmmmmmm.dev/'
 const imageFile = 'social-card.png'

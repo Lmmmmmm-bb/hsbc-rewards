@@ -10,7 +10,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { useI18n } from '@/i18n/use-i18n'
 
-const labels: Readonly<Record<string, MessageKey>> = {
+const labels = {
   'reward.eligible': 'reason.eligible',
   'reward.cap-applied': 'reason.cap',
   'fx.required-for-cap': 'reason.fx',
@@ -28,7 +28,7 @@ const labels: Readonly<Record<string, MessageKey>> = {
   'transaction.credit': 'reason.credit',
   'transaction.non-positive': 'reason.nonpositive',
   'eligibility.excluded-merchant': 'reason.excluded',
-}
+} as const satisfies Readonly<Record<string, MessageKey>>
 const common = (code: string) =>
   code.startsWith('transaction.') ||
   code.startsWith('eligibility.') ||
@@ -49,7 +49,11 @@ export function RewardReasons({
       {reasons.map(({ code, count }) => (
         <li key={code} className="flex items-start justify-between gap-3">
           <span className="min-w-0 text-muted-foreground">
-            {t(Object.hasOwn(labels, code) ? labels[code] : 'reason.other')}
+            {t(
+              Object.hasOwn(labels, code)
+                ? labels[code as keyof typeof labels]
+                : 'reason.other',
+            )}
           </span>
           <Badge variant="secondary">{t('reasons.count', { count })}</Badge>
         </li>

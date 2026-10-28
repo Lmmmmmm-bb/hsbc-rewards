@@ -1,7 +1,8 @@
 import openGraph from 'vite-plugin-open-graph'
 import type { HtmlTagDescriptor, PluginOption } from 'vite'
 import { pageMetadata, SITE_URL, SOCIAL_IMAGE } from '../../src/app/seo.ts'
-import { DEFAULT_LOCALE, messagesFor } from '../../src/i18n/messages.ts'
+import { messagesFor } from '../../src/i18n/messages.ts'
+import { DEFAULT_LOCALE } from '../../src/i18n/locale.ts'
 
 function structuredData(metadata: ReturnType<typeof pageMetadata>) {
   return {

@@ -68,7 +68,7 @@ pnpm dev
 ## 隐私与资源生命周期
 
 - PDF、密码、交易及返现结果只在本机处理。业务会话仅驻留内存，刷新、关闭或重新开始后清空；不写入 localStorage、IndexedDB、Cookie、服务端、日志或埋点。
-- 唯一允许的持久缓存是公开汇率报价、参考日期和获取时间。公开汇率使用固定 Frankfurter / ECB 来源，自成功获取起复用 6 小时，到期更新并自动重试；跨午夜、清空或重新导入不重置有效期，请求不得携带结单字段。示例用合成汇率，不请求或写入公开缓存。
+- 允许持久保存公开汇率报价、参考日期、获取时间，以及用户手动选择的界面语言；语言偏好仅保存 `zh-CN` / `en-US`，不得包含任何结单或会话字段。公开汇率使用固定 Frankfurter / ECB 来源，自成功获取起复用 6 小时，到期更新并自动重试；跨午夜、清空或重新导入不重置有效期，请求不得携带结单字段。示例用合成汇率，不请求或写入公开汇率缓存；语言偏好独立保存。
 - PDF 使用显式 Worker，字体、CMap 等资源随应用提供。引擎不可用时明确失败，不退回主线程假 Worker，不执行 PDF 脚本或跟随其中链接。
 - 密码只传给单次本地解锁调用，不存入 UI 快照、日志或存储；连续错误 5 次暂停 60 秒。
 - 提取完成、取消、移除、失败及过期回调都要释放 PDF、Worker 和原文件引用。
@@ -81,6 +81,10 @@ pnpm dev
 - 新控件通过 `pnpm dlx shadcn@4.22.1 add <component>` 生成并检查差异。项目不常驻安装 shadcn CLI；已有控件需要的状态变体与折叠动画保留在 `src/index.css`，新增控件时核对所需 CSS，不盲目恢复整个 CSS 包。
 - 保持主色 `#D90012`、HSBC 六边形、正文 Inter、品牌标题 Roboto 500 和系统字体回退。
 - 修改用户文案同步更新 `src/i18n/zh.ts` 和 `src/i18n/en.ts`，不要在组件中硬编码。
+- 用户文案采用中国内地简体中文与美式英语。中文使用「账单」「账单余额」「符合条件」，英语统一美式拼写；保留银行产品及活动名称，赏世界在英文简短标签中称 `Outside Hong Kong`，官方类别全名在规则来源中说明。三项奖励称 reward components，消费额度称 spending cap，人民币金额称 CNY reference value；已计入估算不得暗示银行已发放，待计算不得写成零。双语对齐条件、范围和后果，避免为逐字对应牺牲自然表达。
+- i18n 保持轻量实现：`src/i18n/locale.ts` 负责纯语言匹配，词典和 `messages.ts` 负责模板与插值，`browser-preference.ts` 仅负责语言偏好的本机存储，`I18nProvider.tsx` 负责初始语言和页面内选择，公共布局中的 `LanguageSwitcher` 只负责交互。英语单复数及主谓一致留在英文词典中，不把语言判断分散到业务组件。
+- 优先使用 `localStorage` 中有效的手动语言偏好（`pulse.locale.v1`）；旧英文标识 `en-HK` 读取为 `en-US`，后续手动选择仅保存当前标识。缺失、无效或无法读取时，按 `navigator.languages` 的顺序匹配 `zh` / `en`，列表缺失时采用 `navigator.language`，无匹配回退 `zh-CN`。中文变体统一使用简体中文，英语变体统一使用 `en-US`。初始偏好在每次 Provider 挂载后首次读取时确定，本页不订阅其他标签页的语言变化，也不在重渲染时重新读取缓存。仅手动选择时保存语言，不写入 URL 或 Cookie；存储被禁止时仍允许本页切换。重新开始保留语言偏好。手动切换不得重建组件树、结单会话或导入控制器，也不得取消正在处理的批次。
+- 静态预渲染与 hydration 的首次快照统一使用默认中文，浏览器接管后再应用语言偏好；不能在服务端渲染或 hydration 首次渲染时直接用浏览器语言替换默认值。`DocumentMetadata` 随当前语言更新文档；独立语言网址不在当前范围内。
 - 金额称「预计返现（RewardCash）」，单位 RC；人民币金额称参考价值。消费额度与返现上限要区分，部分待计算时不能暗示结果完整。
 - 弹窗外壳同步打开，由 Base UI 管理焦点；规则、隐私和文件明细通过 `src/app/DialogContents.tsx` 共用按需加载入口，清空确认保持同步。
 - 内容加载失败在原弹窗内重试，不刷新页面。关闭文件状态弹窗后导入继续，取消仍撤销未提交的整批；迟到的加载不能重开弹窗或改写批次。本批结束后才能补充文件。
@@ -90,7 +94,7 @@ pnpm dev
 
 项目使用 Vercel 部署，配置为 `vercel.json`。`/assets/` 下的内容哈希资源缓存一年且不可变；HTML、favicon、分享预览图、robots.txt、sitemap.xml 和授权文本使用 `no-cache`。压缩由平台处理；本地 `vite preview` 不读取 Vercel 配置，实际响应头需部署后验证。
 
-正式站点为 `https://rewards.lmmmmmm.dev/`。`src/app/seo.ts` 只维护规范网址、分享图规格和本地化元信息；`src/i18n/messages.ts` 提供不依赖 React 的语言与翻译逻辑，i18n 不反向依赖应用层或操作 DOM。`src/app/DocumentMetadata.tsx` 负责浏览器文档同步。
+正式站点为 `https://rewards.lmmmmmm.dev/`。`src/app/seo.ts` 只维护规范网址、分享图规格和本地化元信息；`src/i18n/locale.ts` 和 `messages.ts` 提供不依赖 React 的语言匹配与翻译逻辑，i18n 不反向依赖应用层或操作 DOM。`src/app/DocumentMetadata.tsx` 负责浏览器文档同步。
 
 `scripts/vite/prerender.ts` 仅负责构建时预渲染与渲染资源释放；浏览器和预渲染共用 `src/app/AppRoot.tsx`，保持组件树一致。预渲染不运行副作用、不读取结单或请求汇率，服务端渲染入口不得进入浏览器包。`scripts/vite/seo.ts` 负责静态元信息、结构化数据、抓取文件及 `vite-plugin-open-graph` 接入，`vite.config.ts` 只组合插件并传入索引策略。仅为实际存在的单页生成站点地图，不为无独立网址的语言添加 hreflang；Vercel 预览构建使用 `noindex`，正式站点保持可索引。
 
@@ -103,6 +107,7 @@ pnpm dev
 代码或依赖变更完成后运行 `pnpm typecheck`、`pnpm lint`、`pnpm test`、`pnpm build` 和 `git diff --check`。仅文档变更检查事实、链接和 diff。
 
 - Vitest 在 Node 环境下仅收集 `src/**/*.test.{ts,tsx}`，显式从 `vitest` 导入 API。测试与模块相邻，按 `<module>.test.ts` 或 `<module>.<scenario>.test.ts` 命名；跨模块用例归到主要验证入口。
+- 语言集成测试位于 `src/app/AppProviders.language.test.tsx`，在 Node 中显式创建并清理 JSDOM，不使用全局 DOM setup；覆盖 hydration、浏览器语言、手动选择，以及读取、解析、待解锁批次在切换后的提交和取消。JSDOM 仅用于测试，不进入应用包。
 - 重点覆盖金额、封顶、去重、缺失数据和异步取消；不写复刻实现的测试或无意义快照。共用合成数据放 `src/tests/fixtures/`，共用辅助函数放 `src/tests/helpers/`；单文件专用准备逻辑留在测试内，不用全局 setup 隐式注入依赖，业务代码不得导入测试支持模块。
 - UI 或样式变更实际走查相关流程及 320 / 360 / 768 / 1280 / 1440 宽度，检查错误状态、键盘和减少动态效果。涉及弹窗时覆盖慢速加载、关闭、取消、后台导入、失败重试、Escape、Tab 限制及关闭后的焦点恢复。浏览器产物仅用合成数据并存到仓库外。
 - 分包、缓存或 SEO 构建变更运行 `node scripts/audit-build.mjs /tmp/pulse-build-audit`。工具在仓库外构建，通过内存中的文案修改检查稳定资源哈希、PDF 与弹窗的懒加载边界；`scripts/audit-seo.mjs` 独立验证生成的预渲染 HTML、搜索元信息与分享图。验证不修改源码或常规 `dist/`。性能比较使用手机、桌面各至少三轮冷启动的中位数；重复访问和部署更新后的请求另行核验。

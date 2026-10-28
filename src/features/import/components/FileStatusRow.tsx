@@ -110,7 +110,6 @@ export function FileStatusRow({
             <p className="text-sm text-muted-foreground">
               {t('pdf.extractedSummary', {
                 pages: item.totalPages ?? 0,
-                rows: item.textRows,
               })}
             </p>
           )}
