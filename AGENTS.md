@@ -151,12 +151,13 @@ pnpm dev
 | `src/i18n/locale.ts` | 不依赖 React 的纯语言匹配 |
 | 词典与 `src/i18n/messages.ts` | 不依赖 React 的消息模板、插值与翻译 |
 | `src/i18n/browser-preference.ts` | 仅负责语言偏好的本机存储 |
+| `src/i18n/browser-locale.ts` | 组合手动偏好与浏览器语言，读取初始语言 |
 | `src/i18n/I18nProvider.tsx` | 初始语言和页面内选择 |
 | `src/components/workspace/LanguageSwitcher.tsx` | 公共布局中的切换交互 |
 
 i18n 保持轻量，不反向依赖应用层或操作 DOM。语言选择规则：
 
-1. 优先读取 `localStorage` 中有效的手动偏好（`pulse.locale.v1`）；旧英文标识 `en-HK` 读取为 `en-US`，后续手动选择仅保存当前标识。
+1. 优先读取 `localStorage` 中有效的手动偏好（`pulse.locale.v1`），只接受 `zh-CN` / `en-US`，其他值视为无效。浏览器语言仍按下述规则匹配语言变体。
 2. 偏好缺失、无效或无法读取时，按 `navigator.languages` 顺序匹配 `zh` / `en`；列表缺失时采用 `navigator.language`，无匹配回退 `zh-CN`。中文变体统一使用简体中文，英语变体统一使用 `en-US`。
 3. 初始偏好在每次 Provider 挂载后首次读取时确定；不订阅其他标签页的语言变化，不在重渲染时重新读取缓存。
 4. 仅手动选择时保存语言，不写入 URL 或 Cookie；存储被禁止时仍允许本页切换。重新开始保留语言偏好。

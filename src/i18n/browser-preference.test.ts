@@ -30,18 +30,7 @@ describe('local language preference', () => {
     expect(cache.setItem).toHaveBeenCalledExactlyOnceWith(LOCALE_PREFERENCE_KEY, locale)
   })
 
-  it('accepts an earlier English preference without writing during the read', () => {
-    const cache = storage('en-HK')
-
-    expect(readLocalePreference()).toBe('en-US')
-    expect(cache.setItem).not.toHaveBeenCalled()
-
-    saveLocalePreference('en-US')
-
-    expect(cache.setItem).toHaveBeenCalledExactlyOnceWith(LOCALE_PREFERENCE_KEY, 'en-US')
-  })
-
-  it.each([null, '', 'en-GB', 'zh', 'unknown', '{"locale":"en-US"}'])(
+  it.each([null, '', 'en-HK', 'en-GB', 'zh', 'unknown', '{"locale":"en-US"}'])(
     'ignores an absent or unsupported stored value: %s',
     (value) => {
       const cache = storage(value)

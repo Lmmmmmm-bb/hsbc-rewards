@@ -6,8 +6,6 @@ export const LOCALE_PREFERENCE_KEY = 'pulse.locale.v1'
 export function readLocalePreference(): Locale | null {
   try {
     const value = window.localStorage.getItem(LOCALE_PREFERENCE_KEY)
-    // Preserve earlier English selections while exposing only the current locale.
-    if (value === 'en-HK') return 'en-US'
     return value === 'zh-CN' || value === 'en-US' ? value : null
   } catch {
     // Missing or blocked browser storage falls back to browser preferences.

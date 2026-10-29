@@ -130,7 +130,7 @@ describe('initial language and hydration', () => {
   it.each([
     { languages: ['fr-FR', 'en-US', 'zh-HK'], saved: null, expected: 'en-US' },
     { languages: ['zh-TW'], saved: 'en-US', expected: 'en-US' },
-    { languages: ['zh-TW'], saved: 'en-HK', expected: 'en-US' },
+    { languages: ['zh-TW'], saved: 'en-HK', expected: 'zh-CN' },
     { languages: ['en-US'], saved: 'zh-CN', expected: 'zh-CN' },
   ] as const)('hydrates static markup before selecting $expected with saved preference $saved', async ({ languages, saved, expected }) => {
     const container = browser(languages)

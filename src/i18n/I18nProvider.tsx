@@ -2,25 +2,14 @@ import { useCallback, useMemo, useState, useSyncExternalStore } from 'react'
 import type { ReactNode } from 'react'
 import { I18nContext } from './context'
 import { createTranslator } from './messages'
-import { DEFAULT_LOCALE, resolveLocale } from './locale'
+import { DEFAULT_LOCALE } from './locale'
 import type { Locale } from './locale'
-import { readLocalePreference, saveLocalePreference } from './browser-preference'
+import { saveLocalePreference } from './browser-preference'
+import { readBrowserLocale } from './browser-locale'
 
 // No cross-tab subscription: the current page retains its explicit selection.
 const subscribe = () => () => {}
 const getServerLocale = () => DEFAULT_LOCALE
-
-const readBrowserLocale = () => {
-  const saved = readLocalePreference()
-  if (saved) return saved
-
-  const preferences = globalThis.navigator
-  return resolveLocale(
-    preferences?.languages?.length
-      ? preferences.languages
-      : [preferences?.language ?? ''],
-  )
-}
 
 export function I18nProvider({ children }: { children: ReactNode }) {
   // Retain a lazy reader per provider without reading browser APIs during SSR.
