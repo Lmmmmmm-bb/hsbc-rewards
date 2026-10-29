@@ -74,11 +74,14 @@ export function TransactionDetails({
         </dl>
       </InfoSection>
       <InfoSection title={t('details.componentRewards')}>
-        <div className="grid items-start gap-2 sm:grid-cols-3">
+        <div className="grid items-stretch gap-2 sm:grid-cols-3">
           {reward.tiers.map((tier) => {
             const capping = componentExplanation(tier)
             return (
-              <section key={tier.tier} className="space-y-3 border p-3">
+              <section
+                key={tier.tier}
+                className="flex min-w-0 flex-col gap-3 border p-3"
+              >
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <h4 className="text-sm font-medium">
                     {t(`rewards.${tier.tier}`)}
@@ -106,7 +109,7 @@ export function TransactionDetails({
                     </div>
                   )}
                 </dl>
-                <ul className="space-y-2 text-xs leading-relaxed">
+                <ul className="mt-auto space-y-2 text-xs leading-relaxed">
                   {tier.reasonCodes.map((code) => (
                     <li key={code}>
                       {t(
