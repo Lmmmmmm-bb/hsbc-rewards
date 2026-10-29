@@ -246,6 +246,14 @@ UI 走查检查错误状态、键盘和减少动态效果。涉及弹窗时，�
 
 审计不修改源码或常规 `dist/`。性能比较使用手机、桌面各至少三轮冷启动的中位数；重复访问和部署更新后的请求另行核验。
 
+### 持续集成
+
+- `.github/workflows/ci.yml` 在 PR、推送到 `main` 及手动触发时运行；同一事件和分支的新运行取消上一轮。工作流使用只读仓库权限，GitHub Actions 固定到提交 SHA，版本更新时同步核对对应输入。
+- `checks` 执行 `pnpm check`；`build-audit (production)` 和 `build-audit (preview)` 分别运行构建审计。三个任务独立运行，一个审计失败不取消另一个环境；CI 不依赖本地钩子是否执行。
+- Node 版本读取 `.nvmrc`，pnpm 版本读取 `package.json#packageManager`；缓存 pnpm store，通过 `pnpm install --frozen-lockfile` 安装，设置 `SKIP_INSTALL_SIMPLE_GIT_HOOKS=1` 跳过钩子安装。
+- 审计复用 `scripts/audit-build.mjs`，使用 `VERCEL_ENV=production` / `preview` 验证索引策略。输出位于 runner 临时目录的 `pulse-build-audit/`，成功或失败后上传已有日志与构建产物，保留 7 天；不把产物写入仓库。
+- 分支保护需在 GitHub 仓库设置中将三个检查设为合并条件；工作流文件本身不配置分支保护。真实 Actions 结果以推送后的运行记录为准，本地命令和工作流静态检查不能代替。
+
 ### 测试组织与样本验证
 
 - Vitest 在 Node 环境下仅收集 `src/**/*.test.{ts,tsx}`，显式从 `vitest` 导入 API。测试与模块相邻，按 `<module>.test.ts` 或 `<module>.<scenario>.test.ts` 命名；跨模块用例归到主要验证入口。
