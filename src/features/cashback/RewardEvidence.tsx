@@ -1,8 +1,18 @@
 import type { ResultScope } from '@/application/results/scope'
-import { resultAssumptions } from '@/application/results/assumptions'
+import {
+  resultAssumptions,
+  type AssumptionKind,
+} from '@/application/results/assumptions'
 import { Button } from '@/components/ui/button'
 import { useI18n } from '@/i18n/use-i18n'
 import { AssumptionNotes } from './AssumptionNotes'
+
+const omittedOverviewAssumptions = new Set<AssumptionKind>([
+  'registration',
+  'multiplier',
+  'pool',
+  'reference-fx',
+])
 
 export function RewardEvidence({
   scope,
@@ -19,7 +29,11 @@ export function RewardEvidence({
       data-reward-evidence
     >
       <p className="text-xs text-muted-foreground">{t('basis.baseline')}</p>
-      <AssumptionNotes items={resultAssumptions(scope.cards)} />
+      <AssumptionNotes
+        items={resultAssumptions(scope.cards).filter(
+          (item) => !omittedOverviewAssumptions.has(item),
+        )}
+      />
       <Button
         variant="link"
         className="h-auto p-0"
