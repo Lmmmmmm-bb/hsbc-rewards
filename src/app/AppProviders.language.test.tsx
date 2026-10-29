@@ -11,6 +11,7 @@ import type { Locale } from '@/i18n/locale'
 import { useI18n } from '@/i18n/use-i18n'
 import { LOCALE_PREFERENCE_KEY } from '@/i18n/browser-preference'
 import { zh } from '@/i18n/zh'
+import { readBrowserLocale } from '@/i18n/browser-locale'
 import { createMemorySession, sessionStore } from '@/store/memory-session'
 import { createPdfImportController } from '@/application/import/controller'
 import { commitImportedBatch } from '@/application/import/commit'
@@ -26,6 +27,8 @@ import { deferred } from '@/tests/helpers/deferred'
 import { AppProviders } from './AppProviders'
 import { AppRoot } from './AppRoot'
 import { pageMetadata } from './seo'
+import { startLocaleBootstrap } from './locale-startup/bootstrap'
+import { claimInitialLocale } from './locale-startup/claim'
 
 let dom: JSDOM | undefined
 let root: Root | undefined
@@ -132,20 +135,21 @@ describe('initial language and hydration', () => {
     { languages: ['zh-TW'], saved: 'en-US', expected: 'en-US' },
     { languages: ['zh-TW'], saved: 'en-HK', expected: 'zh-CN' },
     { languages: ['en-US'], saved: 'zh-CN', expected: 'zh-CN' },
-  ] as const)('hydrates static markup before selecting $expected with saved preference $saved', async ({ languages, saved, expected }) => {
+  ] as const)('hydrates the selected $expected markup with saved preference $saved', async ({ languages, saved, expected }) => {
     const container = browser(languages)
     if (saved) window.localStorage.setItem(LOCALE_PREFERENCE_KEY, saved)
     const localRead = vi.spyOn(dom!.window.Storage.prototype, 'getItem')
     const languageRead = vi.spyOn(window.navigator, 'languages', 'get')
-    const tree = <StrictMode><AppProviders><Page /></AppProviders></StrictMode>
+    const tree = <StrictMode><AppProviders initialLocale={expected}><Page /></AppProviders></StrictMode>
     const staticHtml = renderToString(tree)
 
-    expect(staticHtml).toContain(zh['cashback.emptyTitle'])
+    expect(staticHtml).toContain(createTranslator(expected)('cashback.emptyTitle'))
     expect(localRead).not.toHaveBeenCalled()
     expect(languageRead).not.toHaveBeenCalled()
 
     container.innerHTML = staticHtml
     const heading = query(container, 'h1')
+    expect(readBrowserLocale()).toBe(expected)
     const onRecoverableError = vi.fn()
     const { hydrateRoot } = await import('react-dom/client')
     await act(async () => { root = hydrateRoot(container, tree, { onRecoverableError }) })
@@ -165,7 +169,7 @@ describe('initial language and hydration', () => {
     const container = browser(languages, language)
     const { createRoot } = await import('react-dom/client')
     const mounted = root = createRoot(container)
-    await act(async () => mounted.render(<AppProviders><Page /></AppProviders>))
+    await act(async () => mounted.render(<AppProviders initialLocale={readBrowserLocale()}><Page /></AppProviders>))
 
     expect(query(container, 'h1').dataset.locale).toBe(expected)
   })
@@ -174,7 +178,7 @@ describe('initial language and hydration', () => {
     const container = browser(['en-HK'])
     const { createRoot } = await import('react-dom/client')
     const mounted = root = createRoot(container)
-    await act(async () => mounted.render(<AppProviders><Page /></AppProviders>))
+    await act(async () => mounted.render(<AppProviders initialLocale={readBrowserLocale()}><Page /></AppProviders>))
 
     expect(document.documentElement.lang).toBe('en-US')
     expect(query(container, '[data-date]').textContent).toBe('Oct 28, 2026')
@@ -195,7 +199,8 @@ describe('initial language and hydration', () => {
     const url = window.location.href
     const { createRoot } = await import('react-dom/client')
     const mounted = root = createRoot(container)
-    const tree = (label: string) => <AppProviders><Page><p>{label}</p></Page></AppProviders>
+    let initialLocale = readBrowserLocale()
+    const tree = (label: string) => <AppProviders initialLocale={initialLocale}><Page><p>{label}</p></Page></AppProviders>
     await act(async () => mounted.render(tree('first')))
 
     expect(document.documentElement.lang).toBe(initial)
@@ -217,6 +222,7 @@ describe('initial language and hydration', () => {
 
     await act(async () => mounted.unmount())
     const reloaded = root = createRoot(container)
+    initialLocale = readBrowserLocale()
     await act(async () => reloaded.render(tree('reloaded')))
 
     expect(document.documentElement.lang).toBe(selected)
@@ -234,7 +240,7 @@ describe('initial language and hydration', () => {
     window.localStorage.setItem(LOCALE_PREFERENCE_KEY, 'unsupported')
     const { createRoot } = await import('react-dom/client')
     const mounted = root = createRoot(container)
-    await act(async () => mounted.render(<AppProviders><Page /></AppProviders>))
+    await act(async () => mounted.render(<AppProviders initialLocale={readBrowserLocale()}><Page /></AppProviders>))
 
     expect(document.documentElement.lang).toBe('en-US')
 
@@ -243,13 +249,14 @@ describe('initial language and hydration', () => {
     expect(window.localStorage.getItem(LOCALE_PREFERENCE_KEY)).toBe('zh-CN')
   })
 
-  it('resolves the initial preference once per mount and ignores changes from other pages', async () => {
+  it('uses one initial page preference and ignores changes from other pages', async () => {
     const container = browser(['en-US'])
     window.localStorage.setItem(LOCALE_PREFERENCE_KEY, 'en-US')
     const localRead = vi.spyOn(dom!.window.Storage.prototype, 'getItem')
     const { createRoot } = await import('react-dom/client')
     const mounted = root = createRoot(container)
-    const tree = (label: string) => <StrictMode><AppProviders><Page><p>{label}</p></Page></AppProviders></StrictMode>
+    let initialLocale = readBrowserLocale()
+    const tree = (label: string) => <StrictMode><AppProviders initialLocale={initialLocale}><Page><p>{label}</p></Page></AppProviders></StrictMode>
     await act(async () => mounted.render(tree('first')))
 
     expect(document.documentElement.lang).toBe('en-US')
@@ -265,6 +272,7 @@ describe('initial language and hydration', () => {
 
     await act(async () => mounted.unmount())
     const reloaded = root = createRoot(container)
+    initialLocale = readBrowserLocale()
     await act(async () => reloaded.render(tree('reloaded')))
 
     expect(document.documentElement.lang).toBe('zh-CN')
@@ -278,7 +286,8 @@ describe('initial language and hydration', () => {
     vi.spyOn(storage, 'setItem').mockImplementation(() => { throw new Error('Storage denied') })
     const { createRoot } = await import('react-dom/client')
     const mounted = root = createRoot(container)
-    const tree = (label: string) => <AppProviders><Page><p>{label}</p></Page></AppProviders>
+    const initialLocale = readBrowserLocale()
+    const tree = (label: string) => <AppProviders initialLocale={initialLocale}><Page><p>{label}</p></Page></AppProviders>
     await act(async () => mounted.render(tree('first')))
 
     expect(document.documentElement.lang).toBe('en-US')
@@ -293,14 +302,22 @@ describe('initial language and hydration', () => {
     const container = browser(['zh-CN'])
     window.localStorage.setItem(LOCALE_PREFERENCE_KEY, 'en-US')
     const fetch = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('No network in the example'))
-    container.innerHTML = renderToString(<AppRoot />)
+    container.innerHTML = renderToString(<AppRoot initialLocale="zh-CN" />)
+    container.setAttribute('data-prerender-locale', 'zh-CN')
+    const alternate = document.createElement('template')
+    alternate.id = 'prerender-en-US'
+    alternate.innerHTML = renderToString(<AppRoot initialLocale="en-US" />)
+    document.body.append(alternate)
+    startLocaleBootstrap({ 'zh-CN': pageMetadata('zh-CN'), 'en-US': pageMetadata('en-US') })
+    window.__rewardLocaleStartup!.activate()
+    const initialLocale = claimInitialLocale(container)
     const heading = query(container, 'h1')
 
-    expect(heading.textContent).toBe(zh['cashback.emptyTitle'])
+    expect(heading.textContent).toBe(createTranslator('en-US')('cashback.emptyTitle'))
 
     const onRecoverableError = vi.fn()
     const { hydrateRoot } = await import('react-dom/client')
-    await act(async () => { root = hydrateRoot(container, <AppRoot />, { onRecoverableError }) })
+    await act(async () => { root = hydrateRoot(container, <AppRoot initialLocale={initialLocale} />, { onRecoverableError }) })
 
     expect(onRecoverableError).not.toHaveBeenCalled()
     expect(query(container, 'h1')).toBe(heading)
@@ -345,7 +362,7 @@ describe('initial language and hydration', () => {
     const before = sessionStore.getSnapshot()
     const { createRoot } = await import('react-dom/client')
     const mounted = root = createRoot(container)
-    await act(async () => mounted.render(<AppRoot />))
+    await act(async () => mounted.render(<AppRoot initialLocale="zh-CN" />))
     const periods = query(container, '[data-reward-periods]')
     const buttons = [...periods.querySelectorAll('button')]
     const firstHalf = buttons.find((button) => button.textContent?.includes('上半年'))!
@@ -424,7 +441,7 @@ describe('language changes during an import', () => {
       const beforeBatch = controller.getSnapshot()
       const { createRoot } = await import('react-dom/client')
       const mounted = root = createRoot(container)
-      await act(async () => mounted.render(<StrictMode><AppProviders><Session store={store} controller={controller} /></AppProviders></StrictMode>))
+      await act(async () => mounted.render(<StrictMode><AppProviders initialLocale="en-US"><Session store={store} controller={controller} /></AppProviders></StrictMode>))
       const amount = query(container, '[data-result]').textContent
       const input = query<HTMLInputElement>(container, 'input')
       input.value = 'synthetic unfinished value'

@@ -2,16 +2,19 @@ import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { SITE_URL, SOCIAL_IMAGE } from '../src/app/seo.ts'
+import { JSDOM } from 'jsdom'
 
 /** Check emitted artifacts, independently of Vite's plugin implementation. */
 export async function verifySeoBuild(directory, { indexable, expectedHeading }) {
   const html = await readFile(join(directory, 'index.html'), 'utf8')
   const charset = html.indexOf('<meta charset="UTF-8"')
   assert.ok(charset >= 0 && Buffer.byteLength(html.slice(0, charset)) < 1024, 'The character encoding must remain in the first 1024 bytes.')
-  assert.match(html, /<div id="root"><div data-workspace-shell/)
-  const headings = [...html.matchAll(/<h1\b[^>]*>([^<]*)<\/h1>/g)]
-  assert.equal(headings.length, 1)
-  assert.equal(headings[0][1], expectedHeading)
+  const staticPage = new JSDOM(html)
+  try {
+    const document = staticPage.window.document
+    assert.equal(document.querySelectorAll('h1').length, 1, 'Only the default page may participate in the document.')
+    assert.equal(document.querySelector('#root h1')?.textContent, expectedHeading)
+  } finally { staticPage.window.close() }
   assert.equal((html.match(/rel="canonical"/g) ?? []).length, 1, 'Only one canonical URL may be emitted.')
   assert.ok(html.includes(`rel="canonical" href="${SITE_URL}"`))
   const robotsDirective = indexable ? 'index, follow, max-image-preview:large' : 'noindex, follow'

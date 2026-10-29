@@ -152,18 +152,21 @@ pnpm dev
 | 词典与 `src/i18n/messages.ts` | 不依赖 React 的消息模板、插值与翻译 |
 | `src/i18n/browser-preference.ts` | 仅负责语言偏好的本机存储 |
 | `src/i18n/browser-locale.ts` | 组合手动偏好与浏览器语言，读取初始语言 |
-| `src/i18n/I18nProvider.tsx` | 初始语言和页面内选择 |
+| `src/i18n/I18nProvider.tsx` | 接收显式初始语言并管理页面内选择 |
+| `src/app/locale-startup/` | 首屏语言激活、失败回退与 React 接管边界 |
 | `src/components/workspace/LanguageSwitcher.tsx` | 公共布局中的切换交互 |
 
 i18n 保持轻量，不反向依赖应用层或操作 DOM。语言选择规则：
 
 1. 优先读取 `localStorage` 中有效的手动偏好（`pulse.locale.v1`），只接受 `zh-CN` / `en-US`，其他值视为无效。浏览器语言仍按下述规则匹配语言变体。
 2. 偏好缺失、无效或无法读取时，按 `navigator.languages` 顺序匹配 `zh` / `en`；列表缺失时采用 `navigator.language`，无匹配回退 `zh-CN`。中文变体统一使用简体中文，英语变体统一使用 `en-US`。
-3. 初始偏好在每次 Provider 挂载后首次读取时确定；不订阅其他标签页的语言变化，不在重渲染时重新读取缓存。
+3. 初始偏好在每次页面启动时读取一次，由入口显式传给 Provider；Provider 不读取浏览器偏好，不订阅其他标签页的语言变化，不在重渲染时重新读取缓存。
 4. 仅手动选择时保存语言，不写入 URL 或 Cookie；存储被禁止时仍允许本页切换。重新开始保留语言偏好。
 5. 手动切换不得重建组件树、账单会话或导入控制器，也不得取消正在处理的批次。
 
-静态预渲染与 hydration 的首次快照统一使用默认中文，浏览器接管后再应用语言偏好；不能在服务端渲染或 hydration 首次渲染时直接用浏览器语言替换默认值。`src/app/DocumentMetadata.tsx` 随当前语言更新文档；独立语言网址不在当前范围内。
+构建时为中文、英文生成同一空会话的静态内容；默认中文保留在根节点，英文放入惰性模板。经典内联引导脚本在首次显示前选择并激活内容，React 首次快照必须与根节点的预渲染语言一致，不得在接管后再次自动读取偏好或修正语言。无脚本时中文直接可见；英文激活期间仅暂缓正文显示，不等待 React。模板、初始化失败或 5 秒超时回退中文，回退后禁止迟到激活；成功、失败和接管时清理计时器、监听及备用模板。React 接管后引导逻辑不得再修改根节点。
+
+初始元信息与后续语言切换共用 `src/app/document-metadata.ts`；`src/app/DocumentMetadata.tsx` 随当前语言更新文档。独立语言网址不在当前范围内。
 
 ## 浏览器 AI 工具与 WebMCP
 
@@ -203,6 +206,7 @@ i18n 保持轻量，不反向依赖应用层或操作 DOM。语言选择规则�
 
 - 正式站点为 `https://rewards.lmmmmmm.dev/`。`src/app/seo.ts` 只维护规范网址、分享图规格和本地化元信息；浏览器文档同步归 `src/app/DocumentMetadata.tsx`。
 - `scripts/vite/prerender.ts` 仅负责构建时预渲染与渲染资源释放；浏览器和预渲染共用 `src/app/AppRoot.tsx`，保持组件树一致。预渲染不运行副作用、不读取账单或请求汇率，服务端渲染入口不得进入浏览器包。
+- `scripts/vite/locale-startup.ts` 将语言启动模块编译为独立、无请求的经典内联脚本，元信息只注入构建生成的小型数据表，不包含 React、完整词典或业务会话。准备脚本位于 head 内，激活脚本位于两种静态内容之后；合计 gzip 不超过 2 KiB。开发模式由浏览器入口读取语言并直接渲染。
 - `scripts/vite/seo.ts` 负责静态元信息、结构化数据、抓取文件及 `vite-plugin-open-graph` 接入；`vite.config.ts` 只组合插件并传入索引策略。
 - 仅为实际存在的单页生成站点地图，不为无独立网址的语言添加 hreflang；Vercel 预览构建使用 `noindex`，正式站点保持可索引。
 - 标题、描述和分享元信息采用 i18n 文案。Open Graph 和 Twitter Card 仅由 `vite-plugin-open-graph` 生成，不重复注入。
@@ -240,10 +244,11 @@ i18n 保持轻量，不反向依赖应用层或操作 DOM。语言选择规则�
 
 UI 走查检查错误状态、键盘和减少动态效果。涉及弹窗时，覆盖慢速加载、关闭、取消、后台导入、失败重试、Escape、Tab 限制及关闭后的焦点恢复。浏览器产物仅用合成数据并存到仓库外。
 
-构建审计在仓库外构建，通过内存中的文案修改检查 React / UI / PDF 稳定资源哈希、PDF / 弹窗 / Agent 查询服务的懒加载边界、首屏模块的静态可达性及 PDF 辅助资源外置。该入口同时调用两个独立审计模块：
+构建审计在仓库外构建，通过内存中的文案修改检查 React / UI / PDF 稳定资源哈希、PDF / 弹窗 / Agent 查询服务的懒加载边界、首屏模块的静态可达性及 PDF 辅助资源外置。该入口同时调用三个独立审计模块：
 
 - `scripts/audit-seo.mjs`：验证生成的预渲染 HTML、搜索元信息与分享图。
 - `scripts/audit-agents.mjs`：验证两个文本产物、工具 Schema、发现链接和部署响应头配置。
+- `scripts/audit-locale-startup.mjs`：验证双语静态内容、内联脚本顺序与体积，并执行实际脚本确认激活与清理。
 
 审计不修改源码或常规 `dist/`。性能比较使用手机、桌面各至少三轮冷启动的中位数；重复访问和部署更新后的请求另行核验。
 
@@ -260,7 +265,7 @@ UI 走查检查错误状态、键盘和减少动态效果。涉及弹窗时，�
 - Vitest 在 Node 环境下仅收集 `src/**/*.test.{ts,tsx}`，显式从 `vitest` 导入 API。测试与模块相邻，按 `<module>.test.ts` 或 `<module>.<scenario>.test.ts` 命名；跨模块用例归到主要验证入口。
 - 重点覆盖金额、封顶、去重、缺失数据和异步取消；不写复刻实现的测试或无意义快照。
 - 共用合成数据放 `src/tests/fixtures/`，共用辅助函数放 `src/tests/helpers/`；单文件专用准备逻辑留在测试内，不用全局 setup 隐式注入依赖，业务代码不得导入测试支持模块。
-- 语言集成测试位于 `src/app/AppProviders.language.test.tsx`，在 Node 中显式创建并清理 JSDOM，不使用全局 DOM setup；覆盖 hydration、浏览器语言、手动选择，以及读取、解析、待解锁批次在切换后的提交和取消。JSDOM 仅用于测试，不进入应用包。
+- 语言集成测试位于 `src/app/AppProviders.language.test.tsx`，启动回退测试位于 `src/app/locale-startup/`，在 Node 中显式创建并清理 JSDOM，不使用全局 DOM setup；覆盖双语 hydration、浏览器语言、手动选择、初始化失败和迟到回调，以及读取、解析、待解锁批次在切换后的提交和取消。构建审计另执行实际生成的引导脚本；首次可见画面仍须浏览器验证。JSDOM 仅用于测试及显式审计，不进入应用包。
 - 账单解析验证入口为 `node scripts/verify-pulse-samples.mjs /path/to/statement.pdf`，只输出匿名计数及状态；读取真实样本前须已有明确授权。
 
 ### 交付要求

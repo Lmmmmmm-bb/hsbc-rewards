@@ -3,6 +3,7 @@ import { createServer } from 'vite'
 import type { Plugin, ResolvedConfig } from 'vite'
 
 const outlet = '<!--app-html-->'
+const alternateOutlet = '<!--app-alternate-->'
 
 export function prerender(): Plugin {
   let config: ResolvedConfig
@@ -15,7 +16,7 @@ export function prerender(): Plugin {
       order: 'pre',
       async handler(html) {
         if (!html.includes(outlet)) throw new Error('Missing pre-render outlet in index.html.')
-        if (config.command !== 'build') return html.replace(outlet, '')
+        if (config.command !== 'build') return html.replace(outlet, '').replace(alternateOutlet, '')
 
         const server = await createServer({
           configFile: false,
@@ -30,7 +31,8 @@ export function prerender(): Plugin {
         })
         try {
           const { renderPage } = await server.ssrLoadModule('/src/app/prerender.tsx')
-          return html.replace(outlet, () => renderPage())
+          return html.replace(outlet, () => renderPage('zh-CN'))
+            .replace(alternateOutlet, () => `<template id="prerender-en-US">${renderPage('en-US')}</template>`)
         } finally {
           await server.close()
         }

@@ -126,6 +126,11 @@
     --sidebar-ring: #D90012;
 }
 
+/* Only the alternate static content waits for HTML activation, never for React. */
+html[data-locale-startup="pending"] #root {
+  visibility: hidden;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

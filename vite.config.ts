@@ -5,6 +5,7 @@ import { defineConfig } from 'vite'
 import { prerender } from './scripts/vite/prerender.ts'
 import { seo } from './scripts/vite/seo.ts'
 import { agentDocuments } from './scripts/vite/agents.ts'
+import { localeStartup } from './scripts/vite/locale-startup.ts'
 
 export default defineConfig({
   plugins: [
@@ -13,6 +14,7 @@ export default defineConfig({
     prerender(),
     seo({ indexable: process.env.VERCEL_ENV !== 'preview' }),
     agentDocuments({ originTrialToken: process.env.WEBMCP_ORIGIN_TRIAL_TOKEN }),
+    localeStartup(),
   ],
   build: {
     rolldownOptions: {

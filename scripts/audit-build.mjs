@@ -7,6 +7,7 @@ import { gzipSync } from 'node:zlib'
 import { build } from 'vite'
 import { verifySeoBuild } from './audit-seo.mjs'
 import { verifyAgentBuild } from './audit-agents.mjs'
+import { verifyLocaleStartupBuild } from './audit-locale-startup.mjs'
 import { zh } from '../src/i18n/zh.ts'
 
 // Explicit build/cache audit. The copy edit exists only in a build transform;
@@ -119,12 +120,14 @@ async function snapshot(name, probe = false) {
   for (const chunk of chunks) {
     assert.ok(!Object.keys(chunk.modules).some(id => /[\\/]app[\\/]prerender\.tsx$|[\\/]react-dom[\\/].*server/.test(id)), 'Build-time rendering must not enter any browser chunk.')
     assert.ok(!Object.keys(chunk.modules).some(id => /[\\/]app[\\/]agent-documents\.ts$|[\\/]scripts[\\/]/.test(id)), 'Public-document rendering and verification must stay outside browser chunks.')
+    assert.ok(!Object.keys(chunk.modules).some(id => /[\\/]locale-startup[\\/]bootstrap\.ts$/.test(id)), 'Static activation must not be bundled a second time in React.')
   }
 
   await verifySeoBuild(join(work, name), {
     indexable: process.env.VERCEL_ENV !== 'preview',
     expectedHeading: probe ? probeHeading : heading,
   })
+  await verifyLocaleStartupBuild(join(work, name), { expectedHeading: probe ? probeHeading : heading })
   await verifyAgentBuild(join(work, name), { originTrialToken: process.env.WEBMCP_ORIGIN_TRIAL_TOKEN })
   const files = {}
 
@@ -176,7 +179,7 @@ for (const file of resources) assert.deepEqual(baseline.files[file], probe.files
 for (const file of ['llms.txt', 'webmcp.txt']) assert.deepEqual(baseline.files[file], probe.files[file], `${file} must be independent of page copy and session state.`)
 const report = {
   probe: 'In-memory edit to cashback.emptyTitle in zh.ts; source files are untouched.',
-  checks: { pdfStaysLazy: true, dialogsStayLazy: true, agentServiceStaysLazy: true, noLazyModulesPromoted: true, pdfSupportDataExternal: true, prerenderStaysBuildOnly: true, staticSeo: true, agentDocumentsMatchContract: true, stableDependenciesUnchanged: true, unchangedResources: resources.length },
+  checks: { pdfStaysLazy: true, dialogsStayLazy: true, agentServiceStaysLazy: true, noLazyModulesPromoted: true, pdfSupportDataExternal: true, prerenderStaysBuildOnly: true, staticSeo: true, bilingualStartup: true, agentDocumentsMatchContract: true, stableDependenciesUnchanged: true, unchangedResources: resources.length },
   baseline,
   copyEdit: { entry: probe.entry, stable: probe.stable, directory: probe.directory },
 }
