@@ -1,6 +1,6 @@
 import { componentFlags } from '../results/status'
 export { componentFlags } from '../results/status'
-import type { RewardPool } from '@/domain/rewards/calculate'
+import { selectResultPools } from '../results/pools'
 import type { AgentSnapshot } from './snapshots'
 import type { AgentScope } from './scope'
 
@@ -20,36 +20,14 @@ export function cardIdentity(snapshot: AgentSnapshot, card: AgentScope['cards'][
 }
 
 export function projectPools(snapshot: AgentSnapshot, scope: AgentScope) {
-  const pools = new Map<string, RewardPool>()
-  scope.cards.forEach((card) => card.pools.forEach((pool) => pools.set(pool.key, pool)))
-
-  return [...pools.values()].map((pool) => {
-    const year = pool.period.slice(0, 4)
-    const periodEnd = pool.period.endsWith('H1') ? `${year}-06-30` : `${year}-12-31`
-    const asOf = scope.period && scope.period.to < periodEnd ? scope.period.to : periodEnd
-    const relatedCards = snapshot.session.dataset.cards.filter((card) => (card.pool?.id ?? card.id) === pool.ownerId)
-    const relatedIds = new Set(relatedCards.map((card) => card.id))
-    const from = pool.period.endsWith('H2') ? `${year}-07-01` : `${year}-01-01`
-    const observedThrough = snapshot.session.dataset.transactions
-      .filter((row) => relatedIds.has(row.cardId) && row.transactionDate >= from && row.transactionDate <= asOf)
-      .map((row) => row.transactionDate).sort().at(-1) ?? null
-
-    return {
-      poolRef: snapshot.references.get('pool', pool.key),
-      cardRefs: relatedCards.map((card) => snapshot.references.get('card', card.id)),
-      shared: pool.shared,
-      component: pool.tier,
-      period: pool.period,
-      basisCode: pool.tier === 'abroad' ? 'hkd-equivalent' as const : 'pulse-hkd-cny' as const,
-      scale: 100,
-      asOf,
-      observedThrough,
-      capMinor: pool.capMinor,
-      usedMinor: pool.usedMinor,
-      remainingMinor: pool.remainingMinor,
-      verification: pool.verification,
-    }
-  })
+  return selectResultPools(snapshot.session, scope).map((pool) => ({
+    poolRef: snapshot.references.get('pool', pool.key),
+    cardRefs: pool.relatedCards.map((card) => snapshot.references.get('card', card.id)),
+    shared: pool.shared, component: pool.tier, period: pool.period, basisCode: pool.basisCode,
+    scale: 100, asOf: pool.asOf, observedThrough: pool.observedThrough,
+    capMinor: pool.capMinor, usedMinor: pool.usedMinor, remainingMinor: pool.remainingMinor,
+    verification: pool.verification,
+  }))
 }
 
 export function resultMeta(snapshot: AgentSnapshot, scope: AgentScope) {

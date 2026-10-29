@@ -1,7 +1,7 @@
 import type { ResultScope } from '@/application/results/scope'
 import { resultAssumptions } from '@/application/results/assumptions'
 import { useI18n } from '@/i18n/use-i18n'
-import { AssumptionNotes } from './AssumptionNotes'
+import { AssumptionNotes } from '../AssumptionNotes'
 
 export function CalculationDetails({ scope }: { scope: ResultScope }) {
   const { t, rc, date } = useI18n()

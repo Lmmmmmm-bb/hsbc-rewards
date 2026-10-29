@@ -7,10 +7,11 @@ import { selectResultScope } from '@/application/results/scope'
 import { selectTransactions } from '@/application/results/transactions'
 import type { SessionState } from '@/application/session/types'
 import type { WorkspaceView } from '@/application/session/selectors'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { DialogTabsList, DialogTab } from '@/components/workspace/DialogTabs'
+import { Tabs, TabsContent } from '@/components/ui/tabs'
 import { usePdfImport } from '@/store/use-pdf-import'
 import { useI18n } from '@/i18n/use-i18n'
-import { CalculationDetails } from '../CalculationDetails'
+import { CalculationDetails } from './CalculationDetails'
 import { TransactionList } from './TransactionList'
 import { TransactionDetails } from './TransactionDetails'
 import { StatementDetails } from './StatementDetails'
@@ -29,6 +30,7 @@ export function ResultDetailsContent({
   const { batch } = usePdfImport()
   const host = useRef<HTMLDivElement>(null)
   const listPosition = useRef({ scroll: 0, focusId: '' })
+  const sourcePosition = useRef({ scroll: 0, focusId: '', restore: false })
   const [stored, set] = useState(() => initialNavigation(request, session))
   const state = synchronizeNavigation(stored, session)
   if (state !== stored) set(state)
@@ -59,6 +61,22 @@ export function ResultDetailsContent({
   ]
 
   useLayoutEffect(() => {
+    if (sourcePosition.current.restore && state.statementId) {
+      sourcePosition.current.restore = false
+      const item = [
+        ...(host.current?.querySelectorAll<HTMLElement>(
+          '[data-source-transaction-id]',
+        ) ?? []),
+      ].find(
+        (element) =>
+          element.dataset.sourceTransactionId ===
+          sourcePosition.current.focusId,
+      )
+      item?.focus({ preventScroll: true })
+      const region = host.current?.closest<HTMLElement>('[role="region"]')
+      if (region) region.scrollTop = sourcePosition.current.scroll
+      return
+    }
     const heading = host.current?.querySelector<HTMLElement>(
       '[data-detail-heading]',
     )
@@ -105,6 +123,7 @@ export function ResultDetailsContent({
         </p>
       )}
       <Tabs
+        className="gap-4"
         value={state.tab}
         onValueChange={(value) =>
           set({
@@ -117,25 +136,21 @@ export function ResultDetailsContent({
           })
         }
       >
-        <TabsList className="h-auto w-full flex-wrap" variant="line">
+        <DialogTabsList aria-label={t('details.title')}>
           {tabs.map((tab) => (
-            <TabsTrigger
-              key={tab}
-              value={tab}
-              className="h-auto py-2 whitespace-normal"
-            >
+            <DialogTab key={tab} value={tab}>
               {t(`details.tab.${tab}`)}
-            </TabsTrigger>
+            </DialogTab>
           ))}
-        </TabsList>
-        <TabsContent value="calculation" className="pt-4 text-sm">
+        </DialogTabsList>
+        <TabsContent value="calculation" className="text-sm">
           {selectedScope ? (
             <CalculationDetails scope={selectedScope} />
           ) : (
             <p>{t('details.objectMissing')}</p>
           )}
         </TabsContent>
-        <TabsContent value="transactions" className="pt-4 text-sm">
+        <TabsContent value="transactions" className="text-sm">
           {state.transactionId ? (
             entry ? (
               <>
@@ -147,7 +162,10 @@ export function ResultDetailsContent({
                 <TransactionDetails
                   entry={entry}
                   statements={session.dataset.statements}
-                  onBack={() =>
+                  onBack={() => {
+                    sourcePosition.current.restore = Boolean(
+                      state.returnStatementId,
+                    )
                     set({
                       ...state,
                       transactionId: null,
@@ -157,12 +175,13 @@ export function ResultDetailsContent({
                         : 'transactions',
                       returnStatementId: null,
                     })
-                  }
+                  }}
                   onStatement={(id) =>
                     set({
                       ...state,
                       tab: 'statements',
                       statementId: id,
+                      sourcePage: 0,
                       returnTransactionId: state.transactionId,
                       transactionId: null,
                     })
@@ -193,7 +212,7 @@ export function ResultDetailsContent({
             />
           )}
         </TabsContent>
-        <TabsContent value="statements" className="pt-4 text-sm">
+        <TabsContent value="statements" className="text-sm">
           {selectedScope ? (
             <StatementDetails
               scope={selectedScope}
@@ -201,8 +220,15 @@ export function ResultDetailsContent({
               workspace={workspace}
               statementId={state.statementId}
               status={request.reconciliation}
+              page={state.sourcePage}
+              onPage={(sourcePage) => set({ ...state, sourcePage })}
               onSelect={(id) =>
-                set({ ...state, statementId: id, returnTransactionId: null })
+                set({
+                  ...state,
+                  statementId: id,
+                  sourcePage: 0,
+                  returnTransactionId: null,
+                })
               }
               onBack={() =>
                 set({
@@ -215,7 +241,14 @@ export function ResultDetailsContent({
                   returnTransactionId: null,
                 })
               }
-              onTransaction={(id) =>
+              onTransaction={(id) => {
+                sourcePosition.current = {
+                  scroll:
+                    host.current?.closest<HTMLElement>('[role="region"]')
+                      ?.scrollTop ?? 0,
+                  focusId: id,
+                  restore: false,
+                }
                 set({
                   ...state,
                   tab: 'transactions',
@@ -223,7 +256,7 @@ export function ResultDetailsContent({
                   returnStatementId: state.statementId,
                   statementId: null,
                 })
-              }
+              }}
             />
           ) : (
             <p>{t('details.objectMissing')}</p>

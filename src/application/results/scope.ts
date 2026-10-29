@@ -73,6 +73,7 @@ export function selectResultScope(
       .map(({ statement }) => statement.id),
   ).size
   return {
+    workspace,
     periodId,
     period,
     view,

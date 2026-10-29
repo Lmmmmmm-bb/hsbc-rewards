@@ -6,6 +6,7 @@ import {
 } from '@/application/results/transactions'
 import { Button } from '@/components/ui/button'
 import { useI18n } from '@/i18n/use-i18n'
+import { DetailPagination } from './DetailPagination'
 import { reasonMessage } from '../reason-messages'
 
 export function TransactionList({
@@ -27,7 +28,7 @@ export function TransactionList({
   onPage: (page: number) => void
   onSelect: (id: string) => void
 }) {
-  const { t, date, money, rcSummary, number } = useI18n()
+  const { t, date, money, rcSummary } = useI18n()
   const { entries, count, pages, current } = transactionPage(
     scope,
     filter,
@@ -192,27 +193,7 @@ export function TransactionList({
           </li>
         ))}
       </ul>
-      <div className="flex items-center justify-between gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={current === 0}
-          onClick={() => onPage(current - 1)}
-        >
-          {t('details.previous')}
-        </Button>
-        <span className="text-xs tabular-nums">
-          {number(current + 1, 0)} / {number(pages, 0)}
-        </span>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={current + 1 >= pages}
-          onClick={() => onPage(current + 1)}
-        >
-          {t('details.next')}
-        </Button>
-      </div>
+      <DetailPagination current={current} pages={pages} onPage={onPage} />
     </div>
   )
 }

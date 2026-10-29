@@ -9,18 +9,18 @@ import { RewardQuality } from './RewardQuality'
 import { RewardReasons } from './RewardReasons'
 import { cardAssumptions } from '@/application/results/assumptions'
 import { AssumptionNotes } from './AssumptionNotes'
-import { RewardCaps } from './RewardCaps'
 
 export function RewardCard({
   card,
   onDetails,
+  onCap,
 }: {
   card: WorkspaceView['rewardCards'][number]
+  onCap: (key: string) => void
   onDetails: (request: ResultDetailsRequest) => void
 }) {
   const { t, money, number, rcSummary, rewardNumber } = useI18n()
   const amount = card.totalMicroRc ?? card.knownMicroRc
-
 
   return (
     <Card data-reward-card>
@@ -47,8 +47,10 @@ export function RewardCard({
                   : 'card.reward',
               )}
             </p>
-            <p className="break-words text-3xl font-semibold tracking-tight text-primary tabular-nums">
-              {rewardNumber(amount)}
+            <p
+              className={`flex flex-wrap items-baseline justify-end gap-x-1 font-semibold tracking-tight text-primary tabular-nums ${rewardNumber(amount).length > 12 ? 'text-xl sm:text-2xl' : 'text-3xl'}`}
+            >
+              <span className="whitespace-nowrap">{rewardNumber(amount)}</span>
               <span className="ml-1 text-sm font-medium">RC</span>
             </p>
             <p className="text-xs text-muted-foreground">
@@ -59,25 +61,30 @@ export function RewardCard({
             </p>
           </div>
         </div>
-        <dl className="grid grid-cols-3 gap-3">
+        <dl className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           {card.tiers.map(
             ({ tier, rateBasisPoints, eligibleSpend, knownMicroRc }) => (
-              <div key={tier} className="min-w-0 space-y-1">
+              <div
+                key={tier}
+                className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 sm:block sm:space-y-1"
+              >
                 <dt className="text-xs text-muted-foreground">
                   {t(`rewards.${tier}`)}{' '}
                   <span className="whitespace-nowrap">
                     {number(rateBasisPoints / 100)}%
                   </span>
                 </dt>
-                <dd className="break-words text-base font-semibold tabular-nums">
+                <dd className="text-base font-semibold whitespace-nowrap tabular-nums">
                   {rcSummary(card[`${tier}MicroRc`])}
                 </dd>
                 {card[`${tier}MicroRc`] === null && knownMicroRc > 0 && (
                   <dd className="text-xs text-muted-foreground">
-                    {t('rewards.knownPortion', { amount: rcSummary(knownMicroRc) })}
+                    {t('rewards.knownPortion', {
+                      amount: rcSummary(knownMicroRc),
+                    })}
                   </dd>
                 )}
-                <dd className="text-xs text-muted-foreground">
+                <dd className="col-span-2 text-xs text-muted-foreground">
                   {t('card.eligible')}
                   <ul>
                     {eligibleSpend.map((amount) => (
@@ -93,8 +100,36 @@ export function RewardCard({
             ),
           )}
         </dl>
-        <RewardCaps pools={card.pools} />
-        <RewardQuality quality={card.quality} compact onDetails={(request) => onDetails({ ...request, cardId: card.cardId })} />
+        <div className="flex flex-wrap gap-2">
+          {card.pools
+            .filter(
+              (pool) =>
+                pool.remainingMinor === 0 || pool.remainingMinor === null,
+            )
+            .map((pool) => (
+              <Button
+                key={pool.key}
+                variant="outline"
+                size="sm"
+                className="h-auto py-1 whitespace-normal"
+                onClick={() => onCap(pool.key)}
+              >
+                {t(`rewards.${pool.tier}`)} ·{' '}
+                {t(
+                  pool.remainingMinor === null
+                    ? 'caps.pending'
+                    : 'caps.exhausted',
+                )}
+              </Button>
+            ))}
+        </div>
+        <RewardQuality
+          quality={card.quality}
+          compact
+          onDetails={(request) =>
+            onDetails({ ...request, cardId: card.cardId })
+          }
+        />
         <p className="flex flex-wrap gap-x-3 text-xs text-muted-foreground">
           <span>
             {t('card.transactions', {
@@ -109,9 +144,28 @@ export function RewardCard({
           ))}
         </p>
         {card.transactionCount > 0 && (
-          <RewardReasons tiers={card.tiers} onReason={(component, reason) => onDetails({ tab: 'transactions', cardId: card.cardId, component, reason })} />
+          <RewardReasons
+            tiers={card.tiers}
+            onReason={(component, reason) =>
+              onDetails({
+                tab: 'transactions',
+                cardId: card.cardId,
+                component,
+                reason,
+              })
+            }
+          />
         )}
-        <Button variant="outline" size="sm" onClick={() => onDetails({ tab: 'transactions', cardId: card.cardId })} aria-haspopup="dialog">{t('details.card')}</Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() =>
+            onDetails({ tab: 'transactions', cardId: card.cardId })
+          }
+          aria-haspopup="dialog"
+        >
+          {t('details.card')}
+        </Button>
         <AssumptionNotes items={cardAssumptions(card)} />
       </CardContent>
     </Card>

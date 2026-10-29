@@ -1,7 +1,8 @@
 import type { ResultScope } from '@/application/results/scope'
 import type { SessionState } from '@/application/session/types'
 import type { WorkspaceView } from '@/application/session/selectors'
-import { statementTransactions } from '@/application/results/statements'
+import { statementTransactionPage } from '@/application/results/statements'
+import { DetailPagination } from './DetailPagination'
 import { Button } from '@/components/ui/button'
 import { useI18n } from '@/i18n/use-i18n'
 
@@ -14,6 +15,8 @@ export function StatementDetails({
   onSelect,
   onTransaction,
   onBack,
+  page,
+  onPage,
 }: {
   scope: ResultScope
   session: SessionState
@@ -22,6 +25,8 @@ export function StatementDetails({
   status?: 'mismatch' | 'unverified'
   onSelect: (id: string) => void
   onTransaction: (id: string) => void
+  page: number
+  onPage: (page: number) => void
   onBack: () => void
 }) {
   const { t, date, money, rcSummary } = useI18n()
@@ -59,7 +64,13 @@ export function StatementDetails({
   const accounts = scope.reconciliations.filter(
     ({ statement }) => statement.id === statementId,
   )
-  const entries = statementTransactions(session, workspace, scope, statementId)
+  const { entries, count, current, pages } = statementTransactionPage(
+    session,
+    workspace,
+    scope,
+    statementId,
+    page,
+  )
   return (
     <div className="space-y-4" data-statement-detail>
       <Button variant="outline" size="sm" onClick={onBack}>
@@ -124,12 +135,16 @@ export function StatementDetails({
         </section>
       ))}
       <h4 className="font-medium">{t('details.sourceTransactions')}</h4>
+      <p role="status" className="text-xs text-muted-foreground">
+        {t('details.page', { page: current + 1, pages, count })}
+      </p>
       <ul className="divide-y">
         {entries.map(({ row, reward }) => (
           <li key={row.id}>
             <Button
               variant="ghost"
               className="h-auto w-full justify-between gap-3 py-3 text-left whitespace-normal"
+              data-source-transaction-id={row.id}
               onClick={() => onTransaction(row.id)}
             >
               <span className="min-w-0 break-all">
@@ -145,6 +160,7 @@ export function StatementDetails({
           </li>
         ))}
       </ul>
+      <DetailPagination current={current} pages={pages} onPage={onPage} />
     </div>
   )
 }

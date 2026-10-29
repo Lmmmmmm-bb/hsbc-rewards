@@ -1,7 +1,12 @@
 import type { ReactNode } from 'react'
 import * as m from 'motion/react-m'
-import { RiArrowGoBackLine, RiBookOpenLine, RiGithubLine } from '@remixicon/react'
+import {
+  RiArrowGoBackLine,
+  RiBookOpenLine,
+  RiGithubLine,
+} from '@remixicon/react'
 import { Button, buttonVariants } from '@/components/ui/button'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { useI18n } from '@/i18n/use-i18n'
 import { HsbcLogo } from './HsbcLogo'
 import { LanguageSwitcher } from './LanguageSwitcher'
@@ -10,8 +15,8 @@ export function WorkspaceShell({
   children,
   mode,
   hasData,
-  onRules,
   onDemo,
+  onRules,
   onClear,
   onPrivacy,
   onAgent,
@@ -19,8 +24,8 @@ export function WorkspaceShell({
   children: ReactNode
   mode: 'empty' | 'demo' | 'real'
   hasData: boolean
-  onRules: () => void
   onDemo: () => void
+  onRules: () => void
   onClear: () => void
   onPrivacy: () => void
   onAgent: () => void
@@ -42,7 +47,13 @@ export function WorkspaceShell({
       <Button
         variant="outline"
         className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50"
-        onClick={() => document.getElementById('cashback-main')?.focus()}
+        onClick={() =>
+          document
+            .querySelector<HTMLElement>(
+              '[data-shell-scroll] [data-slot="scroll-area-viewport"]',
+            )
+            ?.focus()
+        }
       >
         {t('action.skip')}
       </Button>
@@ -80,16 +91,25 @@ export function WorkspaceShell({
           </div>
         </div>
       </header>
-      <m.main
-        layoutScroll
+      <main
         id="cashback-main"
         tabIndex={-1}
-        className="min-h-0 overflow-y-auto overscroll-y-contain outline-none"
+        className="min-h-0 overflow-hidden outline-none"
       >
-        <div className="mx-auto max-w-6xl space-y-5 px-4 py-5 sm:px-6">
-          {children}
-        </div>
-      </m.main>
+        <ScrollArea
+          className="h-full"
+          data-shell-scroll
+          viewportProps={{
+            render: <m.div layoutScroll />,
+            tabIndex: 0,
+            className: 'overscroll-y-contain',
+          }}
+        >
+          <div className="mx-auto max-w-6xl space-y-5 px-4 py-5 sm:px-6">
+            {children}
+          </div>
+        </ScrollArea>
+      </main>
       <footer
         data-shell-footer
         className="z-10 border-t bg-background/95 backdrop-blur-xs"
@@ -97,7 +117,12 @@ export function WorkspaceShell({
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 py-2 text-xs text-muted-foreground sm:px-6">
           <p>{t('footer.independent')}</p>
           <div className="flex flex-wrap items-center gap-2">
-            <Button variant="link" size="sm" onClick={onAgent} data-agent-access-trigger>
+            <Button
+              variant="link"
+              size="sm"
+              onClick={onAgent}
+              data-agent-access-trigger
+            >
               {t('agent.dialogTitle')}
             </Button>
             <Button variant="link" size="sm" onClick={onPrivacy}>

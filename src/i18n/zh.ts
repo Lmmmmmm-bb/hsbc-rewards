@@ -1,4 +1,19 @@
 export const zh = {
+  "import.additionalHint": "可补充英文 PDF；本批成功文件将在处理结束后统一计入。",
+  "fx.details": "汇率依据与更新说明",
+  "caps.pending": "待计算",
+  "caps.exhausted": "额度已用尽",
+  "caps.remaining": "有剩余消费额度",
+  "caps.shared": "已确认共享",
+  "caps.independent": "按卡独立估算",
+  "caps.asOf": "累计截至 {date}",
+  "caps.used": "已用 / 消费上限",
+  "caps.bankBasis": "依据账单入账金额或银行港币等值。",
+  "caps.sources": "已导入 {count} 份相关来源账单",
+  "caps.observed": "观测交易 {from} — {to}",
+  "caps.noTransactions": "当前观测范围没有交易，不代表此前没有消费。",
+  "caps.transactions": "查看本半年相关交易",
+
   "details.title": "返现明细",
   "details.hint": "查看计算依据、逐笔奖励和完整来源账单核对。",
   "details.tab.calculation": "计算与依据",
@@ -250,7 +265,7 @@ export const zh = {
   'card.sharedPool': '已确认共享消费额度，下方为共享卡片的合计用量，请勿跨卡相加。',
   'card.enrollmentAssumed':
     '登记或倍数信息缺失时，按已登记且额外 5X 全部分配给赏世界估算。',
-  'card.fxAssumed': '部分赏世界消费额度按参考汇率估算港币等值。',
+  'card.fxAssumed': '部分消费额度按参考汇率估算港币等值。',
   'rules.title': '返现计算规则',
   'rules.subtitle': '三项奖励分别判断资格，符合条件时可叠加。',
   'rules.basic.body': '符合条件的消费按入账币种累计，每 HKD 250 或 CNY 250 计 1 RC。',

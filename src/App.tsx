@@ -60,6 +60,7 @@ function App() {
       {dialog === 'clear' && (
         <Dialog
           title={t('clear.title')}
+          size="confirmation"
           onClose={actions.close}
           footer={
             <>

@@ -19,7 +19,9 @@ export function RewardPeriods({
     { id: 'all', label: t('period.all'), amount: null },
     ...periods.map((period) => ({
       id: period.id,
-      label: t(period.half === 1 ? 'period.h1' : 'period.h2', { year: period.year }),
+      label: t(period.half === 1 ? 'period.h1' : 'period.h2', {
+        year: period.year,
+      }),
       amount: rcSummary(period.totalRewardMicroRc),
     })),
   ]
@@ -35,7 +37,7 @@ export function RewardPeriods({
           key={option.id}
           variant="outline"
           size="sm"
-          className="relative isolate aria-pressed:border-primary aria-pressed:text-primary-foreground aria-pressed:hover:bg-transparent"
+          className="relative isolate h-auto max-w-full flex-wrap py-1 aria-pressed:border-primary aria-pressed:text-primary-foreground aria-pressed:hover:bg-transparent"
           aria-pressed={selected === option.id}
           onClick={() => onSelect(option.id)}
         >
@@ -44,11 +46,19 @@ export function RewardPeriods({
               aria-hidden="true"
               layoutId={selectionId}
               className="pointer-events-none absolute inset-0 -z-10 bg-primary"
-              transition={{ type: 'tween', duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+              transition={{
+                type: 'tween',
+                duration: 0.2,
+                ease: [0.22, 1, 0.36, 1],
+              }}
             />
           )}
           <span>{option.label}</span>
-          {option.amount !== null && <span className="tabular-nums">{option.amount}</span>}
+          {option.amount !== null && (
+            <span className="whitespace-nowrap tabular-nums">
+              {option.amount}
+            </span>
+          )}
         </Button>
       ))}
     </nav>

@@ -8,7 +8,7 @@ import {
   selectTransactions,
   transactionPage,
 } from './transactions'
-import { statementTransactions } from './statements'
+import { statementTransactions, statementTransactionPage } from './statements'
 
 function setup(rows: SessionState['dataset']['transactions']) {
   const session: SessionState = {
@@ -97,5 +97,12 @@ describe('result detail queries', () => {
         ({ row }) => row.id,
       ),
     ).toEqual(['june', 'july'])
+  })
+
+  it('pages source transactions without changing the complete balance-check scope', () => {
+    const { session, workspace, scope } = setup(Array.from({ length: 25 }, (_, index) => transaction({ id: `source-${index}` })))
+    expect(statementTransactionPage(session, workspace, scope, 'statement-a', 0).entries).toHaveLength(20)
+    expect(statementTransactionPage(session, workspace, scope, 'statement-a', 1)).toMatchObject({ count: 25, current: 1, pages: 2 })
+    expect(scope.reconciliations[0].account.transactionIds).toHaveLength(25)
   })
 })

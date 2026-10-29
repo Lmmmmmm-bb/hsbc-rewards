@@ -1,5 +1,6 @@
 import type { RewardTier } from '@/domain/rewards/calculate'
 import type { ResultScope } from './scope'
+import { resultPage } from './pagination'
 import { componentFlags } from './status'
 
 export type TransactionFlag = 'pending' | 'uncertain' | 'excluded' | 'capped'
@@ -58,14 +59,7 @@ export function transactionPage(
     },
     filter,
   )
-  const pages = Math.max(1, Math.ceil(entries.length / 20))
-  const current = Math.max(0, Math.min(page, pages - 1))
-  return {
-    entries: entries.slice(current * 20, current * 20 + 20),
-    count: entries.length,
-    pages,
-    current,
-  }
+  return resultPage(entries, page)
 }
 
 export function componentExplanation(

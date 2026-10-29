@@ -10,6 +10,7 @@ import {
   DialogClose,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { useI18n } from '@/i18n/use-i18n'
 import { cn } from '@/lib/utils'
 
@@ -21,6 +22,7 @@ export function Dialog({
   className,
   description,
   returnFocus,
+  size = 'content',
 }: {
   title: string
   children: ReactNode
@@ -29,6 +31,7 @@ export function Dialog({
   className?: string
   description?: string
   returnFocus?: () => HTMLElement | null
+  size?: 'content' | 'confirmation'
 }) {
   const { t } = useI18n()
   const descriptionId = useId()
@@ -44,12 +47,16 @@ export function Dialog({
         finalFocus={returnFocus}
         showCloseButton={false}
         aria-describedby={description ? descriptionId : undefined}
+        data-dialog-size={size}
         className={cn(
           'flex max-h-[90svh] flex-col overflow-hidden sm:max-w-xl',
+          size === 'confirmation'
+            ? ''
+            : 'h-[min(42rem,90svh)] min-h-[min(24rem,90svh)]',
           className,
         )}
       >
-        <DialogHeader className="pr-8">
+        <DialogHeader className="shrink-0 pr-8">
           <DialogTitle className="text-lg font-semibold">{title}</DialogTitle>
           {description && (
             <DialogDescription id={descriptionId} className="text-sm">
@@ -69,15 +76,20 @@ export function Dialog({
         >
           <RiCloseLine aria-hidden="true" />
         </DialogClose>
-        <div
-          role="region"
-          aria-label={title}
-          tabIndex={0}
-          className="min-h-0 space-y-4 overflow-y-auto text-sm leading-relaxed outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        <ScrollArea
+          className="min-h-0 flex-1"
+          viewportProps={{
+            role: 'region',
+            'aria-label': title,
+            tabIndex: 0,
+            className: 'overscroll-y-contain',
+          }}
         >
-          {children}
-        </div>
-        {footer && <DialogFooter>{footer}</DialogFooter>}
+          <div className="space-y-4 pr-3 text-sm leading-relaxed">
+            {children}
+          </div>
+        </ScrollArea>
+        {footer && <DialogFooter className="shrink-0">{footer}</DialogFooter>}
       </DialogContent>
     </ShadcnDialog>
   )

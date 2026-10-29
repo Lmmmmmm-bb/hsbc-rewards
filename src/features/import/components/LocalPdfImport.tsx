@@ -8,8 +8,10 @@ import { PdfFilePicker } from './PdfFilePicker'
 export function LocalPdfImport({
   onFiles,
   onStatus,
+  compact = false,
 }: {
   onFiles: (files: readonly File[]) => void
+  compact?: boolean
   onStatus: () => void
 }) {
   const { batch } = usePdfImport()
@@ -32,7 +34,9 @@ export function LocalPdfImport({
           pageTrigger
         />
       </div>
-      <p className="text-xs text-muted-foreground">{t('import.anywhere')}</p>
+      <p className="text-xs text-muted-foreground">
+        {t(compact ? 'import.additionalHint' : 'import.anywhere')}
+      </p>
       <p className="text-xs text-muted-foreground">{t('import.limit')}</p>
       {batch.rejected && (
         <ErrorNotice>{t(`pdf.error.${batch.rejected}`)}</ErrorNotice>

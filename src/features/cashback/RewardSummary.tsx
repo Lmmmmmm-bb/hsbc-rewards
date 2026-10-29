@@ -33,6 +33,7 @@ export function RewardSummary({
 }) {
   const { t, number, money, rcSummary, rewardNumber, date } = useI18n()
   const amount = view.totalRewardMicroRc ?? view.knownRewardMicroRc
+  const formatted = rewardNumber(amount)
   const stats = [
     { label: 'cashback.statements', value: statementCount },
     { label: 'cashback.cards', value: cardCount },
@@ -42,7 +43,10 @@ export function RewardSummary({
   return (
     <Card data-reward-summary className="ring-primary/20">
       <CardContent>
-        <ResultReveal trigger={hasResults ? revealKey : null} className="space-y-4">
+        <ResultReveal
+          trigger={hasResults ? revealKey : null}
+          className="space-y-4"
+        >
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-sm font-medium">
               {t(
@@ -60,15 +64,21 @@ export function RewardSummary({
             )}
           </div>
           <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
-            <div className="min-w-0 space-y-1">
+            <div
+              className={
+                hasResults
+                  ? 'flex min-w-0 flex-wrap items-baseline justify-between gap-3 sm:block sm:space-y-1'
+                  : 'min-w-0 space-y-1'
+              }
+            >
               <p
                 data-reward-total
-                className="break-words text-5xl leading-none font-semibold tracking-tight text-primary tabular-nums sm:text-6xl"
+                className={`flex flex-wrap items-baseline gap-x-2 leading-none font-semibold tracking-tight text-primary tabular-nums ${formatted.length > 12 ? 'text-2xl sm:text-4xl' : 'text-5xl sm:text-6xl'}`}
               >
-                {hasResults ? rewardNumber(amount) : '—'}
-                <span className="ml-2 text-lg font-medium text-foreground">
-                  RC
+                <span className="whitespace-nowrap">
+                  {hasResults ? formatted : '—'}
                 </span>
+                <span className="text-lg font-medium text-foreground">RC</span>
               </p>
             </div>
             <div>
@@ -93,18 +103,33 @@ export function RewardSummary({
                 : 'cashback.emptyHint',
             )}
           </p>
-          <dl className="grid grid-cols-3 gap-3">
+          <dl
+            className={
+              hasResults
+                ? 'grid grid-cols-1 gap-3 sm:grid-cols-3'
+                : 'grid grid-cols-3 gap-3'
+            }
+          >
             {view.tierTotals.map(({ tier, microRc, knownMicroRc }) => (
-              <div key={tier} className="min-w-0 space-y-1">
+              <div
+                key={tier}
+                className={
+                  hasResults
+                    ? 'flex min-w-0 flex-wrap items-baseline justify-between gap-3 sm:block sm:space-y-1'
+                    : 'min-w-0 space-y-1'
+                }
+              >
                 <dt className="text-xs text-muted-foreground">
                   {t(`rewards.${tier}`)}
                 </dt>
-                <dd className="break-words text-base font-semibold tabular-nums">
+                <dd className="text-base font-semibold whitespace-nowrap tabular-nums">
                   {hasResults ? rcSummary(microRc) : '— RC'}
                 </dd>
                 {hasResults && microRc === null && knownMicroRc > 0 && (
                   <dd className="text-xs text-muted-foreground">
-                    {t('rewards.knownPortion', { amount: rcSummary(knownMicroRc) })}
+                    {t('rewards.knownPortion', {
+                      amount: rcSummary(knownMicroRc),
+                    })}
                   </dd>
                 )}
               </div>

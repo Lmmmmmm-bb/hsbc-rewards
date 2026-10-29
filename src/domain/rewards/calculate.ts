@@ -15,6 +15,8 @@ export interface TierReward {
   readonly cappedMinor: number | null
   readonly microRc: number | null
   readonly capBasisMinor?: number | null
+  /** Provenance only; does not change eligibility, cap use, or reward precision. */
+  readonly capUsesReferenceFx?: boolean
   readonly reasonCodes: readonly string[]
   readonly poolKey?: string
   /** Exact state after this transaction, for historical views that must retain earlier-period cap use. */
@@ -104,7 +106,7 @@ export function calculateRewards(input: readonly Transaction[], cards: readonly 
       const pool: RewardPool = { key, ownerId, shared: Boolean(card.pool), tier, period, capMinor: rule.capMinor, usedMinor: null, remainingMinor: null, verification: 'missing-fx' }
       poolMap.set(key, pool)
 
-      return { tier, rateBasisPoints, eligibleMinor: null, cappedMinor: null, capBasisMinor: basis.minor, microRc: null, reasonCodes: ['fx.required-for-cap'], poolKey: key, poolAfter: pool }
+      return { tier, rateBasisPoints, eligibleMinor: null, cappedMinor: null, capBasisMinor: basis.minor, capUsesReferenceFx: basis.estimated, microRc: null, reasonCodes: ['fx.required-for-cap'], poolKey: key, poolAfter: pool }
     }
 
     const remaining = prior?.remainingMinor ?? rule.capMinor
@@ -116,7 +118,7 @@ export function calculateRewards(input: readonly Transaction[], cards: readonly 
     poolMap.set(key, pool)
 
     const microRc = basis.minor === 0 && remaining === 0 ? 0 : proportionalMicroRc(transaction.account.minor, rateBasisPoints, usedBasisMinor, basis.minor)
-    return { tier, rateBasisPoints, eligibleMinor, cappedMinor, capBasisMinor: basis.minor, microRc, reasonCodes: cappedMinor > 0 ? ['reward.cap-applied'] : ['reward.eligible'], poolKey: key, poolAfter: pool }
+    return { tier, rateBasisPoints, eligibleMinor, cappedMinor, capBasisMinor: basis.minor, capUsesReferenceFx: basis.estimated, microRc, reasonCodes: cappedMinor > 0 ? ['reward.cap-applied'] : ['reward.eligible'], poolKey: key, poolAfter: pool }
   }
 
   for (const transaction of sorted) {

@@ -5,6 +5,21 @@ const plural = (count: string | number, one: string, other: string) =>
   Number(count) === 1 ? one : other
 
 export const en = {
+  "import.additionalHint": "Add English PDFs. Successful files are included together when this batch finishes.",
+  "fx.details": "Exchange rate basis and updates",
+  "caps.pending": "Pending",
+  "caps.exhausted": "Cap exhausted",
+  "caps.remaining": "Spending cap remaining",
+  "caps.shared": "Confirmed shared cap",
+  "caps.independent": "Estimated separately by card",
+  "caps.asOf": "Cumulative through {date}",
+  "caps.used": "Used / spending cap",
+  "caps.bankBasis": "Based on posted amounts or the bank’s HKD equivalent.",
+  "caps.sources": ({ count }) => `{count} related source ${plural(count, 'statement', 'statements')} imported`,
+  "caps.observed": "Observed transactions {from} — {to}",
+  "caps.noTransactions": "No transactions are observed in this range. Earlier spending may still exist.",
+  "caps.transactions": "View related transactions in this half-year",
+
   "details.title": "Reward details",
   "details.hint": "Inspect calculations, transaction rewards, and complete source-statement balance checks.",
   "details.tab.calculation": "Calculation and basis",
@@ -271,7 +286,7 @@ export const en = {
   'card.enrollmentAssumed':
     'If enrollment or multiplier details are missing, estimates assume enrollment with the full extra 5X allocated to spending outside Hong Kong.',
   'card.fxAssumed':
-    'Some Outside Hong Kong cap usage estimates the HKD equivalent at a reference rate.',
+    'Some spending cap usage estimates the HKD equivalent at a reference rate.',
   'rules.title': 'How RewardCash is calculated',
   'rules.subtitle':
     'The three reward components can be combined when each qualifies.',

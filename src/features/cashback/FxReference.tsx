@@ -1,5 +1,11 @@
 import type { FxSnapshot } from '@/application/session/types'
 import type { FxRequestState } from '@/application/fx/controller'
+import {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from '@/components/ui/accordion'
 import { Badge } from '@/components/ui/badge'
 import { useI18n } from '@/i18n/use-i18n'
 
@@ -52,9 +58,6 @@ export function FxReference({
             </a>{' '}
             · {t('fx.rateDate', { date: date(fx.rateDate) })}
           </p>
-          <p className="text-muted-foreground">
-            {t('fx.retrievedAt', { time: dateTime(fx.retrievedAt) })}
-          </p>
         </div>
       ) : (
         <p className="text-muted-foreground">{t('fx.unavailable')}</p>
@@ -78,9 +81,26 @@ export function FxReference({
         )}
         {available && fx.stale && <p>{t('fx.staleHint')}</p>}
       </div>
-      <div className="space-y-1 text-muted-foreground">
-        <p>{t(fx.source === 'demo' ? 'fx.demoHint' : 'fx.cachePolicy')}</p>
-      </div>
+      {fx.source === 'demo' ? (
+        <p className="text-muted-foreground">{t('fx.demoHint')}</p>
+      ) : (
+        <Accordion>
+          <AccordionItem value="basis">
+            <AccordionTrigger>{t('fx.details')}</AccordionTrigger>
+            <AccordionContent>
+              <div className="space-y-2 text-muted-foreground">
+                {available && (
+                  <p>
+                    {t('fx.retrievedAt', { time: dateTime(fx.retrievedAt) })}
+                  </p>
+                )}
+                <p>{t('fx.cachePolicy')}</p>
+                <p>{t('rewards.fxEffect')}</p>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      )}
     </section>
   )
 }

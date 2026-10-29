@@ -10,6 +10,7 @@ export interface DetailNavigation {
   readonly cardId: string | null
   readonly filter: TransactionFilter
   readonly page: number
+  readonly sourcePage: number
   readonly transactionId: string | null
   readonly statementId: string | null
   readonly returnTransactionId: string | null
@@ -34,6 +35,7 @@ export function initialNavigation(
       poolKey: request.poolKey,
     },
     page: 0,
+    sourcePage: 0,
     transactionId: null,
     statementId: null,
     returnTransactionId: null,
@@ -57,6 +59,7 @@ export function synchronizeNavigation(
     dataset: session.dataset,
     fxIdentity,
     page: 0,
+    sourcePage: 0,
     updated: true,
   }
 }
