@@ -1,18 +1,10 @@
 import type { ResultPool } from '@/application/results/pools'
-import type { ResultDetailsRequest } from '@/application/results/details'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { useI18n } from '@/i18n/use-i18n'
 
-export function RewardCaps({
-  pools,
-  onDetails,
-}: {
-  pools: readonly ResultPool[]
-  onDetails: (request: ResultDetailsRequest) => void
-}) {
+export function RewardCaps({ pools }: { pools: readonly ResultPool[] }) {
   const { t, number, date } = useI18n()
   return (
     <section className="space-y-3" aria-label={t('card.caps')} data-period-caps>
@@ -23,13 +15,7 @@ export function RewardCaps({
       )}
       <div className="grid items-start gap-3 md:grid-cols-2">
         {pools.map((pool) => (
-          <Card
-            key={pool.key}
-            size="sm"
-            data-cap-key={pool.key}
-            tabIndex={-1}
-            className="outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
+          <Card key={pool.key} size="sm" data-cap-key={pool.key}>
             <CardContent className="space-y-3 text-xs">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h4 className="text-sm font-medium">
@@ -110,20 +96,6 @@ export function RewardCaps({
                   {t('caps.noTransactions')}
                 </p>
               )}
-              <Button
-                variant="link"
-                className="h-auto max-w-full p-0 text-left whitespace-normal"
-                onClick={() =>
-                  onDetails({
-                    tab: 'transactions',
-                    component: pool.tier,
-                    poolKey: pool.key,
-                  })
-                }
-                aria-haspopup="dialog"
-              >
-                {t('caps.transactions')}
-              </Button>
             </CardContent>
           </Card>
         ))}

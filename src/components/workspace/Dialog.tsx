@@ -23,6 +23,7 @@ export function Dialog({
   description,
   returnFocus,
   size = 'content',
+  scrollBody = true,
 }: {
   title: string
   children: ReactNode
@@ -32,6 +33,7 @@ export function Dialog({
   description?: string
   returnFocus?: () => HTMLElement | null
   size?: 'content' | 'confirmation'
+  scrollBody?: boolean
 }) {
   const { t } = useI18n()
   const descriptionId = useId()
@@ -76,19 +78,29 @@ export function Dialog({
         >
           <RiCloseLine aria-hidden="true" />
         </DialogClose>
-        <ScrollArea
-          className="min-h-0 flex-1"
-          viewportProps={{
-            role: 'region',
-            'aria-label': title,
-            tabIndex: 0,
-            className: 'overscroll-y-contain',
-          }}
-        >
-          <div className="space-y-4 pr-3 text-sm leading-relaxed">
+        {scrollBody ? (
+          <ScrollArea
+            className="min-h-0 flex-1"
+            viewportProps={{
+              role: 'region',
+              'aria-label': title,
+              tabIndex: 0,
+              className: 'overscroll-y-contain',
+            }}
+          >
+            <div className="space-y-4 pr-3 text-sm leading-relaxed">
+              {children}
+            </div>
+          </ScrollArea>
+        ) : (
+          <div
+            data-dialog-body
+            tabIndex={-1}
+            className="flex min-h-0 flex-1 flex-col outline-none"
+          >
             {children}
           </div>
-        </ScrollArea>
+        )}
         {footer && <DialogFooter className="shrink-0">{footer}</DialogFooter>}
       </DialogContent>
     </ShadcnDialog>

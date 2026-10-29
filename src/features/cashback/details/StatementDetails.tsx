@@ -1,10 +1,17 @@
+import { RiArrowRightSLine, RiFileTextLine } from '@remixicon/react'
 import type { ResultScope } from '@/application/results/scope'
 import type { SessionState } from '@/application/session/types'
 import type { WorkspaceView } from '@/application/session/selectors'
-import { statementTransactionPage } from '@/application/results/statements'
-import { DetailPagination } from './DetailPagination'
+import {
+  statementSummaries,
+  statementTransactionPage,
+} from '@/application/results/statements'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { useI18n } from '@/i18n/use-i18n'
+import { DetailPagination } from './DetailPagination'
+import { BalanceAccount } from './BalanceAccount'
+import { TransactionRow } from './TransactionRow'
 
 export function StatementDetails({
   scope,
@@ -29,41 +36,62 @@ export function StatementDetails({
   onPage: (page: number) => void
   onBack: () => void
 }) {
-  const { t, date, money, rcSummary } = useI18n()
-  const report = scope.reports.find((item) => item.statement.id === statementId)
-  const reports = scope.reports.filter(
-    (item) =>
-      !status ||
-      scope.reconciliations.some(
-        ({ statement, account }) =>
-          statement.id === item.statement.id && account.status === status,
-      ),
-  )
-  const label = (item: ResultScope['reports'][number]) =>
-    `${date(item.statement.date)} · ${item.statement.fileName}`
-  if (!statementId)
+  const { t, date } = useI18n()
+  if (!statementId) {
+    const reports = statementSummaries(scope, status)
     return (
-      <div className="space-y-3" data-detail-statements>
-        <p className="text-xs text-muted-foreground">
-          {t('details.fullStatement')}
-        </p>
+      <div className="space-y-4" data-detail-statements>
+        <h3 className="font-semibold text-primary">
+          {t('details.statementRecords')}
+        </h3>
         {!reports.length && <p>{t('details.empty')}</p>}
-        {reports.map((item) => (
-          <Button
-            key={item.statement.id}
-            variant="outline"
-            className="h-auto w-full justify-start py-3 text-left whitespace-normal break-all"
-            onClick={() => onSelect(item.statement.id)}
-          >
-            {label(item)}
-          </Button>
-        ))}
+        <ul className="divide-y border-y">
+          {reports.map(({ statement, currencies, status: balanceStatus }) => (
+            <li key={statement.id}>
+              <Button
+                variant="ghost"
+                className="h-auto w-full items-start justify-between gap-3 px-2 py-4 text-left whitespace-normal"
+                data-statement-id={statement.id}
+                onClick={() => onSelect(statement.id)}
+              >
+                <span className="flex min-w-0 items-start gap-3">
+                  <RiFileTextLine
+                    className="mt-0.5 size-5 shrink-0 text-muted-foreground"
+                    aria-hidden="true"
+                  />
+                  <span className="min-w-0 space-y-1.5">
+                    <span className="block text-xs font-normal text-muted-foreground">
+                      {date(statement.date)} · {currencies.join(' / ')}
+                    </span>
+                    <span className="block break-all text-sm font-medium">
+                      {statement.fileName}
+                    </span>
+                    <span className="block text-xs font-normal text-muted-foreground">
+                      {date(statement.period.from)} —{' '}
+                      {date(statement.period.to)}
+                    </span>
+                  </span>
+                </span>
+                <span className="flex shrink-0 items-center gap-2">
+                  <Badge variant="outline">
+                    {t(`details.balance.${balanceStatus}`)}
+                  </Badge>
+                  <RiArrowRightSLine
+                    className="hidden size-4 text-muted-foreground sm:block"
+                    aria-hidden="true"
+                  />
+                </span>
+              </Button>
+            </li>
+          ))}
+        </ul>
       </div>
     )
-  if (!report) return <p>{t('details.objectMissing')}</p>
-  const accounts = scope.reconciliations.filter(
+  }
+  const report = statementSummaries(scope).find(
     ({ statement }) => statement.id === statementId,
   )
+  if (!report) return <p>{t('details.objectMissing')}</p>
   const { entries, count, current, pages } = statementTransactionPage(
     session,
     workspace,
@@ -72,95 +100,64 @@ export function StatementDetails({
     page,
   )
   return (
-    <div className="space-y-4" data-statement-detail>
-      <Button variant="outline" size="sm" onClick={onBack}>
-        {t('details.back')}
-      </Button>
-      <h3
-        className="break-all text-base font-semibold"
-        tabIndex={-1}
-        data-detail-heading
-      >
-        {label(report)}
-      </h3>
-      <p>
-        {t('card.coverage', {
-          count: 1,
-          from: date(report.statement.period.from),
-          to: date(report.statement.period.to),
-        })}
-      </p>
-      <p className="text-xs text-muted-foreground">
-        {t('details.fullStatement')}
-      </p>
-      {report.statement.warnings.some(
-        (warning) => warning.code === 'statement.period-inferred',
-      ) && (
-        <p className="text-xs text-muted-foreground">
-          {t('rewards.periodInferred')}
-        </p>
-      )}
-      {accounts.map(({ account }) => (
-        <section key={account.accountId} className="space-y-3 border p-3">
-          <div className="flex flex-wrap justify-between gap-2 font-medium">
-            <h4>{account.currency}</h4>
-            <p>{t(`details.balance.${account.status}`)}</p>
-          </div>
-          <dl className="space-y-2 tabular-nums">
-            {(
-              [
-                ['opening', account.openingMinor],
-                ['debit', account.debitMinor],
-                ['credit', account.creditMinor],
-                ['expected', account.expectedMinor],
-                ['closing', account.closingMinor],
-                ['delta', account.deltaMinor],
-              ] as const
-            ).map(([key, amount]) => (
-              <div key={key} className="flex flex-wrap justify-between gap-2">
-                <dt className="text-muted-foreground">
-                  {t(`details.balance.${key}`)}
-                </dt>
-                <dd>
-                  {amount === null
-                    ? t('details.missing')
-                    : `${key === 'delta' && amount > 0 ? '+' : ''}${money(amount, account.currency)}`}
-                </dd>
-              </div>
-            ))}
-          </dl>
+    <div className="space-y-6" data-statement-detail>
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <Button variant="outline" size="sm" onClick={onBack}>
+            {t('details.back')}
+          </Button>
+          <Badge variant="outline">
+            {t(`details.balance.${report.status}`)}
+          </Badge>
+        </div>
+        <div className="space-y-2">
           <p className="text-xs text-muted-foreground">
-            {t('details.deltaHint')}
+            {date(report.statement.date)}
           </p>
-        </section>
-      ))}
-      <h4 className="font-medium">{t('details.sourceTransactions')}</h4>
-      <p role="status" className="text-xs text-muted-foreground">
-        {t('details.page', { page: current + 1, pages, count })}
-      </p>
-      <ul className="divide-y">
-        {entries.map(({ row, reward }) => (
-          <li key={row.id}>
-            <Button
-              variant="ghost"
-              className="h-auto w-full justify-between gap-3 py-3 text-left whitespace-normal"
-              data-source-transaction-id={row.id}
-              onClick={() => onTransaction(row.id)}
-            >
-              <span className="min-w-0 break-all">
-                {date(row.transactionDate)} · {row.description}
-                <span className="block text-xs text-muted-foreground">
-                  {money(row.account.minor, row.account.currency)}
-                </span>
-              </span>
-              <span className="shrink-0 tabular-nums">
-                {rcSummary(reward.microRc)}
-              </span>
-            </Button>
-          </li>
+          <h3
+            className="break-all text-lg font-semibold outline-none"
+            tabIndex={-1}
+            data-detail-heading
+          >
+            {report.statement.fileName}
+          </h3>
+          <p className="text-sm">
+            {t('period.range')} · {date(report.statement.period.from)} —{' '}
+            {date(report.statement.period.to)}
+          </p>
+        </div>
+        {report.statement.warnings.some(
+          (warning) => warning.code === 'statement.period-inferred',
+        ) && (
+          <p className="text-xs text-muted-foreground">
+            {t('rewards.periodInferred')}
+          </p>
+        )}
+      </div>
+      <div className="grid items-start gap-4 sm:grid-cols-2">
+        {report.accounts.map((account) => (
+          <BalanceAccount key={account.accountId} account={account} />
         ))}
-      </ul>
-      <DetailPagination current={current} pages={pages} onPage={onPage} />
+      </div>
+      {!report.accounts.length && <p>{t('quality.noAccounts')}</p>}
+      <section className="space-y-3">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h4 className="font-semibold text-primary">
+            {t('details.sourceTransactions')}
+          </h4>
+          <p role="status" className="text-xs text-muted-foreground">
+            {t('details.page', { page: current + 1, pages, count })}
+          </p>
+        </div>
+        <ul className="divide-y border-y">
+          {entries.map((entry) => (
+            <li key={entry.row.id}>
+              <TransactionRow entry={entry} source onSelect={onTransaction} />
+            </li>
+          ))}
+        </ul>
+        <DetailPagination current={current} pages={pages} onPage={onPage} />
+      </section>
     </div>
   )
 }

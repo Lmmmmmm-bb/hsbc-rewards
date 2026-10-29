@@ -14,14 +14,20 @@ const labels = {
 
 export function AssumptionNotes({
   items,
+  emphasis = false,
 }: {
   items: readonly AssumptionKind[]
+  emphasis?: boolean
 }) {
   const { t } = useI18n()
   if (!items.length) return null
   return (
     <ul
-      className="space-y-1 text-xs text-muted-foreground"
+      className={
+        emphasis
+          ? 'list-disc space-y-3 pl-4 text-sm leading-relaxed text-foreground'
+          : 'space-y-1 text-xs text-muted-foreground'
+      }
       data-assumption-notes
     >
       {items.map((item) => (

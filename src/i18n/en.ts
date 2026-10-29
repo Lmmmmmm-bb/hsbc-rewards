@@ -5,6 +5,22 @@ const plural = (count: string | number, one: string, other: string) =>
   Number(count) === 1 ? one : other
 
 export const en = {
+  "details.assumptions": "Assumptions used",
+  "details.filters": "Filter transactions",
+  "details.filtersApplied": "Filters applied",
+  "details.assumptionsNone": "No additional registration, multiplier, or cap-sharing assumptions are used.",
+  "details.rulesUsed": "Rules used",
+  "details.ruleVersion": "Rule version",
+  "details.ruleDate": "Verified on",
+  "details.transactionRecords": "Transaction records",
+  "details.statementRecords": "Source statements",
+  "details.transactionInfo": "Transaction information",
+  "details.componentRewards": "Reward components",
+  "details.transactionReward": "Estimated RewardCash",
+  "details.note.calculation": "Calculations retain six RC decimal places; display rounding does not affect them. Only imported spending uses caps, with opening usage assumed zero. Current rules apply to historical statements; refunds do not reduce estimates or restore caps. Actual rewards depend on bank records.",
+  "details.note.transactions": "Filters display rewards calculated for the complete session without reallocating spending caps. Refunds, repayments, fees, and similar entries earn no rewards. Refunds do not reduce prior estimates or restore spending cap capacity.",
+  "details.note.statements": "Balance checks cover complete source statements, including transactions outside the selected half-year. Difference = statement closing balance minus calculated closing balance. Positive means the statement balance is higher; negative means it is lower.",
+
   "import.additionalHint": "Add English PDFs. Successful files are included together when this batch finishes.",
   "fx.details": "Exchange rate basis and updates",
   "caps.pending": "Pending",
@@ -18,7 +34,6 @@ export const en = {
   "caps.sources": ({ count }) => `{count} related source ${plural(count, 'statement', 'statements')} imported`,
   "caps.observed": "Observed transactions {from} — {to}",
   "caps.noTransactions": "No transactions are observed in this range. Earlier spending may still exist.",
-  "caps.transactions": "View related transactions in this half-year",
 
   "details.title": "Reward details",
   "details.hint": "Inspect calculations, transaction rewards, and complete source-statement balance checks.",
@@ -37,7 +52,6 @@ export const en = {
   "details.flag.uncertain": "Insufficient evidence",
   "details.flag.excluded": "Excluded",
   "details.flag.capped": "Capped",
-  "details.poolFilter": "Filtered to transactions using this spending cap",
   "details.issueFilter": "Filtered to the selected quality issue",
   "details.clearReason": "Clear this condition",
   "details.page": ({ count }) => `Page {page} of {pages} · {count} ${plural(count, 'transaction', 'transactions')}`,

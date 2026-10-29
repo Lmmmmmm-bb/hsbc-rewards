@@ -139,18 +139,21 @@ export function CashbackPage({
               {t('period.capHint')}
             </p>
           )}
-          {sections.map(({ period: item, cards, pools }) => (
-            <RewardBreakdown
-              key={item.id}
-              revealKey={revealKey}
-              cards={cards}
-              pools={pools}
-              period={item}
-              onDetails={(request) =>
-                onDetails({ ...request, periodId: item.id })
-              }
-            />
-          ))}
+          <div className="divide-y divide-border" data-period-groups>
+            {sections.map(({ period: item, cards, pools }) => (
+              <div key={item.id} className="py-6 first:pt-0 last:pb-0">
+                <RewardBreakdown
+                  revealKey={revealKey}
+                  cards={cards}
+                  pools={pools}
+                  period={item}
+                  onDetails={(request) =>
+                    onDetails({ ...request, periodId: item.id })
+                  }
+                />
+              </div>
+            ))}
+          </div>
         </section>
       )}
     </WorkspaceShell>

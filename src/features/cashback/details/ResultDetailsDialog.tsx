@@ -30,13 +30,14 @@ export function ResultDetailsDialog({
       description={t('details.hint')}
       onClose={onClose}
       className="sm:max-w-4xl"
+      scrollBody={false}
       returnFocus={() =>
         trigger?.isConnected
           ? trigger
           : document.getElementById('cashback-main')
       }
     >
-      <DeferredDialogContent>
+      <DeferredDialogContent className="flex min-h-0 flex-1 flex-col">
         {({ ResultDetailsContent }) => (
           <ResultDetailsContent
             request={request}

@@ -31,11 +31,18 @@ export function RewardReasons({
   const { t } = useI18n()
   const shared = tiers[0]?.reasons.filter((reason) => common(reason.code)) ?? []
 
-  const list = (reasons: TierDetails[number]['reasons'], component: RewardTier) => (
+  const list = (
+    reasons: TierDetails[number]['reasons'],
+    component: RewardTier,
+  ) => (
     <ul className="space-y-2">
       {reasons.map(({ code, count }) => (
         <li key={code} className="flex items-start justify-between gap-3">
-          <Button variant="link" className="h-auto min-w-0 justify-start p-0 text-left whitespace-normal" onClick={() => onReason?.(component, code)}>
+          <Button
+            variant="ghost"
+            className="h-auto min-w-0 justify-start p-0 text-left whitespace-normal text-foreground hover:bg-transparent hover:underline"
+            onClick={() => onReason?.(component, code)}
+          >
             {t(reasonMessage(code))}
           </Button>
           <Badge variant="secondary">{t('reasons.count', { count })}</Badge>
@@ -53,7 +60,9 @@ export function RewardReasons({
             {children}
             {shared.length > 0 && (
               <section className="space-y-3">
-                <h4 className="font-medium">{t('reasons.common')}</h4>
+                <h4 className="font-medium text-primary">
+                  {t('reasons.common')}
+                </h4>
                 {list(shared, 'basic')}
               </section>
             )}
@@ -62,7 +71,9 @@ export function RewardReasons({
 
               return (
                 <section key={tier} className="space-y-2">
-                  <h4 className="font-medium">{t(`rewards.${tier}`)}</h4>
+                  <h4 className="font-medium text-primary">
+                    {t(`rewards.${tier}`)}
+                  </h4>
                   {specific.length ? (
                     list(specific, tier)
                   ) : (

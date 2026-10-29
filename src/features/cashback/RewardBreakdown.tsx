@@ -1,4 +1,3 @@
-import { useRef } from 'react'
 import type { ResultPool } from '@/application/results/pools'
 import { RewardCaps } from './RewardCaps'
 import type { ResultDetailsRequest } from '@/application/results/details'
@@ -30,17 +29,9 @@ export function RewardBreakdown({
   revealKey: string
 }) {
   const { t, rcSummary } = useI18n()
-  const host = useRef<HTMLElement>(null)
-  const focusCap = (key: string) => {
-    const target = [
-      ...(host.current?.querySelectorAll<HTMLElement>('[data-cap-key]') ?? []),
-    ].find((element) => element.dataset.capKey === key)
-    target?.focus()
-  }
 
   return (
     <section
-      ref={host}
       data-reward-breakdown
       data-period={period?.id}
       className="space-y-3"
@@ -93,12 +84,12 @@ export function RewardBreakdown({
               delay={Math.min(index, 4) * 0.04}
               className="min-w-0"
             >
-              <RewardCard card={card} onDetails={onDetails} onCap={focusCap} />
+              <RewardCard card={card} onDetails={onDetails} />
             </ResultReveal>
           ))}
         </div>
       )}
-      {cards.length > 0 && <RewardCaps pools={pools} onDetails={onDetails} />}
+      {cards.length > 0 && <RewardCaps pools={pools} />}
     </section>
   )
 }

@@ -13,10 +13,8 @@ import { AssumptionNotes } from './AssumptionNotes'
 export function RewardCard({
   card,
   onDetails,
-  onCap,
 }: {
   card: WorkspaceView['rewardCards'][number]
-  onCap: (key: string) => void
   onDetails: (request: ResultDetailsRequest) => void
 }) {
   const { t, money, number, rcSummary, rewardNumber } = useI18n()
@@ -107,29 +105,17 @@ export function RewardCard({
                 pool.remainingMinor === 0 || pool.remainingMinor === null,
             )
             .map((pool) => (
-              <Button
-                key={pool.key}
-                variant="outline"
-                size="sm"
-                className="h-auto py-1 whitespace-normal"
-                onClick={() => onCap(pool.key)}
-              >
+              <Badge key={pool.key} variant="outline">
                 {t(`rewards.${pool.tier}`)} ·{' '}
                 {t(
                   pool.remainingMinor === null
                     ? 'caps.pending'
                     : 'caps.exhausted',
                 )}
-              </Button>
+              </Badge>
             ))}
         </div>
-        <RewardQuality
-          quality={card.quality}
-          compact
-          onDetails={(request) =>
-            onDetails({ ...request, cardId: card.cardId })
-          }
-        />
+        <RewardQuality quality={card.quality} compact />
         <p className="flex flex-wrap gap-x-3 text-xs text-muted-foreground">
           <span>
             {t('card.transactions', {

@@ -32,7 +32,6 @@ export function initialNavigation(
       flags: request.flags,
       reason: request.reason,
       warning: request.warning,
-      poolKey: request.poolKey,
     },
     page: 0,
     sourcePage: 0,

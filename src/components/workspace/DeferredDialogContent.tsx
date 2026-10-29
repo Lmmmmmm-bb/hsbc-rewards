@@ -29,8 +29,10 @@ function loadContents(): Promise<Contents> {
 
 export function DeferredDialogContent({
   children,
+  className,
 }: {
   children: (contents: Contents) => ReactNode
+  className?: string
 }) {
   const { t } = useI18n()
   const host = useRef<HTMLDivElement>(null)
@@ -56,7 +58,11 @@ export function DeferredDialogContent({
   }, [attempt])
 
   return (
-    <div ref={host} data-dialog-content-state={state.status}>
+    <div
+      ref={host}
+      className={className}
+      data-dialog-content-state={state.status}
+    >
       {state.status === 'ready' ? (
         children(state.contents)
       ) : state.status === 'loading' ? (
@@ -72,7 +78,7 @@ export function DeferredDialogContent({
               // The retry button is about to disappear; retain focus in the
               // existing dialog region instead of dropping it onto the page.
               host.current
-                ?.closest<HTMLElement>('[role="region"]')
+                ?.closest<HTMLElement>('[role="region"], [data-dialog-body]')
                 ?.focus({ preventScroll: true })
               setState({ status: 'loading' })
               setAttempt((value) => value + 1)

@@ -75,6 +75,10 @@ it('preserves filters across language and result changes, resets paging, and fol
     await act(async () => button!.click())
   }
   await render(session)
+  const scroll = container.querySelector('[data-details-scroll]')!
+  const note = () => container.querySelector('[data-detail-footnote]')!
+  expect(scroll.contains(note())).toBe(false)
+  expect(note().textContent).toContain('Filters display rewards')
   expect(container.textContent).toContain('Page 1 of 2')
   await click('Next')
   expect(container.textContent).toContain('Page 2 of 2')
@@ -107,6 +111,9 @@ it('preserves filters across language and result changes, resets paging, and fol
   )!
   await act(async () => source.click())
   expect(container.querySelector('[data-statement-detail]')).not.toBeNull()
+  expect(note().textContent).toContain(
+    'Balance checks cover complete source statements',
+  )
   expect(container.textContent).toContain('Calculated closing balance')
   await click('Back')
   expect(container.querySelector('[data-transaction-detail]')).not.toBeNull()
@@ -119,4 +126,29 @@ it('preserves filters across language and result changes, resets paging, and fol
       (item) => item.textContent,
     ),
   ).toContain('Capped')
+  expect(
+    window.document.activeElement?.hasAttribute('data-transaction-id'),
+  ).toBe(true)
+  await click('Balance checks')
+  await act(async () =>
+    (container.querySelector('[data-statement-id]') as HTMLElement).click(),
+  )
+  await act(async () =>
+    (
+      container.querySelector('[data-source-transaction-id]') as HTMLElement
+    ).click(),
+  )
+  await click('Back')
+  expect(
+    window.document.activeElement?.hasAttribute('data-source-transaction-id'),
+  ).toBe(true)
+  await click('Back')
+  expect(window.document.activeElement?.hasAttribute('data-statement-id')).toBe(
+    true,
+  )
+  await click('Calculation and basis')
+  expect(note().textContent).toContain(
+    'Calculations retain six RC decimal places',
+  )
+  expect(scroll.contains(note())).toBe(false)
 })

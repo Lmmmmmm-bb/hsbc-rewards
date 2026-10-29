@@ -9,7 +9,6 @@ export interface TransactionFilter {
   readonly flags?: readonly TransactionFlag[]
   readonly reason?: string
   readonly warning?: string
-  readonly poolKey?: string
 }
 
 /** Flags match within the same component, shared by UI filters and Agent pagination. */
@@ -30,7 +29,6 @@ export function selectTransactions(
         (tier) =>
           (!filter.component || tier.tier === filter.component) &&
           (!filter.reason || tier.reasonCodes.includes(filter.reason)) &&
-          (!filter.poolKey || tier.poolKey === filter.poolKey) &&
           (!filter.flags?.length ||
             filter.flags.some((flag) => componentFlags(tier, row)[flag])),
       )
