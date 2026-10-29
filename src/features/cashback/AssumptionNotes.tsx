@@ -12,10 +12,21 @@ const labels = {
   'enrollment-period': 'rewards.enrollmentPeriodIgnored',
 } as const satisfies Readonly<Record<AssumptionKind, MessageKey>>
 
-export function AssumptionNotes({ items }: { items: readonly AssumptionKind[] }) {
+export function AssumptionNotes({
+  items,
+}: {
+  items: readonly AssumptionKind[]
+}) {
   const { t } = useI18n()
   if (!items.length) return null
-  return <ul className="space-y-1 text-xs text-muted-foreground" data-assumption-notes>
-    {items.map((item) => <li key={item}>{t(labels[item])}</li>)}
-  </ul>
+  return (
+    <ul
+      className="space-y-1 text-xs text-muted-foreground"
+      data-assumption-notes
+    >
+      {items.map((item) => (
+        <li key={item}>{t(labels[item])}</li>
+      ))}
+    </ul>
+  )
 }

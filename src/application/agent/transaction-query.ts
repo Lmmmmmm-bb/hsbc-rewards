@@ -1,6 +1,7 @@
 import type { RewardTier } from '@/domain/rewards/calculate'
 import { agentScope, type ResultScope } from './scope'
 import type { AgentSnapshots, PageInput } from './snapshots'
+import { selectTransactions } from '../results/transactions'
 import { componentFlags, resultMeta } from './projections'
 
 export type TransactionFlag = 'pending' | 'uncertain' | 'excluded' | 'capped'
@@ -15,16 +16,7 @@ export interface TransactionInput extends ResultScope, PageInput {
 export function listAgentTransactions(snapshots: AgentSnapshots, input: TransactionInput) {
   const snapshot = snapshots.capture(input.resultToken)
   const scope = agentScope(snapshot, input)
-  const byId = new Map(scope.rows.map((row) => [row.id, row]))
-  const rows = scope.rewards.flatMap((reward) => {
-    const row = byId.get(reward.transactionId)!
-    const matchedComponents = reward.tiers.filter((tier) =>
-      (!input.component || tier.tier === input.component) &&
-      (!input.flags?.length || input.flags.some((flag) => componentFlags(tier, row)[flag])),
-    ).map((tier) => tier.tier)
-    if (matchedComponents.length === 0) return []
-    return [{ row, reward, matchedComponents }]
-  })
+  const rows = selectTransactions(scope, input)
   const binding = JSON.stringify(['transactions', scope.periodId, input.cardRef ?? null,
     input.component ?? null, [...new Set(input.flags ?? [])].sort(), input.includeDescription ?? false])
   const page = snapshots.page(rows, input, binding, snapshot.resultToken)

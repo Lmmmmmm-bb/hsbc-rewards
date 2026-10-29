@@ -1,14 +1,15 @@
+import type { ResultDetailsRequest } from '@/application/results/details'
 import type { SessionStore } from '@/application/session/types'
 import type { PdfImportController } from '@/application/import/types'
 import type { PdfSource } from '@/ports/pdf'
 import { loadDemoSession } from '@/application/session/actions'
 import { AgentError } from '@/application/agent/errors'
 
-export type WorkspaceDialog = 'privacy' | 'rules' | 'files' | 'clear' | 'agent' | null
+export type WorkspaceDialog = 'privacy' | 'rules' | 'files' | 'clear' | 'agent' | 'details' | null
 
 /** UI and browser tools share these actions; provisional imports stay owned by their controller. */
 export function createWorkspaceActions(store: SessionStore, importer: PdfImportController) {
-  let snapshot: { dialog: WorkspaceDialog; focusItemId?: string } = { dialog: null }
+  let snapshot: { dialog: WorkspaceDialog; focusItemId?: string; details?: ResultDetailsRequest } = { dialog: null }
   const listeners = new Set<() => void>()
 
   const show = (dialog: WorkspaceDialog, focusItemId?: string) => {
@@ -28,6 +29,10 @@ export function createWorkspaceActions(store: SessionStore, importer: PdfImportC
     subscribe(listener: () => void) { listeners.add(listener); return () => { listeners.delete(listener) } },
     close: () => show(null),
     show,
+    openDetails(details: ResultDetailsRequest) {
+      snapshot = { dialog: 'details', details }
+      listeners.forEach((listener) => listener())
+    },
     requestAccess: () => openForAgent('agent'),
     openImport: (itemId?: string) => openForAgent('files', itemId),
 

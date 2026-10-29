@@ -1,3 +1,4 @@
+import type { ResultDetailsRequest } from '@/application/results/details'
 import type { WorkspaceView } from '@/application/session/selectors'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -16,9 +17,11 @@ export function RewardBreakdown({
   cards,
   period,
   revealKey,
+  onDetails,
 }: {
   cards: WorkspaceView['rewardCards']
   period?: WorkspaceView['periods'][number]
+  onDetails: (request: ResultDetailsRequest) => void
   revealKey: string
 }) {
   const { t, rcSummary } = useI18n()
@@ -77,7 +80,7 @@ export function RewardBreakdown({
               delay={Math.min(index, 4) * 0.04}
               className="min-w-0"
             >
-              <RewardCard card={card} />
+              <RewardCard card={card} onDetails={onDetails} />
             </ResultReveal>
           ))}
         </div>

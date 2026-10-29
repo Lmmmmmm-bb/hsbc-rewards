@@ -1,3 +1,5 @@
+import type { ResultDetailsRequest } from '@/application/results/details'
+import { Button } from '@/components/ui/button'
 import { RiBankCardLine } from '@remixicon/react'
 import type { WorkspaceView } from '@/application/session/selectors'
 import { Card, CardContent } from '@/components/ui/card'
@@ -11,8 +13,10 @@ import { RewardCaps } from './RewardCaps'
 
 export function RewardCard({
   card,
+  onDetails,
 }: {
   card: WorkspaceView['rewardCards'][number]
+  onDetails: (request: ResultDetailsRequest) => void
 }) {
   const { t, money, number, rcSummary, rewardNumber } = useI18n()
   const amount = card.totalMicroRc ?? card.knownMicroRc
@@ -90,7 +94,7 @@ export function RewardCard({
           )}
         </dl>
         <RewardCaps pools={card.pools} />
-        <RewardQuality quality={card.quality} compact />
+        <RewardQuality quality={card.quality} compact onDetails={(request) => onDetails({ ...request, cardId: card.cardId })} />
         <p className="flex flex-wrap gap-x-3 text-xs text-muted-foreground">
           <span>
             {t('card.transactions', {
@@ -105,8 +109,9 @@ export function RewardCard({
           ))}
         </p>
         {card.transactionCount > 0 && (
-          <RewardReasons tiers={card.tiers} />
+          <RewardReasons tiers={card.tiers} onReason={(component, reason) => onDetails({ tab: 'transactions', cardId: card.cardId, component, reason })} />
         )}
+        <Button variant="outline" size="sm" onClick={() => onDetails({ tab: 'transactions', cardId: card.cardId })} aria-haspopup="dialog">{t('details.card')}</Button>
         <AssumptionNotes items={cardAssumptions(card)} />
       </CardContent>
     </Card>

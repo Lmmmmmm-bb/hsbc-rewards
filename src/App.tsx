@@ -14,6 +14,7 @@ import { FileStatusDialog } from '@/features/import/components/FileStatusDialog'
 import { sessionStore } from '@/store/memory-session'
 import { createWorkspaceActions } from '@/app/workspace-actions'
 import { useAgentRuntime } from '@/app/use-agent-runtime'
+import { ResultDetailsDialog } from '@/features/cashback/details/ResultDetailsDialog'
 import { AgentDialog } from '@/features/agent/AgentDialog'
 
 function App() {
@@ -21,7 +22,7 @@ function App() {
     { t } = useI18n(),
     { batch } = usePdfImport()
   const [actions] = useState(() => createWorkspaceActions(sessionStore, pdfImport))
-  const { dialog, focusItemId } = useSyncExternalStore(actions.subscribe, actions.getSnapshot, actions.getSnapshot)
+  const { dialog, focusItemId, details } = useSyncExternalStore(actions.subscribe, actions.getSnapshot, actions.getSnapshot)
   const agent = useAgentRuntime(actions)
   const fx = useFx()
 
@@ -33,6 +34,7 @@ function App() {
         view={view}
         fxRequest={fx.request}
         hasPendingFiles={batch.items.length > 0}
+        onDetails={actions.openDetails}
         onDemo={actions.loadDemo}
         onFiles={actions.importFiles}
         onRules={() => actions.show('rules')}
@@ -71,6 +73,7 @@ function App() {
           <p>{t('clear.body')}</p>
         </Dialog>
       )}
+      {dialog === 'details' && details && session.mode !== 'empty' && <ResultDetailsDialog key={session.mode} request={details} session={session} workspace={view} onClose={actions.close} />}
       {dialog === 'agent' && <AgentDialog status={agent.status} shared={agent.shared}
         onGrant={agent.grant} onRevoke={agent.revoke} onRetry={agent.retry} onClose={actions.close} />}
     </PageFileDrop>

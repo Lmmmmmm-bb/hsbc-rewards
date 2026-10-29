@@ -2,3 +2,5 @@
 export { PrivacyDetails } from '@/components/workspace/PrivacyDetails'
 export { RewardRules } from '@/features/cashback/RewardRules'
 export { FileStatusList } from '@/features/import/components/FileStatusList'
+
+export { ResultDetailsContent } from '@/features/cashback/details/ResultDetailsContent'

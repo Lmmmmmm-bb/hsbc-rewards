@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react'
 import type { WorkspaceView } from '@/application/session/selectors'
-import type { MessageKey } from '@/i18n/zh'
+import type { RewardTier } from '@/domain/rewards/calculate'
+import { Button } from '@/components/ui/button'
+import { reasonMessage } from './reason-messages'
 import {
   Accordion,
   AccordionItem,
@@ -9,26 +11,6 @@ import {
 } from '@/components/ui/accordion'
 import { Badge } from '@/components/ui/badge'
 import { useI18n } from '@/i18n/use-i18n'
-
-const labels = {
-  'reward.eligible': 'reason.eligible',
-  'reward.cap-applied': 'reason.cap',
-  'fx.required-for-cap': 'reason.fx',
-  'region.unknown': 'reason.region',
-  'currency.original-unknown': 'reason.currency',
-  'reward.original-hkd': 'reason.originalHkd',
-  'reward.region-excluded': 'reason.regionExcluded',
-  'reward.currency-excluded': 'reason.currencyExcluded',
-  'reward.payment-excluded': 'reason.payment',
-  'reward.not-enrolled': 'reason.enrollment',
-  'transaction.refund': 'reason.refund',
-  'transaction.repayment': 'reason.repayment',
-  'transaction.fee': 'reason.fee',
-  'transaction.cash-advance': 'reason.cash',
-  'transaction.credit': 'reason.credit',
-  'transaction.non-positive': 'reason.nonpositive',
-  'eligibility.excluded-merchant': 'reason.excluded',
-} as const satisfies Readonly<Record<string, MessageKey>>
 
 const common = (code: string) =>
   code.startsWith('transaction.') ||
@@ -40,24 +22,22 @@ type TierDetails = WorkspaceView['rewardCards'][number]['tiers']
 export function RewardReasons({
   tiers,
   children,
+  onReason,
 }: {
   tiers: TierDetails
   children?: ReactNode
+  onReason?: (component: RewardTier, reason: string) => void
 }) {
   const { t } = useI18n()
   const shared = tiers[0]?.reasons.filter((reason) => common(reason.code)) ?? []
 
-  const list = (reasons: TierDetails[number]['reasons']) => (
+  const list = (reasons: TierDetails[number]['reasons'], component: RewardTier) => (
     <ul className="space-y-2">
       {reasons.map(({ code, count }) => (
         <li key={code} className="flex items-start justify-between gap-3">
-          <span className="min-w-0 text-muted-foreground">
-            {t(
-              Object.hasOwn(labels, code)
-                ? labels[code as keyof typeof labels]
-                : 'reason.other',
-            )}
-          </span>
+          <Button variant="link" className="h-auto min-w-0 justify-start p-0 text-left whitespace-normal" onClick={() => onReason?.(component, code)}>
+            {t(reasonMessage(code))}
+          </Button>
           <Badge variant="secondary">{t('reasons.count', { count })}</Badge>
         </li>
       ))}
@@ -74,7 +54,7 @@ export function RewardReasons({
             {shared.length > 0 && (
               <section className="space-y-3">
                 <h4 className="font-medium">{t('reasons.common')}</h4>
-                {list(shared)}
+                {list(shared, 'basic')}
               </section>
             )}
             {tiers.map(({ tier, reasons }) => {
@@ -84,7 +64,7 @@ export function RewardReasons({
                 <section key={tier} className="space-y-2">
                   <h4 className="font-medium">{t(`rewards.${tier}`)}</h4>
                   {specific.length ? (
-                    list(specific)
+                    list(specific, tier)
                   ) : (
                     <p className="text-muted-foreground">
                       {t('reasons.empty')}

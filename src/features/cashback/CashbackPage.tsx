@@ -1,3 +1,5 @@
+import type { ResultDetailsRequest } from '@/application/results/details'
+import { Button } from '@/components/ui/button'
 import { selectResultScope } from '@/application/results/scope'
 import { RewardEvidence } from './RewardEvidence'
 import { usePdfImport } from '@/store/use-pdf-import'
@@ -31,6 +33,7 @@ export function CashbackPage({
   onRules,
   onFileStatus,
   onAgent,
+  onDetails,
 }: {
   session: SessionState
   view: WorkspaceView
@@ -43,6 +46,7 @@ export function CashbackPage({
   onRules: () => void
   onFileStatus: () => void
   onAgent: () => void
+  onDetails: (request: ResultDetailsRequest) => void
 }) {
   const { t } = useI18n()
   const [periodId, setPeriodId] = useState('all')
@@ -100,7 +104,7 @@ export function CashbackPage({
           range={period ? { from: period.from, to: period.to } : view.coverage}
           period={period}
         >
-          {hasResults && <RewardEvidence scope={resultScope} />}
+          {hasResults && <RewardEvidence scope={resultScope} onDetails={() => onDetails({ tab: 'calculation', periodId: resultScope.periodId })} />}
         </RewardSummary>
         <aside className="min-w-0 space-y-3" aria-label={t('import.dropTitle')}>
           <Card size="sm">
@@ -130,9 +134,10 @@ export function CashbackPage({
       {hasResults && resultScope.mismatchStatementCount > 0 && (
         <ErrorNotice title={t('cashback.checkWarningTitle')} role="status">
           {t('cashback.checkWarning', { count: resultScope.mismatchStatementCount })}
+          <Button variant="link" className="h-auto p-0" onClick={() => onDetails({ tab: 'statements', periodId: resultScope.periodId, reconciliation: 'mismatch' })}>{t('details.inspect')}</Button>
         </ErrorNotice>
       )}
-      {hasResults && <RewardQualityAlerts quality={scope.quality} />}
+      {hasResults && <RewardQualityAlerts quality={scope.quality} onDetails={(request) => onDetails({ ...request, periodId: resultScope.periodId })} />}
       {view.periods.length > 1 ? (
         <section className="space-y-4" aria-label={t('period.results')}>
           <p className="text-xs text-muted-foreground">{t('period.capHint')}</p>
@@ -140,6 +145,7 @@ export function CashbackPage({
             <RewardBreakdown
               key={item.id}
               revealKey={revealKey}
+              onDetails={(request) => onDetails({ ...request, periodId: item.id })}
               cards={item.rewardCards}
               period={item}
             />
@@ -148,6 +154,7 @@ export function CashbackPage({
       ) : (
         <RewardBreakdown
           revealKey={revealKey}
+          onDetails={(request) => onDetails({ ...request, periodId: view.periods[0]?.id ?? 'all' })}
           cards={view.rewardCards}
           period={view.periods[0]}
         />
