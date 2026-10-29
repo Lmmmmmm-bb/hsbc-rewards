@@ -36,8 +36,17 @@ pnpm dev
 | `pnpm test` / `pnpm test:watch` | 单元测试 / 监听测试 |
 | `pnpm build` | 类型检查并构建到 `dist/` |
 | `pnpm preview` | 预览生产构建 |
+| `pnpm lint:staged` | 用 nano-staged 检查暂存的 TS / TSX 文件 |
+| `pnpm check` | 依次运行类型、Lint、单元测试和生产构建检查 |
 
 依赖变更使用 pnpm 并同步 `pnpm-lock.yaml`，不要顺带升级无关依赖。不要手改 `dist/`、`node_modules/`，也不要提交验收产物或临时脚本。
+
+### 本地 Git 检查
+
+- `simple-git-hooks` 和 `nano-staged` 的配置统一放在 `package.json`。`pnpm install` 通过项目 `prepare` 安装钩子；修改钩子命令后运行 `pnpm prepare` 重新安装，保留其他未配置的钩子。
+- 提交前只对暂存的 TS / TSX 文件运行 ESLint，警告也视为失败；不自动修复。仅文档变更、删除文件或没有匹配文件时直接通过。部分暂存时只检查暂存内容，并在结束后恢复未暂存内容。
+- 推送前运行 `pnpm check` 检查整个工作区。类型检查、测试和构建不按暂存文件拆分；检查失败时终止本次提交或推送。
+- `pnpm-workspace.yaml` 明确不执行依赖 `simple-git-hooks` 自带的安装脚本，钩子安装统一由项目 `prepare` 负责。CI 安装依赖前设置 `SKIP_INSTALL_SIMPLE_GIT_HOOKS=1`，其余安装与验证照常执行。
 
 ## 目录与依赖方向
 
