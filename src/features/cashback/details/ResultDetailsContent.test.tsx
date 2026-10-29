@@ -135,8 +135,16 @@ it('keeps filters and pagination outside records, preserves language state, and 
   const sources = container.querySelector('[data-transaction-sources]')!
   expect(sources.textContent).toContain('.pdf')
   expect(sources.textContent).toContain('Statement date')
-  expect(sources.querySelector('button')).toBeNull()
-  expect(sources.querySelector('details')).not.toBeNull()
+  const sourceTrigger = sources.querySelector('button')!
+  expect(sourceTrigger.textContent).toBe('Extracted source text')
+  expect(sourceTrigger.getAttribute('aria-expanded')).toBe('false')
+  await act(async () => sourceTrigger.click())
+  expect(sourceTrigger.getAttribute('aria-expanded')).toBe('true')
+  expect(sources.textContent).toContain('SYNTHETIC DEMONSTRATION ONLY')
+  await click('简体中文')
+  expect(sourceTrigger.textContent).toBe('已提取的来源文本')
+  expect(sourceTrigger.getAttribute('aria-expanded')).toBe('true')
+  await click('English')
   await click('Back')
   expect(
     container.querySelector(

@@ -60,7 +60,7 @@ export const zh = {
   "details.sources": "来源账单",
   "details.sourceUnavailable": "来源账单信息已不可用",
   "details.sourcePage": "第 {page} 页",
-  "details.sourceText": "查看已提取的来源文本",
+  "details.sourceText": "已提取的来源文本",
   "details.objectMissing": "原查看对象已不在当前结果中，请关闭后从当前结果重新打开。",
   "details.kind.purchase": "消费",
   "details.kind.refund": "退款",

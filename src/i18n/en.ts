@@ -66,7 +66,7 @@ export const en = {
   "details.sources": "Source statements",
   "details.sourceUnavailable": "Source-statement details are no longer available",
   "details.sourcePage": "Page {page}",
-  "details.sourceText": "Show extracted source text",
+  "details.sourceText": "Extracted source text",
   "details.objectMissing": "The original item is no longer in these results. Close this dialog and open the current results again.",
   "details.kind.purchase": "Purchase",
   "details.kind.refund": "Refund",
