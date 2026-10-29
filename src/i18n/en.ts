@@ -5,6 +5,13 @@ const plural = (count: string | number, one: string, other: string) =>
   Number(count) === 1 ? one : other
 
 export const en = {
+  "basis.title": "Estimate basis",
+  "basis.baseline": "Estimated from imported statements using current rules. Only imported spending uses the caps; opening usage is assumed to be zero.",
+  "basis.registration": "Registration is not stated; the estimate assumes registration.",
+  "basis.multiplier": "The allocation multiplier is not stated; the estimate assumes the full extra 5X is allocated to Outside Hong Kong.",
+  "basis.details": "View calculation and basis",
+  "basis.pendingImport": "This batch is still processing and is not included in the current amounts. Open file status to check progress or unlock files.",
+
   'agent.dialogTitle': 'AI access',
   'agent.dialogHint': 'Allow AI tools in your browser to read analysis results on this page.',
   'agent.allow': 'Allow result access',
@@ -121,7 +128,7 @@ export const en = {
   'precision.compute':
     'RC calculations retain six decimal places without rounding each purchase to a whole RC. At spending caps, proportional rewards discard only fractions below 0.000001 RC.',
   'precision.display':
-    'Overview and card totals round to two decimal places; reward components show up to six. Total rewards are converted to CNY reference values and rounded to cents. Display rounding does not affect calculations; rounded card or period values may not add up to the overview.',
+    'Page amounts round to two decimal places; nonzero amounts that round to zero show <0.01 RC. Calculation details show up to six decimal places. Total rewards are converted to CNY reference values and rounded to cents. Display rounding does not affect calculations; rounded card or period values may not add up to the overview.',
   'precision.example':
     'HKD 0.01 earns 0.00004 basic RC; 100 purchases total 0.004 RC without rounding each to zero.',
   'precision.bank':

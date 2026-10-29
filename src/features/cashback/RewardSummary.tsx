@@ -2,6 +2,7 @@ import type { WorkspaceView } from '@/application/session/selectors'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useI18n } from '@/i18n/use-i18n'
+import type { ReactNode } from 'react'
 import { ResultReveal } from './ResultReveal'
 
 export function RewardSummary({
@@ -12,6 +13,7 @@ export function RewardSummary({
   range,
   period,
   revealKey,
+  children,
 }: {
   view: Pick<
     WorkspaceView,
@@ -26,9 +28,10 @@ export function RewardSummary({
   cardCount: number
   range: { from: string; to: string } | null
   period?: WorkspaceView['periods'][number]
+  children?: ReactNode
   revealKey: string
 }) {
-  const { t, number, money, rc, date } = useI18n()
+  const { t, number, money, rcSummary, rewardNumber, date } = useI18n()
   const amount = view.totalRewardMicroRc ?? view.knownRewardMicroRc
   const stats = [
     { label: 'cashback.statements', value: statementCount },
@@ -62,16 +65,11 @@ export function RewardSummary({
                 data-reward-total
                 className="break-words text-5xl leading-none font-semibold tracking-tight text-primary tabular-nums sm:text-6xl"
               >
-                {hasResults ? number(amount / 1_000_000, 2) : '—'}
+                {hasResults ? rewardNumber(amount) : '—'}
                 <span className="ml-2 text-lg font-medium text-foreground">
                   RC
                 </span>
               </p>
-              {hasResults && amount % 10_000 !== 0 && (
-                <p className="text-xs text-muted-foreground">
-                  {t('precision.exact', { amount: rc(amount) })}
-                </p>
-              )}
             </div>
             <div>
               <p className="text-xs text-muted-foreground">
@@ -102,11 +100,11 @@ export function RewardSummary({
                   {t(`rewards.${tier}`)}
                 </dt>
                 <dd className="break-words text-base font-semibold tabular-nums">
-                  {hasResults ? rc(microRc) : '— RC'}
+                  {hasResults ? rcSummary(microRc) : '— RC'}
                 </dd>
                 {hasResults && microRc === null && knownMicroRc > 0 && (
                   <dd className="text-xs text-muted-foreground">
-                    {t('rewards.knownPortion', { amount: rc(knownMicroRc) })}
+                    {t('rewards.knownPortion', { amount: rcSummary(knownMicroRc) })}
                   </dd>
                 )}
               </div>
@@ -129,6 +127,7 @@ export function RewardSummary({
           {hasResults && view.totalRewardMicroRc === null && (
             <Badge variant="outline">{t('cashback.pendingRewards')}</Badge>
           )}
+          {children}
         </ResultReveal>
       </CardContent>
     </Card>

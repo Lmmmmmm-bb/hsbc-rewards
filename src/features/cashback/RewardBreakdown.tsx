@@ -21,7 +21,7 @@ export function RewardBreakdown({
   period?: WorkspaceView['periods'][number]
   revealKey: string
 }) {
-  const { t, rc } = useI18n()
+  const { t, rcSummary } = useI18n()
 
   return (
     <section
@@ -44,7 +44,7 @@ export function RewardBreakdown({
         </h2>
         {period && (
           <p className="text-sm font-semibold tabular-nums">
-            {rc(period.totalRewardMicroRc)}
+            {rcSummary(period.totalRewardMicroRc)}
           </p>
         )}
       </div>

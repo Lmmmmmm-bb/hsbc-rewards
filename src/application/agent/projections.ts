@@ -1,5 +1,6 @@
-import type { Transaction } from '@/domain/model/types'
-import type { RewardPool, TierReward } from '@/domain/rewards/calculate'
+import { componentFlags } from '../results/status'
+export { componentFlags } from '../results/status'
+import type { RewardPool } from '@/domain/rewards/calculate'
 import type { AgentSnapshot } from './snapshots'
 import type { AgentScope } from './scope'
 
@@ -9,19 +10,6 @@ export const BASELINE_ASSUMPTIONS = [
   'assumption.opening-usage-zero',
   'assumption.refunds-no-clawback',
 ] as const
-
-export function componentFlags(tier: TierReward, row: Transaction) {
-  const uncertain = tier.reasonCodes.some((code) => ['region.unknown', 'currency.original-unknown'].includes(code)) ||
-    row.warnings.some((warning) => warning.code === 'date.outside-period')
-  const capped = tier.reasonCodes.includes('reward.cap-applied')
-
-  return {
-    pending: tier.microRc === null,
-    uncertain,
-    excluded: tier.eligibleMinor === 0 && !uncertain && !capped,
-    capped,
-  }
-}
 
 export function cardIdentity(snapshot: AgentSnapshot, card: AgentScope['cards'][number]) {
   return {

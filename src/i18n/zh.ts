@@ -1,4 +1,11 @@
 export const zh = {
+  "basis.title": "估算依据",
+  "basis.baseline": "依据已导入账单及当前规则估算；仅已导入消费占用额度，此前占用视为零。",
+  "basis.registration": "账单未记载登记状态，按已登记估算。",
+  "basis.multiplier": "账单未记载分配倍数，按额外 5X 全部分配给赏世界估算。",
+  "basis.details": "查看计算与依据",
+  "basis.pendingImport": "本批仍在处理，当前金额尚未包含本批文件。可在文件状态中查看进度或解锁文件。",
+
   'agent.dialogTitle': 'AI 接入',
   'agent.dialogHint': '允许浏览器中的 AI 工具读取本页分析结果。',
   'agent.allow': '允许读取结果',
@@ -108,7 +115,7 @@ export const zh = {
   'precision.compute':
     'RC 保留 6 位小数，不逐笔取整。跨消费上限按比例计奖时，仅舍去不足 0.000001 RC 的部分。',
   'precision.display':
-    '总览和卡片合计四舍五入到 2 位小数，各项奖励最多显示 6 位。人民币参考价值由返现合计换算后四舍五入到分。显示舍入不影响计算；各卡或周期显示值相加，可能与总览有差异。',
+    '页面金额四舍五入到 2 位小数，非零但舍入为零时显示小于 0.01 RC；计算明细最多显示 6 位。人民币参考价值由返现合计换算后四舍五入到分。显示舍入不影响计算；各卡或周期显示值相加，可能与总览有差异。',
   'precision.example':
     'HKD 0.01 的基础奖励为 0.00004 RC，100 笔合计 0.004 RC，不逐笔舍弃为零。',
   'precision.bank':

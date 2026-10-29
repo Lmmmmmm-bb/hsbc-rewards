@@ -1,3 +1,6 @@
+import { selectResultScope } from '@/application/results/scope'
+import { RewardEvidence } from './RewardEvidence'
+import { usePdfImport } from '@/store/use-pdf-import'
 import { useState } from 'react'
 import { RiShieldCheckLine } from '@remixicon/react'
 import type { SessionState } from '@/application/session/types'
@@ -44,7 +47,9 @@ export function CashbackPage({
   const { t } = useI18n()
   const [periodId, setPeriodId] = useState('all')
   const period = view.periods.find((item) => item.id === periodId)
-  const scope = period ?? view
+  const resultScope = selectResultScope(session, view, { periodId: period?.id ?? 'all' })
+  const scope = resultScope.view
+  const { batch } = usePdfImport()
   const hasResults = session.dataset.statements.length > 0
   const revealKey = `${session.revision}:${period?.id ?? 'all'}`
 
@@ -94,7 +99,9 @@ export function CashbackPage({
           cardCount={period?.cardCount ?? session.dataset.cards.length}
           range={period ? { from: period.from, to: period.to } : view.coverage}
           period={period}
-        />
+        >
+          {hasResults && <RewardEvidence scope={resultScope} />}
+        </RewardSummary>
         <aside className="min-w-0 space-y-3" aria-label={t('import.dropTitle')}>
           <Card size="sm">
             <CardContent>
@@ -119,9 +126,10 @@ export function CashbackPage({
           <AlertDescription>{t('cashback.demoNotice')}</AlertDescription>
         </Alert>
       )}
-      {hasResults && view.mismatchCount > 0 && (
+      {hasResults && batch.active && <Alert role="status"><AlertDescription>{t('basis.pendingImport')}</AlertDescription></Alert>}
+      {hasResults && resultScope.mismatchStatementCount > 0 && (
         <ErrorNotice title={t('cashback.checkWarningTitle')} role="status">
-          {t('cashback.checkWarning', { count: view.mismatchCount })}
+          {t('cashback.checkWarning', { count: resultScope.mismatchStatementCount })}
         </ErrorNotice>
       )}
       {hasResults && <RewardQualityAlerts quality={scope.quality} />}

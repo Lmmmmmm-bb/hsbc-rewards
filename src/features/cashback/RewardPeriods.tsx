@@ -13,14 +13,14 @@ export function RewardPeriods({
   selected: string
   onSelect: (id: string) => void
 }) {
-  const { t, rc } = useI18n()
+  const { t, rcSummary } = useI18n()
   const selectionId = useId()
   const options = [
     { id: 'all', label: t('period.all'), amount: null },
     ...periods.map((period) => ({
       id: period.id,
       label: t(period.half === 1 ? 'period.h1' : 'period.h2', { year: period.year }),
-      amount: rc(period.totalRewardMicroRc),
+      amount: rcSummary(period.totalRewardMicroRc),
     })),
   ]
 

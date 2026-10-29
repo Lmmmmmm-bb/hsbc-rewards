@@ -1,4 +1,5 @@
 import { useContext } from 'react'
+import { formatRewardNumber } from './reward-format'
 import { I18nContext } from './context'
 
 export function useI18n() {
@@ -31,7 +32,7 @@ export function useI18n() {
   const rc = (microRc: number | null) =>
     microRc === null
       ? value.t('rewards.pending')
-      : `${number(microRc / 1_000_000, 6)} RC`
+      : `${formatRewardNumber(microRc, value.locale, 'exact')} RC`
 
   const dateTime = (timestamp: number) =>
     new Intl.DateTimeFormat(value.locale, {
@@ -44,5 +45,8 @@ export function useI18n() {
       timeZoneName: 'short',
     }).format(timestamp)
 
-  return { ...value, money, number, date, rc, dateTime }
+  const rewardNumber = (microRc: number) => formatRewardNumber(microRc, value.locale)
+  const rcSummary = (microRc: number | null) => microRc === null ? value.t('rewards.pending') : `${rewardNumber(microRc)} RC`
+
+  return { ...value, money, number, date, rc, rcSummary, rewardNumber, dateTime }
 }
