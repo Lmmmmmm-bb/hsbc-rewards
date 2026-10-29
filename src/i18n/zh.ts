@@ -1,6 +1,5 @@
 export const zh = {
   "details.statementDate": "账单日期",
-  "details.pageLabel": "来源页码",
   "details.statementPeriod": "账单周期",
   "details.filter.mismatch": "已筛选余额有差异的账单交易",
   "details.filter.unverified": "已筛选无法核对的账单交易",

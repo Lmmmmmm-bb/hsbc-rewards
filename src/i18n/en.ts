@@ -6,7 +6,6 @@ const plural = (count: string | number, one: string, other: string) =>
 
 export const en = {
   "details.statementDate": "Statement date",
-  "details.pageLabel": "Source page",
   "details.statementPeriod": "Statement period",
   "details.filter.mismatch": "Transactions from mismatched statement accounts",
   "details.filter.unverified": "Transactions from unverified statement accounts",
