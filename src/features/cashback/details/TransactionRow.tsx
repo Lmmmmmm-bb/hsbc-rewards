@@ -17,29 +17,33 @@ export function TransactionRow({
   return (
     <Button
       variant="ghost"
-      className="h-auto w-full items-center justify-between gap-3 px-2 py-4 text-left whitespace-normal"
+      className="h-full w-full flex-col items-stretch justify-start gap-1.5 border border-border bg-background p-2.5 text-left whitespace-normal"
       data-transaction-id={row.id}
       onClick={() => onSelect(row.id)}
     >
-      <span className="min-w-0 space-y-1.5">
-        <span className="block text-xs font-normal text-muted-foreground">
+      <span className="flex items-start justify-between gap-2">
+        <span className="min-w-0 text-xs font-normal text-muted-foreground">
           {date(row.transactionDate)}
           {cardLabel && ` · ${cardLabel}`}
         </span>
-        <span className="block break-words text-sm font-medium">
-          {row.description}
-        </span>
-        <span className="block text-xs font-normal text-muted-foreground">
-          {t('details.account')} ·{' '}
-          {money(row.account.minor, row.account.currency)}
-        </span>
+        <RiArrowRightSLine
+          className="size-3.5 shrink-0 text-muted-foreground"
+          aria-hidden="true"
+        />
       </span>
-      <span className="flex shrink-0 items-center gap-2">
-        <span className="max-w-36 text-right tabular-nums">
-          <span className="hidden text-xs font-normal text-muted-foreground sm:block">
-            {t('details.transactionReward')}
+      <span className="min-w-0 break-words text-sm font-medium">
+        {row.description}
+      </span>
+      <span className="mt-auto flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+        <span className="min-w-0 text-xs font-normal text-muted-foreground">
+          <span className="sr-only">{t('details.account')} · </span>
+          <span className="break-words tabular-nums">
+            {money(row.account.minor, row.account.currency)}
           </span>
-          <span className="mt-1 block text-base font-semibold">
+        </span>
+        <span className="max-w-36 text-right tabular-nums">
+          <span className="sr-only">{t('details.transactionReward')}</span>
+          <span className="block text-sm font-semibold">
             {rcSummary(reward.microRc)}
           </span>
           {reward.microRc === null && (
@@ -50,10 +54,6 @@ export function TransactionRow({
             </span>
           )}
         </span>
-        <RiArrowRightSLine
-          className="hidden size-4 text-muted-foreground sm:block"
-          aria-hidden="true"
-        />
       </span>
     </Button>
   )

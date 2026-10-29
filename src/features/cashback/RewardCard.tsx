@@ -7,8 +7,6 @@ import { Badge } from '@/components/ui/badge'
 import { useI18n } from '@/i18n/use-i18n'
 import { RewardQuality } from './RewardQuality'
 import { RewardReasons } from './RewardReasons'
-import { cardAssumptions } from '@/application/results/assumptions'
-import { AssumptionNotes } from './AssumptionNotes'
 
 export function RewardCard({
   card,
@@ -149,7 +147,6 @@ export function RewardCard({
         >
           {t('details.card')}
         </Button>
-        <AssumptionNotes items={cardAssumptions(card)} />
       </CardContent>
     </Card>
   )

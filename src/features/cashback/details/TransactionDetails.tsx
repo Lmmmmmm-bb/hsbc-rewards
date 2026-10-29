@@ -1,6 +1,8 @@
 import type { ResultTransaction } from '@/application/results/transactions'
 import { componentExplanation } from '@/application/results/transactions'
 import type { Statement } from '@/domain/model/types'
+import { Card, CardHeader, CardContent } from '@/components/ui/card'
+import { InfoSection } from '@/components/workspace/InfoSection'
 import { TransactionSources } from './TransactionSources'
 import { useI18n } from '@/i18n/use-i18n'
 import { reasonMessage } from '../reason-messages'
@@ -38,16 +40,18 @@ export function TransactionDetails({
     ],
   ]
   return (
-    <div className="space-y-6" data-transaction-detail>
-      <div className="space-y-4">
-        <h3
-          className="break-words text-lg font-semibold outline-none"
-          tabIndex={-1}
-          data-detail-heading
-        >
-          {row.description}
-        </h3>
-        <div className="space-y-2 border bg-muted/30 p-4">
+    <div className="space-y-3" data-transaction-detail>
+      <Card size="sm" className="border bg-muted/30 ring-0">
+        <CardHeader>
+          <h3
+            className="break-words text-lg font-semibold outline-none"
+            tabIndex={-1}
+            data-detail-heading
+          >
+            {row.description}
+          </h3>
+        </CardHeader>
+        <CardContent className="space-y-2">
           <p className="text-sm font-medium">
             {t('details.transactionReward')}
           </p>
@@ -57,13 +61,10 @@ export function TransactionDetails({
           {reward.microRc === null && (
             <p className="text-xs">{t('cashback.knownHint')}</p>
           )}
-        </div>
-      </div>
-      <section className="space-y-3">
-        <h4 className="font-semibold text-primary">
-          {t('details.transactionInfo')}
-        </h4>
-        <dl className="grid gap-x-6 gap-y-4 border-t pt-3 sm:grid-cols-2">
+        </CardContent>
+      </Card>
+      <InfoSection title={t('details.transactionInfo')}>
+        <dl className="grid gap-x-4 gap-y-3 sm:grid-cols-2">
           {fields.map(([label, value]) => (
             <div key={label} className="space-y-1">
               <dt className="text-xs text-muted-foreground">{label}</dt>
@@ -71,20 +72,17 @@ export function TransactionDetails({
             </div>
           ))}
         </dl>
-      </section>
-      <section className="space-y-3">
-        <h4 className="font-semibold text-primary">
-          {t('details.componentRewards')}
-        </h4>
-        <div className="grid items-start gap-3 sm:grid-cols-3">
+      </InfoSection>
+      <InfoSection title={t('details.componentRewards')}>
+        <div className="grid items-start gap-2 sm:grid-cols-3">
           {reward.tiers.map((tier) => {
             const capping = componentExplanation(tier)
             return (
               <section key={tier.tier} className="space-y-3 border p-3">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <h5 className="text-sm font-medium">
+                  <h4 className="text-sm font-medium">
                     {t(`rewards.${tier.tier}`)}
-                  </h5>
+                  </h4>
                   <span className="text-xs text-muted-foreground">
                     {number(tier.rateBasisPoints / 100)}%
                   </span>
@@ -123,7 +121,7 @@ export function TransactionDetails({
             )
           })}
         </div>
-      </section>
+      </InfoSection>
       <TransactionSources sources={row.sources} statements={statements} />
     </div>
   )
