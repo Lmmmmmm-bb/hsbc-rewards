@@ -2,7 +2,7 @@ import type { ComponentProps } from 'react'
 import { TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
 
-/** Shared three-column navigation for the rule and result dialogs. */
+/** Three-column navigation for the rule dialog. */
 export function DialogTabsList({
   className,
   ...props

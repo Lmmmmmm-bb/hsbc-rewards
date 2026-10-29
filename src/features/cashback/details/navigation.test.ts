@@ -12,10 +12,7 @@ describe('detail result changes', () => {
   }
   it('retains filters and selections while resetting pages on data changes', () => {
     const state = {
-      ...initialNavigation(
-        { tab: 'transactions', component: 'pulse', flags: ['capped'] },
-        session,
-      ),
+      ...initialNavigation({ component: 'pulse', flags: ['capped'] }, session),
       page: 2,
       transactionId: 'selected',
     }
@@ -33,7 +30,7 @@ describe('detail result changes', () => {
   })
   it('treats quote provenance as a result change without changing the numeric rate', () => {
     const state = {
-      ...initialNavigation({ tab: 'calculation' }, session),
+      ...initialNavigation({}, session),
       page: 2,
     }
     const updated = synchronizeNavigation(state, {

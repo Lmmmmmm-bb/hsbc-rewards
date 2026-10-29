@@ -54,7 +54,7 @@ export function Dialog({
           'flex max-h-[90svh] flex-col overflow-hidden sm:max-w-xl',
           size === 'confirmation'
             ? ''
-            : 'h-[min(42rem,90svh)] min-h-[min(24rem,90svh)]',
+            : 'h-[min(42rem,90svh)] min-h-[min(24rem,90svh)] lg:h-[min(48rem,90svh)] lg:min-h-[min(32rem,90svh)]',
           className,
         )}
       >

@@ -45,7 +45,7 @@ export function RewardSummary({
       <CardContent>
         <ResultReveal
           trigger={hasResults ? revealKey : null}
-          className="space-y-4"
+          className="flex flex-col gap-4"
         >
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-sm font-medium">

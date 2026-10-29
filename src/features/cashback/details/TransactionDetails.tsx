@@ -1,22 +1,16 @@
-import { RiArrowRightSLine, RiFileTextLine } from '@remixicon/react'
 import type { ResultTransaction } from '@/application/results/transactions'
 import { componentExplanation } from '@/application/results/transactions'
 import type { Statement } from '@/domain/model/types'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { TransactionSources } from './TransactionSources'
 import { useI18n } from '@/i18n/use-i18n'
 import { reasonMessage } from '../reason-messages'
 
 export function TransactionDetails({
   entry,
   statements,
-  onStatement,
-  onBack,
 }: {
   entry: Pick<ResultTransaction, 'row' | 'reward'>
   statements: readonly Statement[]
-  onStatement: (id: string) => void
-  onBack: () => void
 }) {
   const { t, date, money, rc, number, locale } = useI18n()
   const { row, reward } = entry
@@ -46,14 +40,6 @@ export function TransactionDetails({
   return (
     <div className="space-y-6" data-transaction-detail>
       <div className="space-y-4">
-        <div className="flex items-center justify-between gap-2">
-          <Button variant="outline" size="sm" onClick={onBack}>
-            {t('details.back')}
-          </Button>
-          <Badge variant="outline">
-            {t(`details.kind.${row.classification.kind}`)}
-          </Badge>
-        </div>
         <h3
           className="break-words text-lg font-semibold outline-none"
           tabIndex={-1}
@@ -138,51 +124,7 @@ export function TransactionDetails({
           })}
         </div>
       </section>
-      <section className="space-y-3">
-        <h4 className="font-semibold text-primary">{t('details.sources')}</h4>
-        {row.sources.map((source, index) => {
-          const statement = statements.find(
-            (item) => item.id === source.statementId,
-          )
-          return (
-            <div key={index} className="border">
-              <Button
-                variant="ghost"
-                className="h-auto w-full items-start justify-between gap-3 p-3 text-left whitespace-normal"
-                onClick={() => onStatement(source.statementId)}
-              >
-                <span className="flex min-w-0 items-start gap-3">
-                  <RiFileTextLine
-                    className="mt-0.5 size-4 shrink-0 text-muted-foreground"
-                    aria-hidden="true"
-                  />
-                  <span className="min-w-0 space-y-1">
-                    <span className="block break-all text-sm font-medium">
-                      {statement?.fileName ?? t('details.sourceUnavailable')}
-                    </span>
-                    <span className="block text-xs font-normal text-muted-foreground">
-                      {statement && `${date(statement.date)} · `}
-                      {t('details.sourcePage', { page: source.page })}
-                    </span>
-                  </span>
-                </span>
-                <RiArrowRightSLine
-                  className="size-4 shrink-0 text-muted-foreground"
-                  aria-hidden="true"
-                />
-              </Button>
-              <details className="border-t bg-muted/20 p-3">
-                <summary className="cursor-pointer text-xs font-medium">
-                  {t('details.sourceText')}
-                </summary>
-                <p className="mt-3 text-xs leading-relaxed whitespace-pre-wrap break-all">
-                  {source.text}
-                </p>
-              </details>
-            </div>
-          )
-        })}
-      </section>
+      <TransactionSources sources={row.sources} statements={statements} />
     </div>
   )
 }

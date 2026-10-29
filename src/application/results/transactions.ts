@@ -9,6 +9,7 @@ export interface TransactionFilter {
   readonly flags?: readonly TransactionFlag[]
   readonly reason?: string
   readonly warning?: string
+  readonly reconciliation?: 'mismatch' | 'unverified'
 }
 
 /** Flags match within the same component, shared by UI filters and Agent pagination. */
@@ -17,8 +18,16 @@ export function selectTransactions(
   filter: TransactionFilter = {},
 ) {
   const byId = new Map(scope.rows.map((row) => [row.id, row]))
+  const balanceIds = filter.reconciliation
+    ? new Set(
+        scope.reconciliations
+          .filter(({ account }) => account.status === filter.reconciliation)
+          .flatMap(({ account }) => account.transactionIds),
+      )
+    : null
   return scope.rewards.flatMap((reward) => {
     const row = byId.get(reward.transactionId)!
+    if (balanceIds && !balanceIds.has(row.id)) return []
     if (
       filter.warning &&
       !row.warnings.some((warning) => warning.code === filter.warning)

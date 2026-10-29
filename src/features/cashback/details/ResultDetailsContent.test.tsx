@@ -6,6 +6,7 @@ import { LanguageSwitcher } from '@/components/workspace/LanguageSwitcher'
 import { I18nProvider } from '@/i18n/I18nProvider'
 import { deriveWorkspace } from '@/application/session/selectors'
 import { createDemoDataset } from '@/application/demo/dataset'
+import type { ResultDetailsRequest } from '@/application/results/details'
 import type { SessionState } from '@/application/session/types'
 import { ResultDetailsContent } from './ResultDetailsContent'
 
@@ -19,7 +20,7 @@ afterEach(async () => {
   vi.unstubAllGlobals()
 })
 
-it('preserves filters across language and result changes, resets paging, and follows source statements', async () => {
+it('keeps filters and pagination outside records, preserves language state, and restores list focus', async () => {
   dom = new JSDOM('<!doctype html><div id="root"></div>', {
     url: 'https://rewards.lmmmmmm.dev/',
     pretendToBeVisual: true,
@@ -54,13 +55,18 @@ it('preserves filters across language and result changes, resets paging, and fol
     mode: 'demo',
     fx: { source: 'demo', stale: false, hkdToCnyPpm: 900000 },
   }
-  const render = async (current: SessionState) =>
+  const render = async (
+    current: SessionState,
+    request: ResultDetailsRequest = {},
+    instance = 'all',
+  ) =>
     act(async () =>
       root!.render(
         <I18nProvider initialLocale="en-US">
           <LanguageSwitcher />
           <ResultDetailsContent
-            request={{ tab: 'transactions' }}
+            key={instance}
+            request={request}
             session={current}
             workspace={deriveWorkspace(current)}
           />
@@ -75,13 +81,28 @@ it('preserves filters across language and result changes, resets paging, and fol
     await act(async () => button!.click())
   }
   await render(session)
-  const scroll = container.querySelector('[data-details-scroll]')!
-  const note = () => container.querySelector('[data-detail-footnote]')!
-  expect(scroll.contains(note())).toBe(false)
-  expect(note().textContent).toContain('Filters display rewards')
+  const region = () =>
+    container.querySelector(
+      '[data-details-scroll] [role="region"]',
+    ) as HTMLElement
+  expect(container.querySelector('[role="tablist"]')).toBeNull()
+  expect(
+    region().contains(container.querySelector('[data-detail-filters]')),
+  ).toBe(false)
+  expect(
+    region().contains(container.querySelector('[data-detail-pagination]')),
+  ).toBe(false)
+  expect(
+    region().contains(container.querySelector('[data-detail-footnote]')),
+  ).toBe(false)
   expect(container.textContent).toContain('Page 1 of 2')
+  region().scrollTop = 120
   await click('Next')
   expect(container.textContent).toContain('Page 2 of 2')
+  expect(region().scrollTop).toBe(0)
+  expect(
+    window.document.activeElement?.closest('[data-detail-pagination]'),
+  ).not.toBeNull()
   await click('简体中文')
   expect(container.textContent).toContain('第 2 / 2 页')
   await click('English')
@@ -97,58 +118,33 @@ it('preserves filters across language and result changes, resets paging, and fol
   })
   expect(container.textContent).toContain('Page 1 of 2')
   expect(container.textContent).toContain('Results have changed')
-  await click('PULSE exclusive')
-  await click('Capped')
+  await render(session, { component: 'pulse', flags: ['capped'] }, 'filtered')
+  await click('简体中文')
+  await click('English')
   expect(
     container.querySelectorAll('[data-transaction-id]').length,
   ).toBeGreaterThan(0)
+  region().scrollTop = 120
   await act(async () =>
     (container.querySelector('[data-transaction-id]') as HTMLElement).click(),
   )
   expect(container.querySelector('[data-transaction-detail]')).not.toBeNull()
-  const source = [...container.querySelectorAll('button')].find((item) =>
-    item.textContent?.includes('.pdf'),
-  )!
-  await act(async () => source.click())
-  expect(container.querySelector('[data-statement-detail]')).not.toBeNull()
-  expect(note().textContent).toContain(
-    'Balance checks cover complete source statements',
-  )
-  expect(container.textContent).toContain('Calculated closing balance')
-  await click('Back')
-  expect(container.querySelector('[data-transaction-detail]')).not.toBeNull()
-  await click('Back')
-  expect(container.querySelector('[aria-pressed="true"]')?.textContent).toBe(
-    'All cards',
-  )
   expect(
-    [...container.querySelectorAll('[aria-pressed="true"]')].map(
-      (item) => item.textContent,
-    ),
+    window.document.activeElement?.hasAttribute('data-detail-heading'),
+  ).toBe(true)
+  const sources = container.querySelector('[data-transaction-sources]')!
+  expect(sources.textContent).toContain('.pdf')
+  expect(sources.textContent).toContain('Statement date')
+  expect(sources.querySelector('button')).toBeNull()
+  expect(sources.querySelector('details')).not.toBeNull()
+  await click('Back')
+  expect(
+    container.querySelector(
+      '[role="combobox"][aria-label="Calculation status"]',
+    )?.textContent,
   ).toContain('Capped')
   expect(
     window.document.activeElement?.hasAttribute('data-transaction-id'),
   ).toBe(true)
-  await click('Balance checks')
-  await act(async () =>
-    (container.querySelector('[data-statement-id]') as HTMLElement).click(),
-  )
-  await act(async () =>
-    (
-      container.querySelector('[data-source-transaction-id]') as HTMLElement
-    ).click(),
-  )
-  await click('Back')
-  expect(
-    window.document.activeElement?.hasAttribute('data-source-transaction-id'),
-  ).toBe(true)
-  await click('Back')
-  expect(window.document.activeElement?.hasAttribute('data-statement-id')).toBe(
-    true,
-  )
-  await click('Calculation and basis')
-  expect(note().textContent).toContain(
-    'Calculations retain six RC decimal places',
-  )
-  expect(scroll.contains(note())).toBe(false)
+  expect(region().scrollTop).toBe(120)
 })

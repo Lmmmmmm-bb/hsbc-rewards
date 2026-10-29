@@ -134,7 +134,6 @@ export function RewardCard({
             tiers={card.tiers}
             onReason={(component, reason) =>
               onDetails({
-                tab: 'transactions',
                 cardId: card.cardId,
                 component,
                 reason,
@@ -145,9 +144,7 @@ export function RewardCard({
         <Button
           variant="outline"
           size="sm"
-          onClick={() =>
-            onDetails({ tab: 'transactions', cardId: card.cardId })
-          }
+          onClick={() => onDetails({ cardId: card.cardId })}
           aria-haspopup="dialog"
         >
           {t('details.card')}

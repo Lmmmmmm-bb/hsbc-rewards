@@ -30,11 +30,28 @@ export function RewardQualityAlerts({
       <AlertDescription>
         <ul className="space-y-2">
           {active.map(([key, message]) => (
-            <li key={key} className="space-y-1">{t(message, { count: quality[key] })}{' '}
-              <Button variant="link" className="h-auto p-0" onClick={() => onDetails(key === 'unverifiedAccounts'
-                ? { tab: 'statements', reconciliation: 'unverified' }
-                : { tab: 'transactions', ...(key === 'uncertainEligibilityCount' ? { flags: ['uncertain'] as const }
-                  : { warning: key === 'possibleDuplicateCount' ? 'transaction.possible-duplicate' : 'transaction.reference-conflict' }) })}>{t('details.inspect')}</Button>
+            <li key={key} className="space-y-1">
+              {t(message, { count: quality[key] })}{' '}
+              <Button
+                variant="link"
+                className="h-auto p-0"
+                onClick={() =>
+                  onDetails(
+                    key === 'unverifiedAccounts'
+                      ? { reconciliation: 'unverified' }
+                      : key === 'uncertainEligibilityCount'
+                        ? { flags: ['uncertain'] as const }
+                        : {
+                            warning:
+                              key === 'possibleDuplicateCount'
+                                ? 'transaction.possible-duplicate'
+                                : 'transaction.reference-conflict',
+                          },
+                  )
+                }
+              >
+                {t('details.inspect')}
+              </Button>
             </li>
           ))}
         </ul>

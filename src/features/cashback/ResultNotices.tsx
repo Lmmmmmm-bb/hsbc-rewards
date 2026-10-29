@@ -19,7 +19,7 @@ export function ResultNotices({
   const open = (request: ResultDetailsRequest) =>
     onDetails({ ...request, periodId: scope.periodId })
   return (
-    <div className="space-y-3" data-result-notices>
+    <>
       {importActive && (
         <Alert role="status">
           <AlertDescription>{t('basis.pendingImport')}</AlertDescription>
@@ -31,15 +31,13 @@ export function ResultNotices({
           <Button
             variant="link"
             className="h-auto p-0"
-            onClick={() =>
-              open({ tab: 'statements', reconciliation: 'mismatch' })
-            }
+            onClick={() => open({ reconciliation: 'mismatch' })}
           >
             {t('details.inspect')}
           </Button>
         </ErrorNotice>
       )}
       <RewardQualityAlerts quality={scope.view.quality} onDetails={open} />
-    </div>
+    </>
   )
 }

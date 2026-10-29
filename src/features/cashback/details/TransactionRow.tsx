@@ -6,12 +6,10 @@ import { useI18n } from '@/i18n/use-i18n'
 export function TransactionRow({
   entry,
   cardLabel,
-  source = false,
   onSelect,
 }: {
   entry: Pick<ResultTransaction, 'row' | 'reward'>
   cardLabel?: string
-  source?: boolean
   onSelect: (id: string) => void
 }) {
   const { t, date, money, rcSummary } = useI18n()
@@ -20,8 +18,7 @@ export function TransactionRow({
     <Button
       variant="ghost"
       className="h-auto w-full items-center justify-between gap-3 px-2 py-4 text-left whitespace-normal"
-      data-transaction-id={source ? undefined : row.id}
-      data-source-transaction-id={source ? row.id : undefined}
+      data-transaction-id={row.id}
       onClick={() => onSelect(row.id)}
     >
       <span className="min-w-0 space-y-1.5">
@@ -39,7 +36,7 @@ export function TransactionRow({
       </span>
       <span className="flex shrink-0 items-center gap-2">
         <span className="max-w-36 text-right tabular-nums">
-          <span className="block text-xs font-normal text-muted-foreground">
+          <span className="hidden text-xs font-normal text-muted-foreground sm:block">
             {t('details.transactionReward')}
           </span>
           <span className="mt-1 block text-base font-semibold">

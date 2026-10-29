@@ -1,20 +1,12 @@
-import type {
-  ResultDetailsRequest,
-  DetailTab,
-} from '@/application/results/details'
+import type { ResultDetailsRequest } from '@/application/results/details'
 import type { SessionState } from '@/application/session/types'
 import type { TransactionFilter } from '@/application/results/transactions'
 
 export interface DetailNavigation {
-  readonly tab: DetailTab
   readonly cardId: string | null
   readonly filter: TransactionFilter
   readonly page: number
-  readonly sourcePage: number
   readonly transactionId: string | null
-  readonly statementId: string | null
-  readonly returnTransactionId: string | null
-  readonly returnStatementId: string | null
   readonly dataset: SessionState['dataset']
   readonly fxIdentity: string
   readonly updated: boolean
@@ -25,20 +17,16 @@ export function initialNavigation(
   session: SessionState,
 ): DetailNavigation {
   return {
-    tab: request.tab,
     cardId: request.cardId ?? null,
     filter: {
       component: request.component,
       flags: request.flags,
       reason: request.reason,
       warning: request.warning,
+      reconciliation: request.reconciliation,
     },
     page: 0,
-    sourcePage: 0,
     transactionId: null,
-    statementId: null,
-    returnTransactionId: null,
-    returnStatementId: null,
     dataset: session.dataset,
     fxIdentity: JSON.stringify(session.fx),
     updated: false,
@@ -58,7 +46,6 @@ export function synchronizeNavigation(
     dataset: session.dataset,
     fxIdentity,
     page: 0,
-    sourcePage: 0,
     updated: true,
   }
 }

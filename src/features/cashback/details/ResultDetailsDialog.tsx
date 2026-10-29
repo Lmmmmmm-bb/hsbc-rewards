@@ -27,7 +27,6 @@ export function ResultDetailsDialog({
   return (
     <Dialog
       title={t('details.title')}
-      description={t('details.hint')}
       onClose={onClose}
       className="sm:max-w-4xl"
       scrollBody={false}

@@ -1,22 +1,16 @@
 import { useLayoutEffect, useRef, useState } from 'react'
-import type {
-  ResultDetailsRequest,
-  DetailTab,
-} from '@/application/results/details'
+import type { ResultDetailsRequest } from '@/application/results/details'
 import { selectResultScope } from '@/application/results/scope'
 import { selectTransactions } from '@/application/results/transactions'
 import type { SessionState } from '@/application/session/types'
 import type { WorkspaceView } from '@/application/session/selectors'
-import { DialogTabsList, DialogTab } from '@/components/workspace/DialogTabs'
-import { Tabs, TabsContent } from '@/components/ui/tabs'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { DetailFootnote } from './DetailFootnote'
 import { usePdfImport } from '@/store/use-pdf-import'
 import { useI18n } from '@/i18n/use-i18n'
-import { CalculationDetails } from './CalculationDetails'
 import { TransactionList } from './TransactionList'
 import { TransactionDetails } from './TransactionDetails'
-import { StatementDetails } from './StatementDetails'
 import { initialNavigation, synchronizeNavigation } from './navigation'
 
 export function ResultDetailsContent({
@@ -32,8 +26,6 @@ export function ResultDetailsContent({
   const { batch } = usePdfImport()
   const host = useRef<HTMLDivElement>(null)
   const listPosition = useRef({ scroll: 0, focusId: '', restore: false })
-  const statementPosition = useRef({ scroll: 0, focusId: '', restore: false })
-  const sourcePosition = useRef({ scroll: 0, focusId: '', restore: false })
   const [stored, set] = useState(() => initialNavigation(request, session))
   const state = synchronizeNavigation(stored, session)
   if (state !== stored) set(state)
@@ -44,79 +36,22 @@ export function ResultDetailsContent({
   const scope = selectResultScope(session, workspace, {
     periodId: periodExists ? request.periodId : 'all',
   })
-  const cardExists =
-    !state.cardId || scope.cards.some((card) => card.cardId === state.cardId)
-  const selectedScope = cardExists
-    ? selectResultScope(session, workspace, {
-        periodId: scope.periodId,
-        cardId: state.cardId,
-      })
-    : null
   const entry = state.transactionId
-    ? selectTransactions(selectResultScope(session, workspace)).find(
+    ? selectTransactions(scope).find(
         ({ row }) => row.id === state.transactionId,
       )
     : undefined
-  const tabs: readonly DetailTab[] = [
-    'calculation',
-    'transactions',
-    'statements',
-  ]
 
   useLayoutEffect(() => {
-    if (sourcePosition.current.restore && state.statementId) {
-      sourcePosition.current.restore = false
-      const item = [
-        ...(host.current?.querySelectorAll<HTMLElement>(
-          '[data-source-transaction-id]',
-        ) ?? []),
-      ].find(
-        (element) =>
-          element.dataset.sourceTransactionId ===
-          sourcePosition.current.focusId,
-      )
-      item?.focus({ preventScroll: true })
-      const region = host.current?.querySelector<HTMLElement>(
-        '[data-details-scroll] [role="region"]',
-      )
-      if (region) region.scrollTop = sourcePosition.current.scroll
-      return
-    }
-    const heading = host.current?.querySelector<HTMLElement>(
-      '[data-detail-heading]',
+    const region = host.current?.querySelector<HTMLElement>(
+      '[data-details-scroll] [role="region"]',
     )
-    if (heading) {
-      const region = host.current?.querySelector<HTMLElement>(
-        '[data-details-scroll] [role="region"]',
-      )
+    if (state.transactionId) {
       if (region) region.scrollTop = 0
-      heading.focus({ preventScroll: true })
-    } else if (
-      statementPosition.current.restore &&
-      state.tab === 'statements' &&
-      !state.statementId
-    ) {
-      statementPosition.current.restore = false
-      const item = [
-        ...(host.current?.querySelectorAll<HTMLElement>(
-          '[data-statement-id]',
-        ) ?? []),
-      ].find(
-        (element) =>
-          element.dataset.statementId === statementPosition.current.focusId,
-      )
-      item?.focus({ preventScroll: true })
-      const region = host.current?.querySelector<HTMLElement>(
-        '[data-details-scroll] [role="region"]',
-      )
-      if (region) region.scrollTop = statementPosition.current.scroll
-    } else if (
-      listPosition.current.restore &&
-      state.tab === 'transactions' &&
-      !state.transactionId &&
-      !state.statementId &&
-      listPosition.current.focusId
-    ) {
+      host.current
+        ?.querySelector<HTMLElement>('[data-detail-heading]')
+        ?.focus({ preventScroll: true })
+    } else if (listPosition.current.restore) {
       listPosition.current.restore = false
       const item = [
         ...(host.current?.querySelectorAll<HTMLElement>(
@@ -127,12 +62,16 @@ export function ResultDetailsContent({
           element.dataset.transactionId === listPosition.current.focusId,
       )
       item?.focus({ preventScroll: true })
-      const region = host.current?.querySelector<HTMLElement>(
-        '[data-details-scroll] [role="region"]',
-      )
       if (region) region.scrollTop = listPosition.current.scroll
-    }
-  }, [state.transactionId, state.statementId, state.tab])
+    } else if (region) region.scrollTop = 0
+  }, [
+    state.transactionId,
+    state.page,
+    state.cardId,
+    state.filter,
+    state.dataset,
+    state.fxIdentity,
+  ])
 
   if (!periodExists) return <p>{t('details.objectMissing')}</p>
   return (
@@ -150,184 +89,85 @@ export function ResultDetailsContent({
           : t('period.all')}
       </p>
       {state.updated && (
-        <p role="status" className="text-xs">
+        <p role="status" className="shrink-0 text-xs">
           {t('details.updated')}
         </p>
       )}
       {batch.active && (
-        <p role="status" className="text-xs">
+        <p role="status" className="shrink-0 text-xs">
           {t('basis.pendingImport')}
         </p>
       )}
-      <Tabs
-        className="min-h-0 flex-1 gap-3"
-        value={state.tab}
-        onValueChange={(value) =>
-          set({
-            ...state,
-            tab: value as DetailTab,
-            transactionId: null,
-            statementId: null,
-            returnTransactionId: null,
-            returnStatementId: null,
-          })
-        }
-      >
-        <DialogTabsList className="shrink-0" aria-label={t('details.title')}>
-          {tabs.map((tab) => (
-            <DialogTab key={tab} value={tab}>
-              {t(`details.tab.${tab}`)}
-            </DialogTab>
-          ))}
-        </DialogTabsList>
-        <ScrollArea
-          className="min-h-0 flex-1"
-          data-details-scroll
-          viewportProps={{
-            role: 'region',
-            'aria-label': t('details.title'),
-            tabIndex: 0,
-            className: 'overscroll-y-contain',
-          }}
-        >
-          <div className="pr-3">
-            <TabsContent value="calculation" className="text-sm">
-              {selectedScope ? (
-                <CalculationDetails scope={selectedScope} />
-              ) : (
-                <p>{t('details.objectMissing')}</p>
-              )}
-            </TabsContent>
-            <TabsContent value="transactions" className="text-sm">
-              {state.transactionId ? (
-                entry ? (
-                  <>
-                    {!scope.rows.some((row) => row.id === entry.row.id) && (
-                      <p className="mb-3 text-xs text-muted-foreground">
-                        {t('details.outsideScope')}
-                      </p>
-                    )}
-                    <TransactionDetails
-                      entry={entry}
-                      statements={session.dataset.statements}
-                      onBack={() => {
-                        sourcePosition.current.restore = Boolean(
-                          state.returnStatementId,
-                        )
-                        listPosition.current.restore = !state.returnStatementId
-                        set({
-                          ...state,
-                          transactionId: null,
-                          statementId: state.returnStatementId,
-                          tab: state.returnStatementId
-                            ? 'statements'
-                            : 'transactions',
-                          returnStatementId: null,
-                        })
-                      }}
-                      onStatement={(id) =>
-                        set({
-                          ...state,
-                          tab: 'statements',
-                          statementId: id,
-                          sourcePage: 0,
-                          returnTransactionId: state.transactionId,
-                          transactionId: null,
-                        })
-                      }
-                    />
-                  </>
-                ) : (
-                  <p>{t('details.objectMissing')}</p>
-                )
-              ) : (
-                <TransactionList
-                  scope={scope}
-                  cardId={state.cardId}
-                  filter={state.filter}
-                  page={state.page}
-                  onCard={(cardId) => set({ ...state, cardId, page: 0 })}
-                  onFilter={(filter) => set({ ...state, filter, page: 0 })}
-                  onPage={(page) => set({ ...state, page })}
-                  onSelect={(id) => {
-                    listPosition.current = {
-                      scroll:
-                        host.current?.querySelector<HTMLElement>(
-                          '[data-details-scroll] [role="region"]',
-                        )?.scrollTop ?? 0,
-                      focusId: id,
-                      restore: false,
-                    }
-                    set({ ...state, transactionId: id })
-                  }}
-                />
-              )}
-            </TabsContent>
-            <TabsContent value="statements" className="text-sm">
-              {selectedScope ? (
-                <StatementDetails
-                  scope={selectedScope}
-                  session={session}
-                  workspace={workspace}
-                  statementId={state.statementId}
-                  status={request.reconciliation}
-                  page={state.sourcePage}
-                  onPage={(sourcePage) => set({ ...state, sourcePage })}
-                  onSelect={(id) => {
-                    statementPosition.current = {
-                      scroll:
-                        host.current?.querySelector<HTMLElement>(
-                          '[data-details-scroll] [role="region"]',
-                        )?.scrollTop ?? 0,
-                      focusId: id,
-                      restore: false,
-                    }
-                    set({
-                      ...state,
-                      statementId: id,
-                      sourcePage: 0,
-                      returnTransactionId: null,
-                    })
-                  }}
-                  onBack={() => {
-                    statementPosition.current.restore =
-                      !state.returnTransactionId
-                    set({
-                      ...state,
-                      statementId: null,
-                      transactionId: state.returnTransactionId,
-                      tab: state.returnTransactionId
-                        ? 'transactions'
-                        : 'statements',
-                      returnTransactionId: null,
-                    })
-                  }}
-                  onTransaction={(id) => {
-                    sourcePosition.current = {
-                      scroll:
-                        host.current?.querySelector<HTMLElement>(
-                          '[data-details-scroll] [role="region"]',
-                        )?.scrollTop ?? 0,
-                      focusId: id,
-                      restore: false,
-                    }
-                    set({
-                      ...state,
-                      tab: 'transactions',
-                      transactionId: id,
-                      returnStatementId: state.statementId,
-                      statementId: null,
-                    })
-                  }}
-                />
-              ) : (
-                <p>{t('details.objectMissing')}</p>
-              )}
-            </TabsContent>
+      {state.transactionId ? (
+        <>
+          <div className="flex shrink-0 items-center justify-between gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                listPosition.current.restore = true
+                set({ ...state, transactionId: null })
+              }}
+            >
+              {t('details.back')}
+            </Button>
+            {entry && (
+              <Badge variant="outline">
+                {t(`details.kind.${entry.row.classification.kind}`)}
+              </Badge>
+            )}
           </div>
-        </ScrollArea>
-        <DetailFootnote tab={state.tab} />
-      </Tabs>
+          <ScrollArea
+            className="min-h-0 flex-1"
+            data-details-scroll
+            viewportProps={{
+              role: 'region',
+              'aria-label': t('details.transactionInfo'),
+              tabIndex: 0,
+              className: 'overscroll-y-contain',
+            }}
+          >
+            <div className="pr-3 text-sm leading-relaxed">
+              {entry ? (
+                <TransactionDetails
+                  entry={entry}
+                  statements={session.dataset.statements}
+                />
+              ) : (
+                <p>{t('details.objectMissing')}</p>
+              )}
+            </div>
+          </ScrollArea>
+        </>
+      ) : (
+        <TransactionList
+          scope={scope}
+          cardId={state.cardId}
+          filter={state.filter}
+          page={state.page}
+          resultVersion={`${session.revision}:${state.fxIdentity}`}
+          onCard={(cardId) => set({ ...state, cardId, page: 0 })}
+          onFilter={(filter) => set({ ...state, filter, page: 0 })}
+          onPage={(page) => set({ ...state, page })}
+          onSelect={(id) => {
+            listPosition.current = {
+              scroll:
+                host.current?.querySelector<HTMLElement>(
+                  '[data-details-scroll] [role="region"]',
+                )?.scrollTop ?? 0,
+              focusId: id,
+              restore: false,
+            }
+            set({ ...state, transactionId: id })
+          }}
+        />
+      )}
+      <aside
+        data-detail-footnote
+        className="shrink-0 border-t pt-3 text-xs leading-relaxed text-muted-foreground"
+      >
+        <p>{t('details.note.transactions')}</p>
+      </aside>
     </div>
   )
 }

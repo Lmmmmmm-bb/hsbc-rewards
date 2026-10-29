@@ -8,7 +8,6 @@ import {
   selectTransactions,
   transactionPage,
 } from './transactions'
-import { statementTransactions, statementTransactionPage } from './statements'
 
 function setup(rows: SessionState['dataset']['transactions']) {
   const session: SessionState = {
@@ -85,24 +84,27 @@ describe('result detail queries', () => {
     expect(componentExplanation(pulse[1])).toBe('full')
     expect(pulse[1].microRc).toBe(0)
   })
-  it('returns complete source transactions when inspecting a half-year source', () => {
+  it('filters related balance issues using full-source account checks and current-period rows', () => {
     const { session, workspace } = setup([
       transaction({ id: 'june', transactionDate: '2026-06-30' }),
       transaction({ id: 'july', transactionDate: '2026-07-01' }),
+      transaction({
+        id: 'unrelated',
+        sources: [{ ...transaction().sources[0], statementId: 'other' }],
+      }),
     ])
     const scope = selectResultScope(session, workspace, { periodId: '2026-H1' })
-    expect(scope.rows).toHaveLength(1)
+    expect(scope.reconciliations[0].account.transactionIds).toEqual([
+      'june',
+      'july',
+    ])
     expect(
-      statementTransactions(session, workspace, scope, 'statement-a').map(
+      selectTransactions(scope, { reconciliation: 'mismatch' }).map(
         ({ row }) => row.id,
       ),
-    ).toEqual(['june', 'july'])
-  })
-
-  it('pages source transactions without changing the complete balance-check scope', () => {
-    const { session, workspace, scope } = setup(Array.from({ length: 25 }, (_, index) => transaction({ id: `source-${index}` })))
-    expect(statementTransactionPage(session, workspace, scope, 'statement-a', 0).entries).toHaveLength(20)
-    expect(statementTransactionPage(session, workspace, scope, 'statement-a', 1)).toMatchObject({ count: 25, current: 1, pages: 2 })
-    expect(scope.reconciliations[0].account.transactionIds).toHaveLength(25)
+    ).toEqual(['june'])
+    expect(selectTransactions(scope, { reconciliation: 'unverified' })).toEqual(
+      [],
+    )
   })
 })

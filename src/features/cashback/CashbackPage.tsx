@@ -104,9 +104,7 @@ export function CashbackPage({
             <>
               <RewardEvidence
                 scope={scope}
-                onDetails={() =>
-                  onDetails({ tab: 'calculation', periodId: selectedId })
-                }
+                onDetails={() => onDetails({ periodId: selectedId })}
               />
               <ResultNotices
                 scope={scope}
