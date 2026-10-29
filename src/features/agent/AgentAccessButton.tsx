@@ -40,7 +40,7 @@ export function AgentAccessButton({ status, onGrant }: {
         >
           <Button disabled tabIndex={-1} aria-hidden="true" className="w-full">{t('agent.allow')}</Button>
         </TooltipTrigger>
-        <TooltipContent id={tooltipId} role="tooltip" className="max-w-[min(20rem,calc(100vw-2rem))] leading-relaxed">
+        <TooltipContent id={tooltipId} role="tooltip" side="top" align="end" className="max-w-[min(20rem,calc(100vw-2rem))] leading-relaxed">
           {t(message)}
         </TooltipContent>
       </Tooltip>
