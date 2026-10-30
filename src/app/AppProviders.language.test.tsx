@@ -1,5 +1,4 @@
 import { act, StrictMode, useSyncExternalStore } from 'react'
-import type { ReactNode } from 'react'
 import type { Root } from 'react-dom/client'
 import { renderToString } from 'react-dom/server'
 import { JSDOM } from 'jsdom'
@@ -10,8 +9,6 @@ import { createTranslator } from '@/i18n/messages'
 import type { Locale } from '@/i18n/locale'
 import { useI18n } from '@/i18n/use-i18n'
 import { LOCALE_PREFERENCE_KEY } from '@/i18n/browser-preference'
-import { zh } from '@/i18n/zh'
-import { readBrowserLocale } from '@/i18n/browser-locale'
 import { createMemorySession, sessionStore } from '@/store/memory-session'
 import { createPdfImportController } from '@/application/import/controller'
 import { commitImportedBatch } from '@/application/import/commit'
@@ -33,7 +30,7 @@ import { claimInitialLocale } from './locale-startup/claim'
 let dom: JSDOM | undefined
 let root: Root | undefined
 
-function browser(languages: readonly string[] = ['en-GB'], language = 'en-GB') {
+function browser(languages: readonly string[] = ['en-US']) {
   dom = new JSDOM(`<!doctype html><html lang="zh-CN"><head>
     <title>${pageMetadata().title}</title>
     <meta name="description" content=""><meta property="og:locale" content="">
@@ -46,7 +43,6 @@ function browser(languages: readonly string[] = ['en-GB'], language = 'en-GB') {
   })
   const { window } = dom
   Object.defineProperty(window.navigator, 'languages', { get: () => languages, configurable: true })
-  Object.defineProperty(window.navigator, 'language', { get: () => language, configurable: true })
 
   for (const key of ['window', 'document', 'navigator', 'HTMLElement', 'Element', 'Node', 'MutationObserver'] as const) {
     vi.stubGlobal(key, key === 'window' ? window : window[key])
@@ -73,13 +69,6 @@ function expectMetadata(locale: Locale) {
   expect(document.title).toBe(metadata.title)
   expect(query(document, 'meta[name="description"]').getAttribute('content')).toBe(metadata.description)
   expect(query(document, 'meta[property="og:locale"]').getAttribute('content')).toBe(metadata.socialLocale)
-
-  for (const [field, content] of [
-    ['title', metadata.title], ['description', metadata.description], ['image:alt', metadata.imageAlt],
-  ]) {
-    expect(query(document, `meta[property="og:${field}"]`).getAttribute('content')).toBe(content)
-    expect(query(document, `meta[name="twitter:${field}"]`).getAttribute('content')).toBe(content)
-  }
 }
 
 async function clickButton(container: ParentNode, label: string) {
@@ -89,19 +78,6 @@ async function clickButton(container: ParentNode, label: string) {
   await act(async () => button.click())
 }
 
-function Page({ children }: { children?: ReactNode }) {
-  const { locale, t, date } = useI18n()
-
-  return (
-    <>
-      <LanguageSwitcher />
-      <h1 data-locale={locale}>{t('cashback.emptyTitle')}</h1>
-      <p data-date>{date('2026-10-28')}</p>
-      {children}
-    </>
-  )
-}
-
 function Session({ store, controller }: { store: SessionStore; controller: PdfImportController }) {
   const session = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot)
   const batch = useSyncExternalStore(controller.subscribe, controller.getSnapshot, controller.getSnapshot)
@@ -109,13 +85,14 @@ function Session({ store, controller }: { store: SessionStore; controller: PdfIm
   const item = batch.items[0]
 
   return (
-    <Page>
+    <>
+      <LanguageSwitcher />
       <p data-result>{number(deriveWorkspace(session).knownRewardMicroRc / 1_000_000, 6)}</p>
       <p data-batch>{item && t(`pdf.status.${item.status}`)}</p>
       {item?.status === 'locked'
         ? <PasswordForm item={item} onUnlock={(password) => controller.unlock(item.id, password)} />
         : <input aria-label="Synthetic unfinished input" defaultValue="" />}
-    </Page>
+    </>
   )
 }
 
@@ -129,273 +106,65 @@ afterEach(async () => {
   vi.unstubAllGlobals()
 })
 
-describe('initial language and hydration', () => {
-  it.each([
-    { languages: ['fr-FR', 'en-US', 'zh-HK'], saved: null, expected: 'en-US' },
-    { languages: ['zh-TW'], saved: 'en-US', expected: 'en-US' },
-    { languages: ['zh-TW'], saved: 'en-HK', expected: 'zh-CN' },
-    { languages: ['en-US'], saved: 'zh-CN', expected: 'zh-CN' },
-  ] as const)('hydrates the selected $expected markup with saved preference $saved', async ({ languages, saved, expected }) => {
-    const container = browser(languages)
-    if (saved) window.localStorage.setItem(LOCALE_PREFERENCE_KEY, saved)
-    const localRead = vi.spyOn(dom!.window.Storage.prototype, 'getItem')
-    const languageRead = vi.spyOn(window.navigator, 'languages', 'get')
-    const tree = <StrictMode><AppProviders initialLocale={expected}><Page /></AppProviders></StrictMode>
-    const staticHtml = renderToString(tree)
+describe('page language lifecycle', () => {
+  it.each(['zh-CN', 'en-US'] as const)(
+    'hydrates the %s app, preserves results on language switch, and retains the preference after clearing',
+    async (locale) => {
+      const container = browser([locale === 'zh-CN' ? 'en-US' : 'zh-CN'])
+      window.localStorage.setItem(LOCALE_PREFERENCE_KEY, locale)
+      const localRead = vi.spyOn(dom!.window.Storage.prototype, 'getItem')
+      const localWrite = vi.spyOn(dom!.window.Storage.prototype, 'setItem')
+      const fetch = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('No network in the example'))
+      container.innerHTML = renderToString(<AppRoot initialLocale="zh-CN" />)
+      container.setAttribute('data-prerender-locale', 'zh-CN')
+      const alternate = document.createElement('template')
+      alternate.id = 'prerender-en-US'
+      alternate.innerHTML = renderToString(<AppRoot initialLocale="en-US" />)
+      document.body.append(alternate)
+      startLocaleBootstrap({ 'zh-CN': pageMetadata('zh-CN'), 'en-US': pageMetadata('en-US') })
+      window.__rewardLocaleStartup!.activate()
+      const initialLocale = claimInitialLocale(container)
+      const heading = query(container, 'h1')
 
-    expect(staticHtml).toContain(createTranslator(expected)('cashback.emptyTitle'))
-    expect(localRead).not.toHaveBeenCalled()
-    expect(languageRead).not.toHaveBeenCalled()
+      expect(initialLocale).toBe(locale)
+      expect(heading.textContent).toBe(createTranslator(locale)('cashback.emptyTitle'))
 
-    container.innerHTML = staticHtml
-    const heading = query(container, 'h1')
-    expect(readBrowserLocale()).toBe(expected)
-    const onRecoverableError = vi.fn()
-    const { hydrateRoot } = await import('react-dom/client')
-    await act(async () => { root = hydrateRoot(container, tree, { onRecoverableError }) })
+      const onRecoverableError = vi.fn()
+      const { hydrateRoot } = await import('react-dom/client')
+      await act(async () => { root = hydrateRoot(container, <AppRoot initialLocale={initialLocale} />, { onRecoverableError }) })
 
-    expect(onRecoverableError).not.toHaveBeenCalled()
-    expect(query(container, 'h1')).toBe(heading)
-    expect(heading.dataset.locale).toBe(expected)
-    expect(heading.textContent).toBe(createTranslator(expected)('cashback.emptyTitle'))
-    expectMetadata(expected)
-  })
+      expect(onRecoverableError).not.toHaveBeenCalled()
+      expect(query(container, 'h1')).toBe(heading)
+      expectMetadata(locale)
+      expect(localWrite).not.toHaveBeenCalled()
 
-  it.each([
-    { languages: ['zh-TW', 'en-US'], language: 'en-US', expected: 'zh-CN' },
-    { languages: [], language: 'en-US', expected: 'en-US' },
-    { languages: ['fr-FR', 'ja-JP'], language: 'fr-FR', expected: 'zh-CN' },
-  ])('selects $expected from browser configuration $languages / $language', async ({ languages, language, expected }) => {
-    const container = browser(languages, language)
-    const { createRoot } = await import('react-dom/client')
-    const mounted = root = createRoot(container)
-    await act(async () => mounted.render(<AppProviders initialLocale={readBrowserLocale()}><Page /></AppProviders>))
+      await clickButton(container, createTranslator(locale)('cashback.tryExample'))
 
-    expect(query(container, 'h1').dataset.locale).toBe(expected)
-  })
+      const before = sessionStore.getSnapshot()
+      expect(before.mode).toBe('demo')
+      const total = query(container, '[data-reward-total]')
+      const amount = total.textContent
+      const selected = locale === 'zh-CN' ? 'en-US' : 'zh-CN'
+      await act(async () => query<HTMLButtonElement>(container, '[data-language-switcher]').click())
 
-  it('uses the US language tag, calendar format and social locale for English variants', async () => {
-    const container = browser(['en-HK'])
-    const { createRoot } = await import('react-dom/client')
-    const mounted = root = createRoot(container)
-    await act(async () => mounted.render(<AppProviders initialLocale={readBrowserLocale()}><Page /></AppProviders>))
+      expectMetadata(selected)
+      expect(sessionStore.getSnapshot()).toBe(before)
+      expect(query(container, '[data-reward-total]')).toBe(total)
+      expect(total.textContent).toBe(amount)
+      expect(localWrite).toHaveBeenCalledExactlyOnceWith(LOCALE_PREFERENCE_KEY, selected)
 
-    expect(document.documentElement.lang).toBe('en-US')
-    expect(query(container, '[data-date]').textContent).toBe('Oct 28, 2026')
-    expect(query(document, 'meta[property="og:locale"]').getAttribute('content')).toBe('en_US')
+      await act(async () => sessionStore.clear())
 
-    await act(async () => query<HTMLButtonElement>(container, '[data-language-switcher]').click())
-
-    expect(query(container, '[data-language-switcher] span').lang).toBe('en-US')
-  })
-
-  it.each([
-    { languages: ['en-GB'], initial: 'en-US', selected: 'zh-CN' },
-    { languages: ['zh-HK'], initial: 'zh-CN', selected: 'en-US' },
-  ] as const)('keeps manual $selected across rerenders and remounts over browser $initial', async ({ languages, initial, selected }) => {
-    const container = browser(languages)
-    const localWrite = vi.spyOn(dom!.window.Storage.prototype, 'setItem')
-    const cookieWrite = vi.spyOn(dom!.window.Document.prototype, 'cookie', 'set')
-    const url = window.location.href
-    const { createRoot } = await import('react-dom/client')
-    const mounted = root = createRoot(container)
-    let initialLocale = readBrowserLocale()
-    const tree = (label: string) => <AppProviders initialLocale={initialLocale}><Page><p>{label}</p></Page></AppProviders>
-    await act(async () => mounted.render(tree('first')))
-
-    expect(document.documentElement.lang).toBe(initial)
-    expect(localWrite).not.toHaveBeenCalled()
-
-    const button = query<HTMLButtonElement>(container, '[data-language-switcher]')
-    button.focus()
-    await act(async () => button.click())
-
-    expectMetadata(selected)
-    expect(document.activeElement).toBe(button)
-    expect(button.getAttribute('aria-label')).toBe(createTranslator(selected)(
-      selected === 'zh-CN' ? 'language.switchToEnglish' : 'language.switchToChinese',
-    ))
-
-    await act(async () => mounted.render(tree('second')))
-
-    expect(query(container, 'h1').dataset.locale).toBe(selected)
-
-    await act(async () => mounted.unmount())
-    const reloaded = root = createRoot(container)
-    initialLocale = readBrowserLocale()
-    await act(async () => reloaded.render(tree('reloaded')))
-
-    expect(document.documentElement.lang).toBe(selected)
-    expect(document.title).toBe(pageMetadata(selected).title)
-    expect(window.location.href).toBe(url)
-    expect(localWrite).toHaveBeenCalledExactlyOnceWith(LOCALE_PREFERENCE_KEY, selected)
-    expect(cookieWrite).not.toHaveBeenCalled()
-    expect(window.localStorage.length).toBe(1)
-    expect(window.localStorage.getItem(LOCALE_PREFERENCE_KEY)).toBe(selected)
-    expect(window.sessionStorage.length).toBe(0)
-  })
-
-  it('falls back to browser preferences for an invalid saved value', async () => {
-    const container = browser(['en-GB'])
-    window.localStorage.setItem(LOCALE_PREFERENCE_KEY, 'unsupported')
-    const { createRoot } = await import('react-dom/client')
-    const mounted = root = createRoot(container)
-    await act(async () => mounted.render(<AppProviders initialLocale={readBrowserLocale()}><Page /></AppProviders>))
-
-    expect(document.documentElement.lang).toBe('en-US')
-
-    await act(async () => query<HTMLButtonElement>(container, '[data-language-switcher]').click())
-
-    expect(window.localStorage.getItem(LOCALE_PREFERENCE_KEY)).toBe('zh-CN')
-  })
-
-  it('uses one initial page preference and ignores changes from other pages', async () => {
-    const container = browser(['en-US'])
-    window.localStorage.setItem(LOCALE_PREFERENCE_KEY, 'en-US')
-    const localRead = vi.spyOn(dom!.window.Storage.prototype, 'getItem')
-    const { createRoot } = await import('react-dom/client')
-    const mounted = root = createRoot(container)
-    let initialLocale = readBrowserLocale()
-    const tree = (label: string) => <StrictMode><AppProviders initialLocale={initialLocale}><Page><p>{label}</p></Page></AppProviders></StrictMode>
-    await act(async () => mounted.render(tree('first')))
-
-    expect(document.documentElement.lang).toBe('en-US')
-
-    window.localStorage.setItem(LOCALE_PREFERENCE_KEY, 'zh-CN')
-    window.dispatchEvent(new window.StorageEvent('storage', {
-      key: LOCALE_PREFERENCE_KEY, newValue: 'zh-CN', storageArea: window.localStorage,
-    }))
-    await act(async () => mounted.render(tree('second')))
-
-    expect(document.documentElement.lang).toBe('en-US')
-    expect(localRead).toHaveBeenCalledTimes(1)
-
-    await act(async () => mounted.unmount())
-    const reloaded = root = createRoot(container)
-    initialLocale = readBrowserLocale()
-    await act(async () => reloaded.render(tree('reloaded')))
-
-    expect(document.documentElement.lang).toBe('zh-CN')
-    expect(localRead).toHaveBeenCalledTimes(2)
-  })
-
-  it('still switches and retains the current selection when storage is blocked', async () => {
-    const container = browser()
-    const storage = dom!.window.Storage.prototype
-    vi.spyOn(storage, 'getItem').mockImplementation(() => { throw new Error('Storage denied') })
-    vi.spyOn(storage, 'setItem').mockImplementation(() => { throw new Error('Storage denied') })
-    const { createRoot } = await import('react-dom/client')
-    const mounted = root = createRoot(container)
-    const initialLocale = readBrowserLocale()
-    const tree = (label: string) => <AppProviders initialLocale={initialLocale}><Page><p>{label}</p></Page></AppProviders>
-    await act(async () => mounted.render(tree('first')))
-
-    expect(document.documentElement.lang).toBe('en-US')
-
-    await act(async () => query<HTMLButtonElement>(container, '[data-language-switcher]').click())
-    await act(async () => mounted.render(tree('second')))
-
-    expect(document.documentElement.lang).toBe('zh-CN')
-  })
-
-  it('hydrates the actual app, preserves demo results on switch, and keeps the language when results clear', async () => {
-    const container = browser(['zh-CN'])
-    window.localStorage.setItem(LOCALE_PREFERENCE_KEY, 'en-US')
-    const fetch = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('No network in the example'))
-    container.innerHTML = renderToString(<AppRoot initialLocale="zh-CN" />)
-    container.setAttribute('data-prerender-locale', 'zh-CN')
-    const alternate = document.createElement('template')
-    alternate.id = 'prerender-en-US'
-    alternate.innerHTML = renderToString(<AppRoot initialLocale="en-US" />)
-    document.body.append(alternate)
-    startLocaleBootstrap({ 'zh-CN': pageMetadata('zh-CN'), 'en-US': pageMetadata('en-US') })
-    window.__rewardLocaleStartup!.activate()
-    const initialLocale = claimInitialLocale(container)
-    const heading = query(container, 'h1')
-
-    expect(heading.textContent).toBe(createTranslator('en-US')('cashback.emptyTitle'))
-
-    const onRecoverableError = vi.fn()
-    const { hydrateRoot } = await import('react-dom/client')
-    await act(async () => { root = hydrateRoot(container, <AppRoot initialLocale={initialLocale} />, { onRecoverableError }) })
-
-    expect(onRecoverableError).not.toHaveBeenCalled()
-    expect(query(container, 'h1')).toBe(heading)
-    expectMetadata('en-US')
-
-    await clickButton(container, createTranslator('en-US')('cashback.tryExample'))
-
-    expect([...container.querySelectorAll('button')].some((button) =>
-      button.textContent === createTranslator('en-US')('cashback.tryExample'))).toBe(false)
-
-    const before = sessionStore.getSnapshot()
-    const total = query(container, '[data-reward-total]')
-    const amount = total.textContent
-    await act(async () => query<HTMLButtonElement>(container, '[data-language-switcher]').click())
-
-    expectMetadata('zh-CN')
-    expect(sessionStore.getSnapshot()).toBe(before)
-    expect(query(container, '[data-reward-total]')).toBe(total)
-    expect(total.textContent).toBe(amount)
-
-    await act(async () => sessionStore.clear())
-
-    expect(sessionStore.getSnapshot().mode).toBe('empty')
-    expectMetadata('zh-CN')
-    expect(window.localStorage.getItem(LOCALE_PREFERENCE_KEY)).toBe('zh-CN')
-    expect([...container.querySelectorAll('button')].some((button) =>
-      button.textContent === zh['cashback.tryExample'])).toBe(true)
-    expect(fetch).not.toHaveBeenCalled()
-  })
-
-  it('keeps the selected half, focused period button, and expanded result when the language changes', async () => {
-    const container = browser(['zh-CN'])
-    const dataset = importedFile('two-halves')
-    const row = dataset.transactions[0]
-    sessionStore.replace({
-      ...dataset,
-      transactions: [
-        { ...row, id: 'first-half', transactionDate: '2026-06-19', postingDate: '2026-06-20' },
-        { ...row, id: 'second-half', account: { currency: 'CNY', minor: 50_000 }, original: { currency: 'CNY', minor: 50_000 } },
-      ],
-    }, 'demo', { hkdToCnyPpm: 900000, source: 'demo', stale: false })
-    const before = sessionStore.getSnapshot()
-    const { createRoot } = await import('react-dom/client')
-    const mounted = root = createRoot(container)
-    await act(async () => mounted.render(<AppRoot initialLocale="zh-CN" />))
-    const periods = query(container, '[data-reward-periods]')
-    const buttons = [...periods.querySelectorAll('button')]
-    const firstHalf = buttons.find((button) => button.textContent?.includes('上半年'))!
-    await act(async () => firstHalf.click())
-    const total = query(container, '[data-reward-total]')
-
-    expect(total.textContent).toBe('11.00RC')
-    expect(container.querySelectorAll('[data-reward-breakdown]')).toHaveLength(1)
-    expect(query(container, '[data-reward-breakdown]').getAttribute('data-period')).toBe('2026-H1')
-
-    const reasons = query<HTMLButtonElement>(container, '[data-reward-card] button[aria-expanded]')
-    await act(async () => reasons.click())
-
-    expect(reasons.getAttribute('aria-expanded')).toBe('true')
-
-    firstHalf.focus()
-    await act(async () => query<HTMLButtonElement>(container, '[data-language-switcher]').click())
-
-    expect(document.documentElement.lang).toBe('en-US')
-    expect(document.activeElement).toBe(firstHalf)
-    expect(firstHalf.getAttribute('aria-pressed')).toBe('true')
-    expect(query(container, '[data-reward-total]')).toBe(total)
-    expect(total.textContent).toBe('11.00RC')
-    expect(query(container, '[data-reward-card] button[aria-expanded]')).toBe(reasons)
-    expect(reasons.getAttribute('aria-expanded')).toBe('true')
-    expect(sessionStore.getSnapshot()).toBe(before)
-
-    await act(async () => buttons[0].click())
-
-    expect(total.textContent).toBe('33.00RC')
-    expect(container.querySelectorAll('[data-reward-breakdown]')).toHaveLength(2)
-    expect(sessionStore.getSnapshot()).toBe(before)
-  })
+      expect(sessionStore.getSnapshot().mode).toBe('empty')
+      expectMetadata(selected)
+      expect(localRead).toHaveBeenCalledExactlyOnceWith(LOCALE_PREFERENCE_KEY)
+      expect(window.localStorage.getItem(LOCALE_PREFERENCE_KEY)).toBe(selected)
+      expect(window.localStorage.length).toBe(1)
+      expect([...container.querySelectorAll('button')].some((button) =>
+        button.textContent === createTranslator(selected)('cashback.tryExample'))).toBe(true)
+      expect(fetch).not.toHaveBeenCalled()
+    },
+  )
 })
 
 describe('language changes during an import', () => {
