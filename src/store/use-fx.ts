@@ -1,5 +1,7 @@
 import { useEffect, useSyncExternalStore } from 'react'
-import { fxController } from '@/application/fx/runtime'
+import { workspace } from '@/app/runtime/workspace'
+
+const { fx: fxController } = workspace
 
 export function useFx() {
   useEffect(() => {

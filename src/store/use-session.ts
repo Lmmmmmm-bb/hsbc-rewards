@@ -1,7 +1,9 @@
 import { useMemo, useSyncExternalStore } from 'react'
 import { loadDemoSession } from '@/application/session/actions'
 import { deriveWorkspace } from '@/application/session/selectors'
-import { sessionStore } from './memory-session'
+import { workspace } from '@/app/runtime/workspace'
+
+const { store: sessionStore } = workspace
 
 export function useSession() {
   const session = useSyncExternalStore(

@@ -5,13 +5,12 @@ import { PrivacyDialog } from '@/components/workspace/PrivacyDialog'
 import { CashbackPage } from '@/features/cashback/CashbackPage'
 import { useI18n } from '@/i18n/use-i18n'
 import { useSession } from '@/store/use-session'
-import { pdfImport } from '@/application/import/runtime'
+import { workspace } from '@/app/runtime/workspace'
 import { usePdfImport } from '@/store/use-pdf-import'
 import { useFx } from '@/store/use-fx'
 import { PageFileDrop } from '@/features/import/components/PageFileDrop'
 import { RulesDialog } from '@/features/cashback/RulesDialog'
 import { FileStatusDialog } from '@/features/import/components/FileStatusDialog'
-import { sessionStore } from '@/store/memory-session'
 import { createWorkspaceActions } from '@/app/workspace-actions'
 import { useAgentRuntime } from '@/app/use-agent-runtime'
 import { ResultDetailsDialog } from '@/features/cashback/details/ResultDetailsDialog'
@@ -21,7 +20,7 @@ function App() {
   const { session, view } = useSession(),
     { t } = useI18n(),
     { batch } = usePdfImport()
-  const [actions] = useState(() => createWorkspaceActions(sessionStore, pdfImport))
+  const [actions] = useState(() => createWorkspaceActions(workspace.store, workspace.importer))
   const { dialog, focusItemId, details } = useSyncExternalStore(actions.subscribe, actions.getSnapshot, actions.getSnapshot)
   const agent = useAgentRuntime(actions)
   const fx = useFx()

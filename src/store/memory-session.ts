@@ -45,5 +45,3 @@ export function createMemorySession(): SessionStore {
     },
   }
 }
-
-export const sessionStore = createMemorySession()

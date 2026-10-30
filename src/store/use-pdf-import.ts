@@ -1,5 +1,7 @@
 import { useSyncExternalStore } from 'react'
-import { pdfImport } from '@/application/import/runtime'
+import { workspace } from '@/app/runtime/workspace'
+
+const { importer: pdfImport } = workspace
 
 export function usePdfImport() {
   const batch = useSyncExternalStore(

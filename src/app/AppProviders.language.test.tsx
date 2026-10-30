@@ -9,7 +9,8 @@ import { createTranslator } from '@/i18n/messages'
 import type { Locale } from '@/i18n/locale'
 import { useI18n } from '@/i18n/use-i18n'
 import { LOCALE_PREFERENCE_KEY } from '@/i18n/browser-preference'
-import { createMemorySession, sessionStore } from '@/store/memory-session'
+import { createMemorySession } from '@/store/memory-session'
+import { workspace } from './runtime/workspace'
 import { createPdfImportController } from '@/application/import/controller'
 import { commitImportedBatch } from '@/application/import/commit'
 import { deriveWorkspace } from '@/application/session/selectors'
@@ -26,6 +27,8 @@ import { AppRoot } from './AppRoot'
 import { pageMetadata } from './seo'
 import { startLocaleBootstrap } from './locale-startup/bootstrap'
 import { claimInitialLocale } from './locale-startup/claim'
+
+const { store: sessionStore } = workspace
 
 let dom: JSDOM | undefined
 let root: Root | undefined

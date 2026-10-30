@@ -4,7 +4,8 @@ import { en } from '../i18n/en'
 
 it('renders a crawlable empty page without requests or session changes', async () => {
   const fetch = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('No build-time network access'))
-  const { sessionStore } = await import('../store/memory-session')
+  const { workspace } = await import('./runtime/workspace')
+  const { store: sessionStore } = workspace
   const before = sessionStore.getSnapshot()
   const { renderPage } = await import('./prerender')
 
