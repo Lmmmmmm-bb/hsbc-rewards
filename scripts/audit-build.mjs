@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto'
 import { mkdir, mkdtemp, readdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { parseArgs } from 'node:util'
 import { gzipSync } from 'node:zlib'
 import { build } from 'vite'
 import { verifySeoBuild } from './audit-seo.mjs'
@@ -10,10 +11,14 @@ import { verifyAgentBuild } from './audit-agents.mjs'
 import { verifyLocaleStartupBuild } from './audit-locale-startup.mjs'
 import { zh } from '../src/i18n/zh.ts'
 
-// Explicit build/cache audit. The copy edit exists only in a build transform;
-// source files, the normal dist directory and business data are never changed.
-const [directory] = process.argv.slice(2)
-if (!directory) throw new Error('Usage: node scripts/audit-build.mjs <output-dir-outside-repository>')
+// Cache comparisons are opt-in. Their copy edit exists only in a build transform.
+const { values, positionals } = parseArgs({
+  options: { 'check-cache': { type: 'boolean', default: false } },
+  allowPositionals: true,
+})
+assert.equal(positionals.length, 1, 'Usage: node scripts/audit-build.mjs [--check-cache] <output-dir-outside-repository>')
+const [directory] = positionals
+const checkCache = values['check-cache']
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const output = resolve(directory)
@@ -129,20 +134,22 @@ async function snapshot(name, probe = false) {
   })
   await verifyLocaleStartupBuild(join(work, name), { expectedHeading: probe ? probeHeading : heading })
   await verifyAgentBuild(join(work, name), { originTrialToken: process.env.WEBMCP_ORIGIN_TRIAL_TOKEN })
-  const files = {}
-
-  async function collect(folder) {
-    for (const item of await readdir(folder, { withFileTypes: true })) {
-      const path = join(folder, item.name)
-      if (item.isDirectory()) await collect(path)
-      else {
-        const data = await readFile(path)
-        files[relative(join(work, name), path)] = { bytes: data.length, sha256: createHash('sha256').update(data).digest('hex') }
+  const files = checkCache ? {} : undefined
+  if (files) {
+    async function collect(folder) {
+      for (const item of await readdir(folder, { withFileTypes: true })) {
+        const path = join(folder, item.name)
+        if (item.isDirectory()) await collect(path)
+        else {
+          const data = await readFile(path)
+          files[relative(join(work, name), path)] = { bytes: data.length, sha256: createHash('sha256').update(data).digest('hex') }
+        }
       }
     }
+
+    await collect(join(work, name))
   }
 
-  await collect(join(work, name))
   return {
     directory: join(work, name),
     entry: entry.fileName,
@@ -150,8 +157,7 @@ async function snapshot(name, probe = false) {
     initial: [...initial],
     initialBytes: [...initial].reduce((sum, file) => sum + Buffer.byteLength(byFile.get(file).code), 0),
     initialGzipBytes: [...initial].reduce((sum, file) => sum + gzipSync(byFile.get(file).code).length, 0),
-    totalBytes: Object.values(files).reduce((sum, file) => sum + file.bytes, 0),
-    files,
+    ...(files ? { files, totalBytes: Object.values(files).reduce((sum, file) => sum + file.bytes, 0) } : {}),
     chunks: chunks.map(chunk => ({
       file: chunk.fileName,
       name: chunk.name,
@@ -164,25 +170,35 @@ async function snapshot(name, probe = false) {
 }
 
 const baseline = await snapshot('baseline')
-const probe = await snapshot('copy-edit', true)
-assert.notEqual(baseline.entry, probe.entry, 'The changed copy must invalidate the business entry.')
+let cache = { status: 'skipped' }
+if (checkCache) {
+  const probe = await snapshot('copy-edit', true)
+  assert.notEqual(baseline.entry, probe.entry, 'The changed copy must invalidate the business entry.')
 
-for (const kind of ['react', 'ui', 'pdf']) {
-  assert.equal(baseline.stable[kind], probe.stable[kind], `${kind} must retain its content hash.`)
-  const file = baseline.stable[kind]
-  assert.deepEqual(baseline.files[file], probe.files[file], `${kind} must remain byte-identical.`)
+  for (const kind of ['react', 'ui', 'pdf']) {
+    assert.equal(baseline.stable[kind], probe.stable[kind], `${kind} must retain its content hash.`)
+    const file = baseline.stable[kind]
+    assert.deepEqual(baseline.files[file], probe.files[file], `${kind} must remain byte-identical.`)
+  }
+
+  const chunkFiles = new Set(baseline.chunks.map(chunk => chunk.file))
+  const resources = Object.keys(baseline.files).filter(file => file.startsWith('assets/') && !chunkFiles.has(file))
+  for (const file of resources) assert.deepEqual(baseline.files[file], probe.files[file], `${file} must remain byte-identical.`)
+  for (const file of ['llms.txt', 'webmcp.txt']) assert.deepEqual(baseline.files[file], probe.files[file], `${file} must be independent of page copy and session state.`)
+  cache = {
+    status: 'passed',
+    probe: 'In-memory edit to cashback.emptyTitle in zh.ts; source files are untouched.',
+    stableDependenciesUnchanged: true,
+    unchangedResources: resources.length,
+    copyEdit: { entry: probe.entry, stable: probe.stable, directory: probe.directory },
+  }
 }
-
-const chunkFiles = new Set(baseline.chunks.map(chunk => chunk.file))
-const resources = Object.keys(baseline.files).filter(file => file.startsWith('assets/') && !chunkFiles.has(file))
-for (const file of resources) assert.deepEqual(baseline.files[file], probe.files[file], `${file} must remain byte-identical.`)
-for (const file of ['llms.txt', 'webmcp.txt']) assert.deepEqual(baseline.files[file], probe.files[file], `${file} must be independent of page copy and session state.`)
 const report = {
-  probe: 'In-memory edit to cashback.emptyTitle in zh.ts; source files are untouched.',
-  checks: { pdfStaysLazy: true, dialogsStayLazy: true, agentServiceStaysLazy: true, noLazyModulesPromoted: true, pdfSupportDataExternal: true, prerenderStaysBuildOnly: true, staticSeo: true, bilingualStartup: true, agentDocumentsMatchContract: true, stableDependenciesUnchanged: true, unchangedResources: resources.length },
+  mode: checkCache ? 'cache' : 'build',
+  checks: { pdfStaysLazy: true, dialogsStayLazy: true, agentServiceStaysLazy: true, noLazyModulesPromoted: true, pdfSupportDataExternal: true, prerenderStaysBuildOnly: true, staticSeo: true, bilingualStartup: true, agentDocumentsMatchContract: true },
   baseline,
-  copyEdit: { entry: probe.entry, stable: probe.stable, directory: probe.directory },
+  cache,
 }
 const reportPath = join(output, 'build-summary.json')
 await writeFile(reportPath, JSON.stringify(report, null, 2))
-console.log(JSON.stringify({ report: reportPath, checks: report.checks, initialBytes: baseline.initialBytes, initialGzipBytes: baseline.initialGzipBytes, chunks: baseline.chunks }, null, 2))
+console.log(JSON.stringify({ report: reportPath, mode: report.mode, checks: report.checks, cache: report.cache, initialBytes: baseline.initialBytes, initialGzipBytes: baseline.initialGzipBytes, chunks: baseline.chunks }, null, 2))

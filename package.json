@@ -18,6 +18,8 @@
     "typecheck": "tsc -b",
     "test": "vitest run",
     "test:watch": "vitest",
+    "audit:build": "node scripts/audit-build.mjs",
+    "audit:cache": "node scripts/audit-build.mjs --check-cache",
     "check": "pnpm typecheck && pnpm lint && pnpm test && pnpm build"
   },
   "simple-git-hooks": {
