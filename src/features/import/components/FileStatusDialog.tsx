@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { usePdfImport } from '@/store/use-pdf-import'
+import { usePdfImport } from '@/app/use-pdf-import'
 import { Dialog } from '@/components/workspace/Dialog'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'

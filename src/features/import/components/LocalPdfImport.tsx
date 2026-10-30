@@ -1,5 +1,5 @@
 import { RiFileUploadLine } from '@remixicon/react'
-import { usePdfImport } from '@/store/use-pdf-import'
+import { usePdfImport } from '@/app/use-pdf-import'
 import { useI18n } from '@/i18n/use-i18n'
 import { ErrorNotice } from '@/components/workspace/ErrorNotice'
 import { ImportBatch } from './ImportBatch'
