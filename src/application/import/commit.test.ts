@@ -2,11 +2,55 @@ import { describe, expect, it, vi } from 'vitest'
 import type { Dataset } from '@/domain/model/types'
 import { importedFile as file } from '@/tests/fixtures/imported-file'
 import { createMemorySession } from '@/store/memory-session'
-import { commitImportedBatch } from './commit'
+import { commitImportedBatch, reviewImportedCards } from './commit'
+import { parsePulseStatement } from '@/domain/parsing/pulse/parse'
+import { pulseFile, pulseIdentity, pulsePage } from '@/tests/fixtures/pulse-statement'
 
 const empty: Dataset = { cards: [], statements: [], transactions: [] }
 
 describe('atomic batch publication', () => {
+  it('reviews actual cards after linking dual-currency accounts, without merging matching last four digits', () => {
+    const store = createMemorySession()
+    const linked = parsePulseStatement([
+      pulsePage({ currency: 'HKD' }), pulsePage({ page: 2, currency: 'CNY' }),
+    ], pulseFile, pulseIdentity())
+    expect(linked.cards).toHaveLength(1)
+    expect(linked.cards[0].accountIds).toHaveLength(2)
+    const review = reviewImportedCards(store, [linked], store.getSnapshot().revision)
+    expect(review).toEqual([{ cardId: linked.cards[0].id, lastFour: linked.cards[0].lastFour, role: 'primary' }])
+    const other = file('other', undefined, { id: 'different-card', lastFour: linked.cards[0].lastFour, role: 'unknown' })
+    const multiple = reviewImportedCards(store, [linked, other], store.getSnapshot().revision)
+    expect(multiple).toHaveLength(2)
+    expect(multiple.map(card => card.role)).toEqual([null, null])
+    expect(store.getSnapshot().mode).toBe('empty')
+  })
+
+  it('retains user-confirmed roles across conflicting later statements without creating a shared pool', () => {
+    const store = createMemorySession()
+    const first = file('first', undefined, { role: 'unknown' })
+    const review = reviewImportedCards(store, [first], store.getSnapshot().revision)
+    commitImportedBatch(store, [first], store.getSnapshot().revision, review.map(card => ({ ...card, role: 'additional' })))
+    const next = file('next', '2026-11-20', { role: 'primary' })
+    expect(reviewImportedCards(store, [next], store.getSnapshot().revision)[0].role).toBe('additional')
+    commitImportedBatch(store, [next], store.getSnapshot().revision)
+    expect(store.getSnapshot().dataset.cards[0]).toMatchObject({ role: 'additional', roleSource: 'user' })
+    expect(store.getSnapshot().dataset.cards[0].pool).toBeUndefined()
+    expect(store.getSnapshot().dataset.cards[0].warnings).not.toContainEqual({ code: 'card.role-conflict' })
+  })
+
+  it('rejects stale or incomplete role choices before changing results', () => {
+    const store = createMemorySession()
+    const files = [file('first'), file('second', undefined, { id: 'card-b' })]
+    const review = reviewImportedCards(store, files, store.getSnapshot().revision)
+    const before = store.getSnapshot()
+    for (const roles of [review.slice(1), [review[0], review[0]], [...review.slice(1), { ...review[0], cardId: 'stale-card' }], review.map(card => ({ ...card, role: null }))]) {
+      expect(() => commitImportedBatch(store, files, before.revision, roles)).toThrow('import.invalid-card-roles')
+      expect(store.getSnapshot()).toBe(before)
+    }
+    store.clear()
+    expect(() => commitImportedBatch(store, files, before.revision, review)).toThrow('import.session-changed')
+  })
+
   it('rejects a combined reward overflow before publishing and preserves the prior computable session', () => {
     const localFile = (id: string): Dataset => {
       const input = file(id)

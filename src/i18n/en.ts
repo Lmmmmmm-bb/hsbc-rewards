@@ -16,7 +16,7 @@ export const en = {
   "details.transactionReward": "Estimated RewardCash",
   "details.note.transactions": "Filters do not reallocate spending caps. Refunds do not reduce estimates or restore caps.",
 
-  "import.additionalHint": "Add English PDFs. Successful files are included together when this batch finishes.",
+  "import.additionalHint": "Add English PDFs. Successful files are included together after parsing and card role confirmation.",
   "fx.details": "Exchange rate basis and updates",
   "caps.pending": "Pending",
   "caps.exhausted": "Cap exhausted",
@@ -86,7 +86,7 @@ export const en = {
   "basis.registration": "Registration is not stated; the estimate assumes registration.",
   "basis.multiplier": "The allocation multiplier is not stated; the estimate assumes the full extra 5X is allocated to Outside Hong Kong.",
   "basis.details": "View transaction details",
-  "basis.pendingImport": "This batch is still processing and is not included in the current amounts. Open file status to check progress or unlock files.",
+  "basis.pendingImport": "This batch is not included in the current amounts. Open file status to check progress, unlock files, or confirm card roles.",
 
   'agent.dialogTitle': 'AI access',
   'agent.dialogHint': 'Allow AI tools in your browser to read analysis results on this page.',
@@ -107,7 +107,7 @@ export const en = {
   'agent.tool.context': 'Inspect supported statements, limits, result-sharing status, and browser file input instructions for Reward+.',
   'agent.tool.rules': 'Read the rules actually used by this application, their verification date, estimate assumptions, and official sources.',
   'agent.tool.access': 'Open the page-local result-sharing dialog. A page action enables sharing; calling this tool does not grant access.',
-  'agent.tool.openImport': 'Open file status to select PDFs or handle a referenced file. Provide files through browser upload controls and enter passwords in the page.',
+  'agent.tool.openImport': 'Open file status to select PDFs, confirm card roles, or handle a referenced file. Provide files through browser upload controls; passwords and card roles are handled in the page.',
   'agent.tool.importStatus': 'Read batch-wide outcomes and paginated anonymous file progress, problem codes, and next actions. Keep batchRef when paging. Real results require page-local sharing.',
   'agent.tool.cancelImport': 'Cancel the current uncommitted batch identified by batchRef, discarding its work while retaining earlier results. Stale references cannot cancel a newer batch.',
   'agent.tool.summary': 'Read committed reward totals, key limitations, periods, and a paginated card index. Returns resultToken for consistent follow-up queries.',
@@ -186,8 +186,15 @@ export const en = {
   'privacy.languageValue':
     'Your manually selected language is saved on this device and takes priority on reload or future visits. Clearing results keeps it. If storage is blocked, it lasts only on this page.',
   'pdf.dialogTitle': 'File status',
+  'pdf.cards.title': 'Confirm card roles',
+  'pdf.cards.hint': 'HKD and CNY subaccounts of the same card are combined. A single card defaults to primary. Choose primary or additional for every card before confirming. Choices stay on this page and do not combine spending caps across cards.',
+  'pdf.cards.card': 'Card {index} · ending {lastFour}',
+  'pdf.cards.primary': 'Primary',
+  'pdf.cards.additional': 'Additional',
+  'pdf.cards.confirm': 'Confirm and include',
+  'pdf.cards.waiting': 'Parsing is complete. Confirm card roles to include this batch.',
   'pdf.dialogHint':
-    'Check progress, unlock files, or review errors.',
+    'Check progress, unlock files, confirm card roles, or review errors.',
   'pdf.inProgressHint':
     'Processing continues after closing. Canceling discards this batch and keeps earlier results.',
   'pdf.failedFilesHint':
@@ -199,7 +206,7 @@ export const en = {
   'pdf.summary.error': 'Processing failed',
   'pdf.summary.duplicate': 'Identical files skipped',
   'pdf.detailsHint':
-    'Successful files are added together when this batch finishes.',
+    'Successful files are added together after parsing finishes and card roles are confirmed.',
   'rules.dialogTitle': 'RewardCash rules',
   'rules.exampleTitle': 'Combining three reward components',
   'rules.exampleBody':
@@ -343,10 +350,10 @@ export const en = {
   'pdf.dropBody':
     'Drop multiple PDFs here or select files. Unlock password-protected statements on your device.',
   'pdf.stageHint':
-    'English text-based HSBC PULSE PDFs only; scans are unsupported. Successful files are added together when the batch finishes.',
+    'English text-based HSBC PULSE PDFs only; scans are unsupported. Successful files are added together after parsing and card role confirmation.',
   'pdf.batchTitle': 'Your selected files',
   'pdf.batchHint':
-    'Successful files are added together when this batch finishes. Canceling discards this batch and keeps earlier results.',
+    'Successful files are added together after card roles are confirmed. Canceling discards this batch and keeps earlier results.',
   'pdf.cancelBatch': 'Cancel this import',
   'pdf.committed': ({ files, transactions }) =>
     `Added {files} ${plural(files, 'statement', 'statements')} and {transactions} new ${plural(transactions, 'transaction', 'transactions')}.`,
@@ -365,7 +372,7 @@ export const en = {
   'pdf.status.locked': 'Password required',
   'pdf.status.extracted': 'Text extracted',
   'pdf.status.parsing': 'Identifying',
-  'pdf.status.parsed': 'Waiting for batch',
+  'pdf.status.parsed': 'Awaiting review',
   'pdf.status.imported': 'Added to estimate',
   'pdf.status.error': 'Processing failed',
   'pdf.status.duplicate': 'Duplicate skipped',

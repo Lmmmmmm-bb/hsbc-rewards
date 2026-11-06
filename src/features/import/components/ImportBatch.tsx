@@ -38,7 +38,8 @@ export function ImportBatch({
           </Badge>
         )}
       </div>
-      {batch.active && (
+      {batch.cardReview && <p role="status" className="text-xs font-medium">{t('pdf.cards.waiting')}</p>}
+      {batch.active && !batch.cardReview && (
         <Progress
           value={items.length ? (finished / items.length) * 100 : 0}
           aria-label={t('pdf.batchProgress', {

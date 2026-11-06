@@ -53,6 +53,8 @@ function App() {
           onFiles={actions.importFiles}
           onClose={actions.close}
           onCancel={actions.cancelImport}
+          onCardRole={actions.setCardRole}
+          onConfirmCards={actions.confirmCards}
           focusItemId={focusItemId}
         />
       )}

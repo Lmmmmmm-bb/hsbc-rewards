@@ -5,7 +5,7 @@ import type {
   PdfTextPage,
 } from '@/ports/pdf'
 import type { InputError, PasswordGate } from './limits'
-import type { Dataset } from '@/domain/model/types'
+import type { Card, Dataset } from '@/domain/model/types'
 import type { StatementParser } from '@/ports/statements'
 
 export type ImportProblem =
@@ -44,12 +44,22 @@ export interface ImportSnapshot {
   readonly active: boolean
   readonly items: readonly ImportItem[]
   readonly rejected: ImportProblem | null
+  readonly cardReview?: {
+    readonly id: number
+    readonly cards: readonly ImportCardRole[]
+  }
   readonly outcome: {
     readonly status: 'idle' | 'committed' | 'empty' | 'failed'
     readonly files: number
     readonly transactions: number
     readonly problem?: 'session-changed' | 'commit-failed'
   }
+}
+
+export interface ImportCardRole {
+  readonly cardId: string
+  readonly lastFour: string
+  readonly role: Exclude<Card['role'], 'unknown'> | null
 }
 
 export interface ImportDependencies {
@@ -64,9 +74,11 @@ export interface ImportDependencies {
     revision?: number
   }
   readonly parser?: StatementParser
+  readonly reviewCards?: (files: readonly Dataset[], expectedRevision: number) => readonly ImportCardRole[]
   readonly commit?: (
     files: readonly Dataset[],
     expectedRevision: number,
+    roles?: readonly ImportCardRole[],
   ) => { files: number; transactions: number }
 }
 
@@ -78,5 +90,7 @@ export interface PdfImportController {
   retry(id: string): void
   remove(id: string): void
   cancel(): void
+  setCardRole(reviewId: number, cardId: string, role: NonNullable<ImportCardRole['role']>): void
+  confirmCards(reviewId: number): void
   preview(id: string): readonly PdfTextPage[] | null
 }

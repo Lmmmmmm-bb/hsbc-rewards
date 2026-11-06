@@ -26,6 +26,7 @@ function mergeCard(prior: Card, incoming: Card): Card {
     ...(prior.warnings ?? []),
     ...(incoming.warnings ?? []),
   ])
+  const confirmed = incoming.roleSource === 'user' ? incoming : prior.roleSource === 'user' ? prior : undefined
 
   const conflict = (code: string) => {
     if (!warnings.some((warning) => warning.code === code))
@@ -33,7 +34,7 @@ function mergeCard(prior: Card, incoming: Card): Card {
   }
 
   if (
-    prior.role !== 'unknown' &&
+    !confirmed && prior.role !== 'unknown' &&
     incoming.role !== 'unknown' &&
     prior.role !== incoming.role
   )
@@ -42,7 +43,7 @@ function mergeCard(prior: Card, incoming: Card): Card {
   if (prior.pool && incoming.pool && prior.pool.id !== incoming.pool.id)
     conflict('card.pool-conflict')
 
-  const role = warnings.some((warning) => warning.code === 'card.role-conflict')
+  const role = confirmed ? confirmed.role : warnings.some((warning) => warning.code === 'card.role-conflict')
     ? 'unknown'
     : incoming.role === 'unknown'
       ? prior.role
@@ -56,6 +57,7 @@ function mergeCard(prior: Card, incoming: Card): Card {
   return {
     ...base,
     role,
+    ...(confirmed ? { roleSource: 'user' as const } : {}),
     ...(pool ? { pool } : {}),
     statementIds: unique([
       ...(prior.statementIds ?? []),
@@ -65,7 +67,7 @@ function mergeCard(prior: Card, incoming: Card): Card {
       ...(prior.accountIds ?? []),
       ...(incoming.accountIds ?? []),
     ]),
-    warnings,
+    warnings: confirmed ? warnings.filter(warning => warning.code !== 'card.role-conflict') : warnings,
   }
 }
 

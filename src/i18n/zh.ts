@@ -10,7 +10,7 @@ export const zh = {
   "details.transactionReward": "本笔预计返现",
   "details.note.transactions": "筛选不重新分配消费额度；退款不扣回估算或恢复额度。",
 
-  "import.additionalHint": "可补充英文 PDF；本批成功文件将在处理结束后统一计入。",
+  "import.additionalHint": "可补充英文 PDF；解析完成并确认卡片身份后，本批成功文件统一计入。",
   "fx.details": "汇率依据与更新说明",
   "caps.pending": "待计算",
   "caps.exhausted": "额度已用尽",
@@ -80,7 +80,7 @@ export const zh = {
   "basis.registration": "账单未记载登记状态，按已登记估算。",
   "basis.multiplier": "账单未记载分配倍数，按额外 5X 全部分配给赏世界估算。",
   "basis.details": "查看交易明细",
-  "basis.pendingImport": "本批仍在处理，当前金额尚未包含本批文件。可在文件状态中查看进度或解锁文件。",
+  "basis.pendingImport": "当前金额尚未包含本批文件。请在文件状态中查看进度、解锁文件或确认卡片身份。",
 
   'agent.dialogTitle': 'AI 接入',
   'agent.dialogHint': '允许浏览器中的 AI 工具读取本页分析结果。',
@@ -101,7 +101,7 @@ export const zh = {
   'agent.tool.context': '了解 Reward+ 支持的账单、限制、结果共享状态和浏览器文件传入方式。',
   'agent.tool.rules': '查看应用实际采用的返现规则、核实日期、估算假设和官方来源。',
   'agent.tool.access': '打开本页结果共享弹窗，由页面操作开启共享；调用本工具不会自动授权。',
-  'agent.tool.openImport': '打开文件状态弹窗以选择 PDF 或处理指定文件；文件通过浏览器上传能力传入，密码在页面输入。',
+  'agent.tool.openImport': '打开文件状态弹窗以选择 PDF、确认卡片身份或处理指定文件；文件通过浏览器上传能力传入，密码和卡片身份在页面确认。',
   'agent.tool.importStatus': '读取当前批次汇总，并分页获取匿名文件进度、问题代码和下一步操作。翻页需保留 batchRef；需要开启真实结果共享。',
   'agent.tool.cancelImport': '取消 batchRef 指定的当前未提交批次，丢弃本批工作并保留此前结果。过期引用不能取消新批次。',
   'agent.tool.summary': '获取已提交结果的总览、关键限制、周期和分页卡片索引；返回 resultToken，供后续一致性查询。',
@@ -176,7 +176,14 @@ export const zh = {
   'privacy.languageValue':
     '手动选择后保存在本机，刷新或再次访问时优先使用，清空结果时保留。浏览器禁止存储时，仅本页有效。',
   'pdf.dialogTitle': '文件状态',
-  'pdf.dialogHint': '查看进度、解锁文件或检查错误。',
+  'pdf.cards.title': '确认卡片身份',
+  'pdf.cards.hint': '已合并同一张卡的 HKD / CNY 子账户。单卡默认主卡；请逐张选择主卡或副卡后确认。选择仅保留在本页，不会合并不同卡片的消费额度。',
+  'pdf.cards.card': '卡片 {index} · 尾号 {lastFour}',
+  'pdf.cards.primary': '主卡',
+  'pdf.cards.additional': '副卡',
+  'pdf.cards.confirm': '确认并计入',
+  'pdf.cards.waiting': '解析完成，确认卡片身份后计入本批账单。',
+  'pdf.dialogHint': '查看进度、解锁文件、确认卡片身份或检查错误。',
   'pdf.inProgressHint':
     '关闭弹窗后继续处理；取消导入会撤销本批，保留此前结果。',
   'pdf.failedFilesHint': '失败文件未计入估算，请重新选择后重试。',
@@ -186,7 +193,7 @@ export const zh = {
   'pdf.summary.locked': '等待解锁',
   'pdf.summary.error': '处理失败',
   'pdf.summary.duplicate': '相同文件已跳过',
-  'pdf.detailsHint': '本批处理结束后，成功文件一并计入估算。',
+  'pdf.detailsHint': '本批解析完成并确认卡片身份后，成功文件一并计入估算。',
   'rules.dialogTitle': '返现规则与说明',
   'rules.exampleTitle': '三项奖励叠加示例',
   'rules.exampleBody':
@@ -315,10 +322,10 @@ export const zh = {
     '可补充 PDF，继续累计结果；列表将显示新一批文件。',
   'pdf.dropBody': '拖入多份 PDF，或选择文件。加密账单可在本机输入密码解锁。',
   'pdf.stageHint':
-    '仅支持 HSBC PULSE 英文文本 PDF，不支持扫描件。成功文件在本批结束后一并计入。',
+    '仅支持 HSBC PULSE 英文文本 PDF，不支持扫描件。解析完成并确认卡片身份后，成功文件一并计入。',
   'pdf.batchTitle': '本次选择的文件',
   'pdf.batchHint':
-    '本批结束后统一计入成功文件；取消会撤销本批，保留此前结果。',
+    '确认卡片身份后统一计入成功文件；取消会撤销本批，保留此前结果。',
   'pdf.cancelBatch': '取消本批导入',
   'pdf.committed': '已加入 {files} 份账单，新增 {transactions} 笔交易。',
   'pdf.emptyBatch': '本批无新增账单，现有结果不变。',
@@ -334,7 +341,7 @@ export const zh = {
   'pdf.status.locked': '需要密码',
   'pdf.status.extracted': '文本已提取',
   'pdf.status.parsing': '识别中',
-  'pdf.status.parsed': '待本批完成',
+  'pdf.status.parsed': '待确认',
   'pdf.status.imported': '已计入估算',
   'pdf.status.error': '处理失败',
   'pdf.status.duplicate': '相同文件已跳过',

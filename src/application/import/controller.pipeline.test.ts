@@ -9,9 +9,11 @@ import { PdfReadError } from '@/ports/pdf'
 import type { LocalPdfDocument, PdfReader, PdfSource } from '@/ports/pdf'
 import type { StatementParser } from '@/ports/statements'
 import { createPdfImportController } from './controller'
-import { commitImportedBatch } from './commit'
+import { commitImportedBatch, reviewImportedCards } from './commit'
+import type { ImportCardRole } from './types'
 import { IMPORT_LIMITS } from './limits'
 import { deriveWorkspace } from '@/application/session/selectors'
+import { importedFile } from '@/tests/fixtures/imported-file'
 
 const source = (
   name: string,
@@ -47,16 +49,18 @@ function setup(
   reader: PdfReader = { read: async () => document() },
   processor = parser,
   yieldTask?: () => Promise<void>,
+  review = false,
 ) {
   const store = createMemorySession()
-  const commit = vi.fn((files: readonly Dataset[], revision: number) =>
-    commitImportedBatch(store, files, revision),
+  const commit = vi.fn((files: readonly Dataset[], revision: number, roles?: readonly ImportCardRole[]) =>
+    commitImportedBatch(store, files, revision, roles),
   )
   const controller = createPdfImportController({
     reader,
     parser: processor,
     yieldTask,
     commit,
+    reviewCards: review ? (files, revision) => reviewImportedCards(store, files, revision) : undefined,
     fingerprint: async (bytes) => new TextDecoder().decode(bytes),
     now: () => 1000,
     existing: () => {
@@ -80,6 +84,95 @@ function setup(
 }
 
 describe('parsed PDF batch pipeline', () => {
+  it('requires a primary or additional choice for every unrecognized card before committing', async () => {
+    const processor: StatementParser = { parse: async (_, file) =>
+      importedFile(file.id, undefined, { id: file.fileName, role: 'unknown' }) }
+    const { store, controller, commit } = setup(undefined, processor, undefined, true)
+    controller.start([source('first.pdf'), source('second.pdf')])
+    await vi.waitFor(() => expect(controller.getSnapshot().cardReview).toBeDefined())
+    const review = controller.getSnapshot().cardReview!
+    expect(review.cards.map(card => card.role)).toEqual([null, null])
+    controller.confirmCards(review.id)
+    expect(commit).not.toHaveBeenCalled()
+    controller.setCardRole(review.id, review.cards[0].cardId, 'primary')
+    controller.confirmCards(review.id)
+    expect(commit).not.toHaveBeenCalled()
+    controller.setCardRole(review.id, review.cards[1].cardId, 'additional')
+    controller.confirmCards(review.id)
+    expect(commit).toHaveBeenCalledOnce()
+    expect(store.getSnapshot().dataset.cards.map(card => card.role)).toEqual(['primary', 'additional'])
+  })
+
+  it('holds parsed files for role confirmation and publishes the selected roles once', async () => {
+    const extracted = document()
+    const { store, controller, commit } = setup({ read: async () => extracted }, parser, undefined, true)
+    const before = store.getSnapshot()
+    controller.start([source('first.pdf')])
+    await vi.waitFor(() => expect(controller.getSnapshot().cardReview).toBeDefined())
+    const review = controller.getSnapshot().cardReview!
+    expect(review.cards).toHaveLength(1)
+    expect(review.cards[0].role).toBe('primary')
+    expect(extracted.dispose).toHaveBeenCalledOnce()
+    expect(controller.preview(controller.getSnapshot().items[0].id)).toBeNull()
+    controller.setCardRole(review.id, review.cards[0].cardId, 'additional')
+    controller.start([source('blocked.pdf')])
+    expect(controller.getSnapshot().rejected).toBe('batch-busy')
+    expect(store.getSnapshot()).toBe(before)
+    expect(commit).not.toHaveBeenCalled()
+    controller.confirmCards(review.id)
+    controller.confirmCards(review.id)
+    expect(commit).toHaveBeenCalledOnce()
+    expect(controller.getSnapshot()).toMatchObject({ active: false, outcome: { status: 'committed' } })
+    expect(controller.getSnapshot().cardReview).toBeUndefined()
+    expect(store.getSnapshot().dataset.cards[0].role).toBe('additional')
+  })
+
+  it('invalidates confirmations after removal and cancellation while preserving prior results', async () => {
+    const { store, controller, commit } = setup(undefined, parser, undefined, true)
+    controller.start([source('previous.pdf')])
+    await vi.waitFor(() => expect(controller.getSnapshot().cardReview).toBeDefined())
+    controller.confirmCards(controller.getSnapshot().cardReview!.id)
+    const before = store.getSnapshot()
+    commit.mockClear()
+    controller.start([source('first.pdf'), source('second.pdf')])
+    await vi.waitFor(() => expect(controller.getSnapshot().cardReview).toBeDefined())
+    const old = controller.getSnapshot().cardReview!
+    controller.remove(controller.getSnapshot().items[0].id)
+    const replacement = controller.getSnapshot().cardReview!
+    expect(replacement.id).not.toBe(old.id)
+    controller.setCardRole(old.id, old.cards[0].cardId, 'additional')
+    controller.confirmCards(old.id)
+    expect(controller.getSnapshot().cardReview).toBe(replacement)
+    controller.cancel()
+    controller.confirmCards(replacement.id)
+    expect(commit).not.toHaveBeenCalled()
+    expect(store.getSnapshot()).toBe(before)
+    controller.start([source('new.pdf')])
+    await vi.waitFor(() => expect(controller.getSnapshot().cardReview).toBeDefined())
+    controller.confirmCards(replacement.id)
+    expect(commit).not.toHaveBeenCalled()
+    controller.confirmCards(controller.getSnapshot().cardReview!.id)
+    expect(store.getSnapshot().dataset.statements).toHaveLength(2)
+  })
+
+  it('rechecks session revision at confirmation and releases the failed batch', async () => {
+    const signals: AbortSignal[] = []
+    const { store, controller } = setup({ read: async (_, options) => {
+      signals.push(options.signal)
+      return document()
+    } }, parser, undefined, true)
+    controller.start([source('first.pdf')])
+    await vi.waitFor(() => expect(controller.getSnapshot().cardReview).toBeDefined())
+    const review = controller.getSnapshot().cardReview!
+    store.clear()
+    const before = store.getSnapshot()
+    controller.confirmCards(review.id)
+    expect(controller.getSnapshot()).toMatchObject({ active: false, outcome: { status: 'failed', problem: 'session-changed' } })
+    expect(controller.getSnapshot().cardReview).toBeUndefined()
+    expect(signals.every(signal => signal.aborted)).toBe(true)
+    expect(store.getSnapshot()).toBe(before)
+  })
+
   it.each(['session-changed', 'commit-failed', 'money.out-of-range'])(
     'releases provisional resources after terminal %s without changing earlier results', async (problem) => {
       const signals: AbortSignal[] = []

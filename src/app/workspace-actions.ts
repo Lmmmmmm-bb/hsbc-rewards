@@ -1,6 +1,6 @@
 import type { ResultDetailsRequest } from '@/application/results/details'
 import type { SessionStore } from '@/application/session/types'
-import type { PdfImportController } from '@/application/import/types'
+import type { ImportCardRole, PdfImportController } from '@/application/import/types'
 import type { PdfSource } from '@/ports/pdf'
 import { loadDemoSession } from '@/application/session/actions'
 import { AgentError } from '@/application/agent/errors'
@@ -40,6 +40,11 @@ export function createWorkspaceActions(store: SessionStore, importer: PdfImportC
       importer.cancel()
       if (snapshot.dialog === 'files') show(null)
     },
+
+    setCardRole(reviewId: number, cardId: string, role: NonNullable<ImportCardRole['role']>) {
+      importer.setCardRole(reviewId, cardId, role)
+    },
+    confirmCards(reviewId: number) { importer.confirmCards(reviewId) },
 
     importFiles(files: readonly PdfSource[]) {
       if (!files.length) return

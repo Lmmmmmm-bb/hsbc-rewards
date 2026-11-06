@@ -31,6 +31,13 @@
   }
 }
 
+@custom-variant data-checked {
+  &:where([data-state="checked"]),
+  &:where([data-checked]:not([data-checked="false"])) {
+    @slot;
+  }
+}
+
 @custom-variant data-vertical {
   &:where([data-orientation="vertical"]) {
     @slot;

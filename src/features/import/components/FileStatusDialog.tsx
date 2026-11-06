@@ -7,19 +7,25 @@ import { ErrorNotice } from '@/components/workspace/ErrorNotice'
 import { useI18n } from '@/i18n/use-i18n'
 import { DeferredDialogContent } from '@/components/workspace/DeferredDialogContent'
 import { PdfFilePicker } from './PdfFilePicker'
+import type { WorkspaceActions } from '@/app/workspace-actions'
 
 export function FileStatusDialog({
   onClose,
   onCancel,
   onFiles,
+  onCardRole,
+  onConfirmCards,
   focusItemId,
 }: {
   onClose: () => void
   onCancel: () => void
   onFiles: (files: readonly File[]) => void
+  onCardRole: WorkspaceActions['setCardRole']
+  onConfirmCards: WorkspaceActions['confirmCards']
   focusItemId?: string
 }) {
   const { batch, controller } = usePdfImport()
+  const review = batch.cardReview
   const cancelled = useRef(false)
   const { t, number } = useI18n()
   const items = batch.items.filter((item) => item.status !== 'removed')
@@ -63,9 +69,18 @@ export function FileStatusDialog({
               {t('pdf.cancelBatch')}
             </Button>
           )}
-          <Button onClick={onClose}>
-            {t(committed ? 'pdf.viewRewards' : 'pdf.backToRewards')}
-          </Button>
+          {review ? (
+            <Button
+              onClick={() => onConfirmCards(review.id)}
+              disabled={review.cards.some((card) => card.role === null)}
+            >
+              {t('pdf.cards.confirm')}
+            </Button>
+          ) : (
+            <Button onClick={onClose}>
+              {t(committed ? 'pdf.viewRewards' : 'pdf.backToRewards')}
+            </Button>
+          )}
         </>
       }
     >
@@ -87,7 +102,7 @@ export function FileStatusDialog({
             ),
           )}
         </dl>
-        {batch.active && (
+        {batch.active && !batch.cardReview && (
           <div role="status" className="space-y-2">
             <p className="text-sm">
               {t('pdf.batchProgress', {
@@ -136,13 +151,16 @@ export function FileStatusDialog({
           </p>
         )}
         <DeferredDialogContent>
-          {({ FileStatusList }) => (
-            <FileStatusList
-              items={items}
-              controller={controller}
-              editable={editable}
-              focusItemId={focusItemId}
-            />
+          {({ FileStatusList, CardRoleReview }) => (
+            <div className="flex flex-col gap-4">
+              {review && <CardRoleReview review={review} onRole={onCardRole} />}
+              <FileStatusList
+                items={items}
+                controller={controller}
+                editable={editable}
+                focusItemId={focusItemId}
+              />
+            </div>
           )}
         </DeferredDialogContent>
       </div>
