@@ -54,7 +54,7 @@ describe('isolated memory sessions', () => {
       spendHkdMinor: 1399000,
       mismatchCount: 1,
       reviewCount: 1,
-      totalRewardMicroRc: 4335280060,
+      totalRewardMicroRc: 4314680060,
     })
     expect(
       view.rewards.pools.find((pool) => pool.ownerId === 'demo-main' && pool.tier === 'abroad' && pool.period === '2026')

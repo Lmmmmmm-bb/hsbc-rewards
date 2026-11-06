@@ -21,14 +21,14 @@ export function OfficialSources({ rules }: { rules: WorkspaceView['rules'] }) {
                 rel="noreferrer"
                 className="inline-flex max-w-full items-start gap-1 p-0 text-sm font-medium text-primary underline-offset-4 outline-none hover:underline focus-visible:underline focus-visible:ring-2 focus-visible:ring-ring"
               >
-                <span>{t(`rules.source.${index as 0 | 1 | 2 | 3}`)}</span>
+                <span>{t(`rules.source.${index as 0 | 1 | 2 | 3 | 4 | 5}`)}</span>
                 <RiExternalLinkLine
                   className="mt-0.5 size-4 shrink-0"
                   aria-hidden="true"
                 />
               </a>
               <p className="text-xs text-muted-foreground">
-                {t(`rules.sourceHint.${index as 0 | 1 | 2 | 3}`)}
+                {t(`rules.sourceHint.${index as 0 | 1 | 2 | 3 | 4 | 5}`)}
               </p>
             </li>
           ))}

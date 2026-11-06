@@ -156,6 +156,12 @@ export const en = {
   'rules.sourceHint.1': 'Red Hot Rewards of Your Choice and allocation to Overseas and Mainland China Spending.',
   'rules.sourceHint.2': 'Eligibility, multipliers, and the annual spending cap for spending outside Hong Kong.',
   'rules.sourceHint.3': 'Qualifying payment methods and the half-year spending cap for PULSE.',
+  'rules.sourceHint.4': 'Mainland China dining in the first half of 2026: monthly threshold, UnionPay bonus, and registration.',
+  'rules.sourceHint.5': 'Mainland China dining in the second half of 2026: monthly cap and merchant classification (Traditional Chinese).',
+  'rules.diningTitle': 'Separate promotions (not included)',
+  'rules.diningPeriods': 'Both 2026 mainland China dining promotions require monthly eligible mainland net spending of 1,200, treating RMB1 as HKD1 for the RMB subaccount. January–June offers an extra 3%, capped at 60 RC per month, plus another 2% for PULSE, capped at 40 RC per month. July–December offers an extra 3%, capped at 80 RC per month, with no separate UnionPay 2% bonus. Neither promotion covers Macau.',
+  'rules.diningEvidence': 'Registration is required before spending. Dining eligibility follows the card network’s merchant classification and excludes banquets and dining counters inside hotels, department stores, and clubs. The estimate assumes registration and the highest available reward tier, but includes no dining amount without classification evidence. Registration does not mean the monthly threshold or cap has been reached. Apple Pay identifies a payment method; names such as Meituan alone do not prove dining eligibility. Neither promotion is applied to other historical periods.',
+  'rules.otherPromotions': 'Welcome, targeted, and merchant promotions need evidence such as the card issue date, application channel, registration, or purchased products and are not included. Instant discounts, vouchers, and cash rebates are not counted as RC.',
   'precision.computeLabel': 'Calculation precision',
   'precision.displayLabel': 'Displayed amounts',
   'precision.bankLabel': 'Actual bank rewards',
@@ -290,7 +296,9 @@ export const en = {
   'rules.abroad.cap':
     'HKD 100,000 equivalent per year',
   'rules.pulse.body':
-    'CNY or MOP purchases in mainland China or Macau using UnionPay QR, Apple Pay, Google Pay, or Samsung Pay.',
+    'CNY or MOP purchases in mainland China or Macau using Reward+ or UnionPay App QR (primary cards only), Apple Pay, Google Pay, or Samsung Pay.',
+  'reason.qrPrimary': 'Qualifying QR payments require a primary card. Confirmed additional-card transactions are excluded from PULSE extra rewards.',
+  'rewards.qrPrimary': 'When card role is not stated, QR payment labels are estimated as primary-card payments without changing the recorded card identity. Actual eligibility follows bank records.',
   'rules.pulse.cap':
     'HKD / CNY 80,000 per half-year; MOP at its HKD equivalent',
   'rules.extra': 'Extra {rate}%',
@@ -298,12 +306,14 @@ export const en = {
   'rules.formula':
     'Eligible posted amount × reward rate → RC. A spending cap affects only the corresponding extra reward component.',
   'rules.exclusions':
-    'Repayments, fees, cash advances, stored-value reloads, and similar transactions earn no rewards. In this tool, refunds earn no rewards, do not reduce prior estimates, and do not restore spending cap capacity. The bank may handle them differently.',
+    'Repayments, fees, cash advances, stored-value reloads, and similar transactions earn no rewards. Bank terms exclude refunds and allow reward clawbacks. This tool cannot reliably link refunds or other merchant credits to original purchases, so it lists them without reducing estimates or restoring spending caps. Estimates may therefore be overstated.',
   'rules.details': 'Estimate details and official terms',
   'rules.source.0': 'RewardCash general terms',
   'rules.source.1': 'Red Hot Rewards of Your Choice overview',
   'rules.source.2': '2026 Red Hot Rewards of Your Choice terms',
   'rules.source.3': 'PULSE promotion terms',
+  'rules.source.4': '2026 Red Hot Spending Rewards — Mainland China, January–June',
+  'rules.source.5': '2026 Red Hot Spending Rewards — Mainland China, July–December',
   'cashback.tryExample': 'View example',
   'cashback.example': 'Example · Fictional data',
   'cashback.demoNotice':

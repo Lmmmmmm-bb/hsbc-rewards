@@ -10,6 +10,7 @@ const labels = {
   'reward.region-excluded': 'reason.regionExcluded',
   'reward.currency-excluded': 'reason.currencyExcluded',
   'reward.payment-excluded': 'reason.payment',
+  'reward.qr-primary-required': 'reason.qrPrimary',
   'reward.not-enrolled': 'reason.enrollment',
   'transaction.refund': 'reason.refund',
   'transaction.repayment': 'reason.repayment',

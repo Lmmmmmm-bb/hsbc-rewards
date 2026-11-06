@@ -8,6 +8,7 @@ export type AssumptionKind =
   | 'role-conflict'
   | 'pool-conflict'
   | 'enrollment-period'
+  | 'qr-primary'
 
 /** Explain missing registration and allocation separately, preserving recognized multipliers. */
 export function cardAssumptions(
@@ -28,6 +29,8 @@ export function cardAssumptions(
     result.push('pool-conflict')
   if (card.assumptions.includes('assumption.enrollment-period-ignored'))
     result.push('enrollment-period')
+  if (card.assumptions.includes('assumption.qr-primary'))
+    result.push('qr-primary')
   return result
 }
 

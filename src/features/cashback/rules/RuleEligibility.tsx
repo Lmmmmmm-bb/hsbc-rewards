@@ -67,6 +67,12 @@ export function RuleEligibility({ rules }: { rules: WorkspaceView['rules'] }) {
       </InfoSection>
       <InfoSection title={t('rules.excludedTitle')}>
         <p className="text-muted-foreground">{t('rules.exclusions')}</p>
+        <p className="text-muted-foreground">{t('rewards.qrPrimary')}</p>
+      </InfoSection>
+      <InfoSection title={t('rules.diningTitle')}>
+        <p className="text-muted-foreground">{t('rules.diningPeriods')}</p>
+        <p className="text-muted-foreground">{t('rules.diningEvidence')}</p>
+        <p className="text-muted-foreground">{t('rules.otherPromotions')}</p>
       </InfoSection>
     </div>
   )

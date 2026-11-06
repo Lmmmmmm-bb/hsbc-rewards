@@ -41,6 +41,23 @@ describe('three-tier reward accrual and independent cap pools', () => {
     expect(row.tiers.find(t => t.tier === 'basic')?.microRc).toBe(1000000)
   })
 
+  it('excludes confirmed additional cards from QR rewards while allowing mobile payments', () => {
+    const card = { ...testCard, role: 'additional' as const }
+    const qr = run([transaction()], [card])
+    expect(qr.cards[0]).toMatchObject({ basicMicroRc: 1000000, abroadMicroRc: 5000000, pulseMicroRc: 0 })
+    expect(qr.transactions[0].tiers.find(tier => tier.tier === 'pulse')?.reasonCodes).toEqual(['reward.qr-primary-required'])
+    const mobile = transaction({ classification: { ...transaction().classification, paymentMethod: 'apple-pay' } })
+    expect(run([mobile], [card]).cards[0].pulseMicroRc).toBe(5000000)
+  })
+
+  it('uses the confirmed QR estimation policy for unknown roles without changing card identity', () => {
+    const card = { ...testCard, role: 'unknown' as const }
+    const result = run([transaction()], [card])
+    expect(result.cards[0].pulseMicroRc).toBe(5000000)
+    expect(result.transactions[0].assumptions).toContain('assumption.qr-primary')
+    expect(card.role).toBe('unknown')
+  })
+
   it('ignores refunds without releasing consumed cap', () => {
     const purchase = transaction({ id: 'purchase', transactionDate: '2026-01-01', account: { currency: 'CNY', minor: LATEST_RULES.abroad.capMinor } })
     const refund = transaction({ id: 'refund', transactionDate: '2026-02-01', account: { currency: 'CNY', minor: -100000 }, classification: { ...transaction().classification, kind: 'refund', eligible: false } })

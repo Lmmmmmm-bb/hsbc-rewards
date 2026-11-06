@@ -135,6 +135,14 @@ Expected recovery actions include request_access, provide_files, read_summary, f
 
 ## Public rule version and sources
 
+${t('rewards.qrPrimary')}
+
+${t('rules.diningPeriods')}
+
+${t('rules.diningEvidence')}
+
+${t('rules.otherPromotions')}
+
 This deployment uses ${LATEST_RULES.id}, verified ${LATEST_RULES.verifiedAt}. reward_get_rules returns the same application version and localized explanations; it does not fetch or reverify current bank terms.
 
 ${LATEST_RULES.sources.map((url) => `- ${url}`).join('\n')}

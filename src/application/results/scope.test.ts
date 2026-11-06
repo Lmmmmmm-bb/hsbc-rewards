@@ -55,7 +55,7 @@ describe('shared result selection', () => {
     const state = session(createDemoDataset())
     const view = deriveWorkspace(state)
     expect(selectResultScope(state, view).totals.totalRewardMicroRc).toBe(
-      4_335_280_060,
+      4_314_680_060,
     )
     expect(
       selectResultScope(state, view, { periodId: '2026-H1' })
