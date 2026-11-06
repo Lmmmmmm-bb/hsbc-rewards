@@ -34,7 +34,7 @@ export function RewardBreakdown({
     <section
       data-reward-breakdown
       data-period={period?.id}
-      className="space-y-3"
+      className="flex min-w-0 flex-col gap-4"
       aria-label={
         period
           ? t(period.half === 1 ? 'period.h1' : 'period.h2', {
@@ -50,7 +50,7 @@ export function RewardBreakdown({
             : t('cashback.breakdown')}
         </h2>
         {period && (
-          <p className="text-sm font-semibold tabular-nums">
+          <p className="shrink-0 text-sm font-semibold whitespace-nowrap tabular-nums">
             {rcSummary(period.totalRewardMicroRc)}
           </p>
         )}

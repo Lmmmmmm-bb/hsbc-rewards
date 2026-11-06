@@ -41,7 +41,10 @@ export function RewardSummary({
   ] as const
 
   return (
-    <Card data-reward-summary className="ring-primary/20">
+    <Card
+      data-reward-summary
+      className="@container/summary min-w-0 ring-primary/20"
+    >
       <CardContent>
         <ResultReveal
           trigger={hasResults ? revealKey : null}
@@ -64,13 +67,7 @@ export function RewardSummary({
             )}
           </div>
           <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
-            <div
-              className={
-                hasResults
-                  ? 'flex min-w-0 flex-wrap items-baseline justify-between gap-3 sm:block sm:space-y-1'
-                  : 'min-w-0 space-y-1'
-              }
-            >
+            <div className="min-w-0">
               <p
                 data-reward-total
                 className={`flex flex-wrap items-baseline gap-x-2 leading-none font-semibold tracking-tight text-primary tabular-nums ${formatted.length > 12 ? 'text-2xl sm:text-4xl' : 'text-5xl sm:text-6xl'}`}
@@ -81,7 +78,7 @@ export function RewardSummary({
                 <span className="text-lg font-medium text-foreground">RC</span>
               </p>
             </div>
-            <div>
+            <div className="flex min-w-0 flex-col gap-1 @lg/summary:items-end @lg/summary:text-right">
               <p className="text-xs text-muted-foreground">
                 {t('cashback.reference')}
               </p>
@@ -106,7 +103,7 @@ export function RewardSummary({
           <dl
             className={
               hasResults
-                ? 'grid grid-cols-1 gap-3 sm:grid-cols-3'
+                ? 'grid grid-cols-1 gap-3 @lg/summary:grid-cols-3'
                 : 'grid grid-cols-3 gap-3'
             }
           >
@@ -115,8 +112,8 @@ export function RewardSummary({
                 key={tier}
                 className={
                   hasResults
-                    ? 'flex min-w-0 flex-wrap items-baseline justify-between gap-3 sm:block sm:space-y-1'
-                    : 'min-w-0 space-y-1'
+                    ? 'flex min-w-0 flex-wrap items-baseline justify-between gap-x-3 gap-y-1 @lg/summary:flex-col @lg/summary:items-start @lg/summary:justify-start'
+                    : 'flex min-w-0 flex-col gap-1'
                 }
               >
                 <dt className="text-xs text-muted-foreground">
@@ -126,7 +123,7 @@ export function RewardSummary({
                   {hasResults ? rcSummary(microRc) : '— RC'}
                 </dd>
                 {hasResults && microRc === null && knownMicroRc > 0 && (
-                  <dd className="text-xs text-muted-foreground">
+                  <dd className="w-full text-xs text-muted-foreground">
                     {t('rewards.knownPortion', {
                       amount: rcSummary(knownMicroRc),
                     })}
@@ -137,7 +134,7 @@ export function RewardSummary({
           </dl>
           <dl className="flex flex-wrap gap-x-5 gap-y-2 text-xs">
             {stats.map(({ label, value }) => (
-              <div key={label} className="flex gap-1">
+              <div key={label} className="flex gap-2">
                 <dt className="text-muted-foreground">{t(label)}</dt>
                 <dd className="font-medium tabular-nums">
                   {hasResults ? number(value, 0) : '—'}

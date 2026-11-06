@@ -34,7 +34,7 @@ function FilterSelect({
   const id = useId()
   const selected = choices.find((choice) => choice.value === value)?.label
   return (
-    <div className={cn('min-w-0 space-y-1', className)}>
+    <div className={cn('flex min-w-0 flex-col gap-1', className)}>
       <label htmlFor={id} className="block text-xs text-muted-foreground">
         {label}
       </label>
@@ -92,6 +92,7 @@ export function TransactionFilters({
     >
       <FilterSelect
         label={t('cashback.cards')}
+        className="col-span-2 sm:col-span-1"
         value={cardId ?? 'all'}
         choices={[
           { value: 'all', label: t('details.allCards') },
@@ -125,7 +126,6 @@ export function TransactionFilters({
       <FilterSelect
         label={t('details.status')}
         value={filter.flags?.[0] ?? 'all'}
-        className="col-span-2 sm:col-span-1"
         choices={[
           { value: 'all', label: t('details.allStatuses') },
           ...(['pending', 'uncertain', 'excluded', 'capped'] as const).map(
