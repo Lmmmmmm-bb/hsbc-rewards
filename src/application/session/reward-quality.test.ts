@@ -113,10 +113,10 @@ describe('reward quality aggregates', () => {
     })
     const transactions = deduplicateTransactions([
       row,
-      { ...row, id: 'second-row' },
+      { ...row, id: 'second-row', sources: row.sources.map(source => ({ ...source, statementId: 'statement-b', fileHash: 'synthetic-b' })) },
     ]).transactions
     const { quality } = inspect(
-      { cards: [testCard], statements: [statement()], transactions },
+      { cards: [testCard], statements: [statement(), statement({ id: 'statement-b', fileHash: 'synthetic-b' })], transactions },
       null,
     )
 

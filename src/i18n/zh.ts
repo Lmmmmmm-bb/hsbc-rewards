@@ -414,7 +414,7 @@ export const zh = {
   'quality.duplicate': '疑似重复 {count} 笔',
   'quality.noAccounts': '缺少账单子账户余额，无法核对。',
   'quality.duplicateHint':
-    '{count} 笔交易疑似重复，因缺少唯一银行凭证，仍计入估算。',
+    '{count} 笔交易在不同账单间疑似重复，因缺少唯一银行凭证而保留；是否计奖仍按各笔资格判断。',
   'quality.referenceHint':
     '{count} 笔交易的银行凭证冲突，仍计入估算。',
   'quality.unverifiedHint':

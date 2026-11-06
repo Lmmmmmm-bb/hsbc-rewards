@@ -462,7 +462,7 @@ export const en = {
   'quality.duplicate': 'Possible duplicates: {count}',
   'quality.noAccounts': 'Statement account balances unavailable; unable to check.',
   'quality.duplicateHint': ({ count }) =>
-    `{count} ${plural(count, 'transaction may be a duplicate. Without a unique bank reference, it remains', 'transactions may be duplicates. Without unique bank references, they remain')} in the estimate.`,
+    `{count} ${plural(count, 'transaction may be duplicated across statements and is retained', 'transactions may be duplicated across statements and are retained')} without unique bank references. Reward eligibility is assessed separately.`,
   'quality.referenceHint': ({ count }) =>
     `{count} ${plural(count, 'transaction has', 'transactions have')} conflicting bank references and ${plural(count, 'remains', 'remain')} in the estimate.`,
   'quality.unverifiedHint': ({ count }) =>

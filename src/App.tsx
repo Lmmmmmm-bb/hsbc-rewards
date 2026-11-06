@@ -28,7 +28,7 @@ function App() {
   return (
     <PageFileDrop onFiles={actions.importFiles} busy={batch.active}>
       <CashbackPage
-        key={session.mode}
+        key={`page:${session.mode}`}
         session={session}
         view={view}
         fxRequest={fx.request}
@@ -73,7 +73,7 @@ function App() {
           <p>{t('clear.body')}</p>
         </Dialog>
       )}
-      {dialog === 'details' && details && session.mode !== 'empty' && <ResultDetailsDialog key={session.mode} request={details} session={session} workspace={view} onClose={actions.close} />}
+      {dialog === 'details' && details && session.mode !== 'empty' && <ResultDetailsDialog key={`details:${session.mode}`} request={details} session={session} workspace={view} onClose={actions.close} />}
       {dialog === 'agent' && <AgentDialog status={agent.status} shared={agent.shared}
         onGrant={agent.grant} onRevoke={agent.revoke} onRetry={agent.retry} onClose={actions.close} />}
     </PageFileDrop>
