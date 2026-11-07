@@ -22,7 +22,7 @@ export function FxReference({
   return (
     <section
       data-fx-reference
-      className="space-y-2 text-xs"
+      className="space-y-3 text-xs"
       aria-label={t('fx.title')}
     >
       <div className="flex flex-wrap items-center justify-between gap-2">

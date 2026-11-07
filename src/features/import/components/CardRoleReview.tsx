@@ -18,7 +18,7 @@ export function CardRoleReview({
   return (
     <section className="flex flex-col gap-4" aria-labelledby={`${id}-title`}>
       <div className="flex flex-col gap-1">
-        <h3 id={`${id}-title`} className="text-sm font-semibold">
+        <h3 id={`${id}-title`} className="text-sm font-medium">
           {t('pdf.cards.title')}
         </h3>
         <p className="text-xs text-muted-foreground">{t('pdf.cards.hint')}</p>

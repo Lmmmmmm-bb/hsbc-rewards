@@ -44,7 +44,7 @@ export function RewardBreakdown({
       }
     >
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-lg font-semibold tracking-tight">
+        <h2 className="text-lg font-semibold">
           {period
             ? `${t(period.half === 1 ? 'period.h1' : 'period.h2', { year: period.year })} · ${t('cashback.breakdown')}`
             : t('cashback.breakdown')}

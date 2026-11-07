@@ -62,7 +62,7 @@ export function FileStatusRow({
             </p>
           )}
           {(item.status === 'reading' || item.status === 'parsing') && (
-            <div role="status" className="space-y-1">
+            <div role="status" className="space-y-2">
               <Progress
                 value={
                   item.status === 'parsing' || !item.totalPages

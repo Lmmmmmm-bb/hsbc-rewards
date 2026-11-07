@@ -65,7 +65,7 @@ export function RewardCard({
           </p>
         </div>
       </CardHeader>
-      <CardContent className="flex min-w-0 flex-col gap-4">
+      <CardContent className="flex min-w-0 flex-col gap-3">
         <dl className="grid grid-cols-1 gap-4 @lg/reward:grid-cols-3">
           {card.tiers.map(
             ({ tier, rateBasisPoints, eligibleSpend, knownMicroRc }) => (

@@ -68,7 +68,7 @@ export function CashbackPage({
           <p className="text-xs font-medium text-muted-foreground">
             {t('cashback.subtitle')}
           </p>
-          <h1 className="text-3xl font-semibold tracking-tight">
+          <h1 className="text-3xl font-semibold">
             {t(hasResults ? 'cashback.title' : 'cashback.emptyTitle')}
           </h1>
           {!hasResults && (

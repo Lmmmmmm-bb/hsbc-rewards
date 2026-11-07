@@ -13,7 +13,7 @@ export function RewardCaps({ pools }: { pools: readonly ResultPool[] }) {
       data-period-caps
     >
       <div className="flex flex-col gap-1">
-        <h3 className="font-semibold">{t('card.caps')}</h3>
+        <h3 className="font-medium">{t('card.caps')}</h3>
         <p className="text-xs text-muted-foreground">{t('rewards.imported')}</p>
       </div>
       {!pools.length && (

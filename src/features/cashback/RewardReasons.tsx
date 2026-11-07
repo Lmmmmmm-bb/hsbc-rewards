@@ -35,7 +35,7 @@ export function RewardReasons({
     reasons: TierDetails[number]['reasons'],
     component: RewardTier,
   ) => (
-    <ul className="flex flex-col gap-2">
+    <ul className="flex flex-col gap-1">
       {reasons.map(({ code, count }) => (
         <li key={code} className="flex items-start justify-between gap-3">
           <Button
@@ -60,7 +60,7 @@ export function RewardReasons({
             {children}
             {shared.length > 0 && (
               <section className="flex min-w-0 flex-col gap-2">
-                <h4 className="text-xs font-semibold text-foreground">
+                <h4 className="text-xs font-medium text-foreground">
                   {t('reasons.common')}
                 </h4>
                 {list(shared, 'basic')}
@@ -71,7 +71,7 @@ export function RewardReasons({
 
               return (
                 <section key={tier} className="flex flex-col gap-2">
-                  <h4 className="text-xs font-semibold text-foreground">
+                  <h4 className="text-xs font-medium text-foreground">
                     {t(`rewards.${tier}`)}
                   </h4>
                   {specific.length ? (
