@@ -41,7 +41,7 @@ function summarize(
       return (
         result.tiers.some((tier) =>
           tier.reasonCodes.some((code) =>
-            ['region.unknown', 'currency.original-unknown'].includes(code),
+            ['region.unknown', 'currency.original-unknown', 'payment.unknown'].includes(code),
           ),
         ) ||
         row.warnings.some((warning) => warning.code === 'date.outside-period')

@@ -44,7 +44,10 @@ export function createWorkspaceActions(store: SessionStore, importer: PdfImportC
     setCardRole(reviewId: number, cardId: string, role: NonNullable<ImportCardRole['role']>) {
       importer.setCardRole(reviewId, cardId, role)
     },
-    confirmCards(reviewId: number) { importer.confirmCards(reviewId) },
+    confirmCards(reviewId: number) {
+      importer.confirmCards(reviewId)
+      if (importer.getSnapshot().outcome.status === 'committed' && snapshot.dialog === 'files') show(null)
+    },
 
     importFiles(files: readonly PdfSource[]) {
       if (!files.length) return

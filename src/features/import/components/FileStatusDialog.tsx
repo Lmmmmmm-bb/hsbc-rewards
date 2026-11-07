@@ -117,19 +117,11 @@ export function FileStatusDialog({
             <p className="text-xs text-muted-foreground">
               {t('pdf.inProgressHint')}
             </p>
-            <p className="text-xs text-muted-foreground">
-              {t('pdf.addFilesBusy')}
-            </p>
           </div>
         )}
         {committed && (
           <p role="status" className="text-sm font-medium">
             {t('pdf.committed', batch.outcome)}
-          </p>
-        )}
-        {!batch.active && (
-          <p className="text-sm text-muted-foreground">
-            {t('pdf.addFilesHint')}
           </p>
         )}
         {batch.outcome.status === 'empty' && (

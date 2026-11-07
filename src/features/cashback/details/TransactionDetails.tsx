@@ -34,10 +34,10 @@ export function TransactionDetails({
           ) ?? row.classification.region)
         : t('details.unknown'),
     ],
-    [
+    ...(row.classification.kind === 'purchase' ? [[
       t('details.payment'),
       t(`details.payment.${row.classification.paymentMethod}`),
-    ],
+    ]] : []),
   ]
   return (
     <div className="space-y-3" data-transaction-detail>
@@ -51,7 +51,7 @@ export function TransactionDetails({
             {row.description}
           </h3>
         </CardHeader>
-        <CardContent className="space-y-2">
+        {row.classification.kind === 'purchase' && <CardContent className="space-y-2">
           <p className="text-sm font-medium">
             {t('details.transactionReward')}
           </p>
@@ -61,7 +61,7 @@ export function TransactionDetails({
           {reward.microRc === null && (
             <p className="text-xs">{t('cashback.knownHint')}</p>
           )}
-        </CardContent>
+        </CardContent>}
       </Card>
       <InfoSection title={t('details.transactionInfo')}>
         <dl className="grid gap-x-4 gap-y-3 sm:grid-cols-2">
@@ -73,7 +73,7 @@ export function TransactionDetails({
           ))}
         </dl>
       </InfoSection>
-      <InfoSection title={t('details.componentRewards')}>
+      {row.classification.kind === 'purchase' && <InfoSection title={t('details.componentRewards')}>
         <div className="grid items-stretch gap-2 sm:grid-cols-3">
           {reward.tiers.map((tier) => {
             const capping = componentExplanation(tier)
@@ -124,7 +124,7 @@ export function TransactionDetails({
             )
           })}
         </div>
-      </InfoSection>
+      </InfoSection>}
       <TransactionSources sources={row.sources} statements={statements} />
     </div>
   )

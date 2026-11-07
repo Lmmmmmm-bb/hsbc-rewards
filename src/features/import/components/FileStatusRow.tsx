@@ -52,7 +52,7 @@ export function FileStatusRow({
             )}
           </div>
           {(item.status === 'parsed' || item.status === 'imported') && (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               {t('pdf.parsedSummary', {
                 pages: item.totalPages ?? 0,
                 transactions: item.transactions,

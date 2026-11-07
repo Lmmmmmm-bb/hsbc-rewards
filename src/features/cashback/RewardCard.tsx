@@ -25,7 +25,7 @@ export function RewardCard({
   return (
     <Card data-reward-card className="@container/reward min-w-0">
       <CardHeader className="grid min-w-0 gap-3 @md/reward:grid-cols-[minmax(0,1fr)_auto]">
-        <div className="flex min-w-0 flex-col items-start gap-1">
+        <div className="flex min-w-0 flex-col items-start gap-2">
           <p className="flex items-start gap-2 text-xs text-muted-foreground">
             <RiBankCardLine
               className="size-4 shrink-0 text-primary"
@@ -71,7 +71,7 @@ export function RewardCard({
             ({ tier, rateBasisPoints, eligibleSpend, knownMicroRc }) => (
               <div
                 key={tier}
-                className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-3 gap-y-1 @lg/reward:flex-col @lg/reward:items-start @lg/reward:justify-start"
+                className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-3 gap-y-2 @lg/reward:flex-col @lg/reward:items-start @lg/reward:justify-start"
               >
                 <dt className="text-xs text-muted-foreground">
                   {t(`rewards.${tier}`)}{' '}
@@ -89,9 +89,9 @@ export function RewardCard({
                     })}
                   </dd>
                 )}
-                <dd className="w-full text-xs text-muted-foreground">
+                <dd className="flex w-full flex-col gap-1 text-xs text-muted-foreground">
                   {t('card.eligible')}
-                  <ul className="flex flex-wrap gap-x-3 @lg/reward:flex-col">
+                  <ul className="flex flex-wrap gap-x-3 gap-y-1 @lg/reward:flex-col">
                     {eligibleSpend.map((amount) => (
                       <li
                         key={amount.currency}

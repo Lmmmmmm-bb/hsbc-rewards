@@ -157,7 +157,7 @@ export function calculateRewards(input: readonly Transaction[], cards: readonly 
       const qrPrimary = classification.paymentMethod !== 'unionpay-qr' || card.role !== 'additional'
       const pulse = pulseRegion && pulseCurrency && mobile && qrPrimary
         ? cappedTier('pulse', transaction, card, LATEST_RULES.pulse.rateBasisPoints, assumptions)
-        : emptyTier('pulse', LATEST_RULES.pulse.rateBasisPoints, classification.region === null ? 'region.unknown' : !originalKnown ? 'currency.original-unknown' : !pulseRegion ? 'reward.region-excluded' : !pulseCurrency ? 'reward.currency-excluded' : !qrPrimary ? 'reward.qr-primary-required' : 'reward.payment-excluded')
+        : emptyTier('pulse', LATEST_RULES.pulse.rateBasisPoints, classification.region === null ? 'region.unknown' : !originalKnown ? 'currency.original-unknown' : !pulseRegion ? 'reward.region-excluded' : !pulseCurrency ? 'reward.currency-excluded' : !qrPrimary ? 'reward.qr-primary-required' : classification.paymentMethod === 'unknown' ? 'payment.unknown' : 'reward.payment-excluded')
       if (pulseRegion && pulseCurrency && classification.paymentMethod === 'unionpay-qr' && card.role === 'unknown') assumptions.push('assumption.qr-primary')
 
       tiers = [basic, abroad, pulse]

@@ -34,6 +34,11 @@ export function TransactionRow({
       <span className="min-w-0 break-words text-sm font-medium">
         {row.description}
       </span>
+      <span className="text-xs font-normal text-muted-foreground">
+        {row.classification.kind === 'purchase'
+          ? t(`details.payment.${row.classification.paymentMethod}`)
+          : t(`details.kind.${row.classification.kind}`)}
+      </span>
       <span className="mt-auto flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
         <span className="min-w-0 text-xs font-normal text-muted-foreground">
           <span className="sr-only">{t('details.account')} · </span>
@@ -41,7 +46,7 @@ export function TransactionRow({
             {money(row.account.minor, row.account.currency)}
           </span>
         </span>
-        <span className="max-w-36 text-right tabular-nums">
+        {row.classification.kind === 'purchase' && <span className="max-w-36 text-right tabular-nums">
           <span className="sr-only">{t('details.transactionReward')}</span>
           <span className="block text-sm font-semibold">
             {rcSummary(reward.microRc)}
@@ -53,7 +58,7 @@ export function TransactionRow({
               })}
             </span>
           )}
-        </span>
+        </span>}
       </span>
     </Button>
   )

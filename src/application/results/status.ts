@@ -5,7 +5,7 @@ import type { TierReward } from '@/domain/rewards/calculate'
 export function componentFlags(tier: TierReward, row: Transaction) {
   const uncertain =
     tier.reasonCodes.some((code) =>
-      ['region.unknown', 'currency.original-unknown'].includes(code),
+      ['region.unknown', 'currency.original-unknown', 'payment.unknown'].includes(code),
     ) || row.warnings.some((warning) => warning.code === 'date.outside-period')
   const capped = tier.reasonCodes.includes('reward.cap-applied')
   return {

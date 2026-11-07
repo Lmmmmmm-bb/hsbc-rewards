@@ -32,6 +32,15 @@ describe('three-tier reward accrual and independent cap pools', () => {
     expect(run([transaction()], [{ ...testCard, abroadEnrollment: 'not-registered' }]).cards[0]).toMatchObject({ abroadMicroRc: 0, pulseMicroRc: 5000000 })
   })
 
+  it('distinguishes ineligible payment from missing payment evidence', () => {
+    for (const paymentMethod of ['standard', 'unknown'] as const) {
+      const row = transaction({ classification: { ...transaction().classification, paymentMethod } })
+      const reward = run([row], [testCard]).transactions[0].tiers.find(tier => tier.tier === 'pulse')!
+      expect(reward.microRc).toBe(0)
+      expect(reward.reasonCodes).toEqual([paymentMethod === 'standard' ? 'reward.payment-excluded' : 'payment.unknown'])
+    }
+  })
+
   it('clips only the portion crossing the cap, preserving basic rewards', () => {
     const prior = transaction({ id: 'prior', transactionDate: '2026-01-01', account: { currency: 'CNY', minor: LATEST_RULES.abroad.capMinor - 10000 }, classification: { ...transaction().classification, paymentMethod: 'standard' } })
     const result = run([transaction(), prior], [testCard])
