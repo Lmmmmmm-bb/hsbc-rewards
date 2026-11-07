@@ -217,7 +217,7 @@ export const en = {
   'precision.compute':
     'RC calculations retain six decimal places without rounding each purchase to a whole RC. At spending caps, proportional rewards discard only fractions below 0.000001 RC.',
   'precision.display':
-    'Page amounts round to two decimal places; nonzero amounts that round to zero show <0.01 RC. Calculation details show up to six decimal places. Total rewards are converted to CNY reference values and rounded to cents. Display rounding does not affect calculations; rounded card or period values may not add up to the overview.',
+    'Overview RC amounts are rounded down to whole numbers; amounts below 1 RC show as 0 RC. Transaction lists show two decimal places, with nonzero amounts that round to zero shown as <0.01 RC. Individual calculation details show up to six decimal places. Calculations and totals retain full precision. CNY reference values use the unrounded reward total and are rounded to cents. Displayed amounts may not add up to the displayed total.',
   'precision.example':
     'HKD 0.01 earns 0.00004 basic RC; 100 purchases total 0.004 RC without rounding each to zero.',
   'precision.bank':

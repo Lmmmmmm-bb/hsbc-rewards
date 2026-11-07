@@ -12,7 +12,7 @@ export function TransactionRow({
   cardLabel?: string
   onSelect: (id: string) => void
 }) {
-  const { t, date, money, rcSummary } = useI18n()
+  const { t, date, money, rc } = useI18n()
   const { row, reward } = entry
   return (
     <Button
@@ -49,12 +49,12 @@ export function TransactionRow({
         {row.classification.kind === 'purchase' && <span className="max-w-36 text-right tabular-nums">
           <span className="sr-only">{t('details.transactionReward')}</span>
           <span className="block text-sm font-semibold">
-            {rcSummary(reward.microRc)}
+            {rc(reward.microRc, 'decimal')}
           </span>
           {reward.microRc === null && (
             <span className="mt-1 block text-xs font-normal">
               {t('rewards.knownPortion', {
-                amount: rcSummary(reward.knownMicroRc),
+                amount: rc(reward.knownMicroRc, 'decimal'),
               })}
             </span>
           )}
