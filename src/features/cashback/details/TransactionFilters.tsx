@@ -85,14 +85,14 @@ export function TransactionFilters({
   const { t } = useI18n()
   return (
     <div
-      className="grid shrink-0 grid-cols-2 items-end gap-2 border bg-muted/30 p-2.5 sm:grid-cols-3"
+      className="grid shrink-0 grid-cols-2 items-end gap-2 border bg-muted/30 p-2.5 @2xl/details:grid-cols-3"
       data-detail-filters
       role="group"
       aria-label={t('details.filters')}
     >
       <FilterSelect
         label={t('cashback.cards')}
-        className="col-span-2 sm:col-span-1"
+        className="col-span-2 @2xl/details:col-span-1"
         value={cardId ?? 'all'}
         choices={[
           { value: 'all', label: t('details.allCards') },
@@ -140,7 +140,7 @@ export function TransactionFilters({
         }
       />
       {(filter.reason || filter.warning || filter.reconciliation) && (
-        <div className="col-span-2 flex flex-wrap items-center gap-x-2 text-xs sm:col-span-3">
+        <div className="col-span-full flex flex-wrap items-center gap-x-2 text-xs">
           <span>
             {filter.reason
               ? t(reasonMessage(filter.reason))

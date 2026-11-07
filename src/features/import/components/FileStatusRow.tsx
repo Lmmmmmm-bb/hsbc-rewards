@@ -37,19 +37,21 @@ export function FileStatusRow({
                 {number(item.size / 1024, 0)} KB
               </p>
             </div>
-            <Badge variant={item.status === 'error' ? 'default' : 'secondary'}>
-              {t(`pdf.status.${item.status}`)}
-            </Badge>
-            {editable && (
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                aria-label={t('pdf.remove', { name: item.name })}
-                onClick={() => controller.remove(item.id)}
-              >
-                <RiCloseLine aria-hidden="true" />
-              </Button>
-            )}
+            <div className="-mt-1 -mr-1 flex min-h-6 shrink-0 items-center gap-2">
+              <Badge variant={item.status === 'error' ? 'default' : 'secondary'}>
+                {t(`pdf.status.${item.status}`)}
+              </Badge>
+              {editable && (
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={t('pdf.remove', { name: item.name })}
+                  onClick={() => controller.remove(item.id)}
+                >
+                  <RiCloseLine aria-hidden="true" />
+                </Button>
+              )}
+            </div>
           </div>
           {(item.status === 'parsed' || item.status === 'imported') && (
             <p className="text-xs text-muted-foreground">

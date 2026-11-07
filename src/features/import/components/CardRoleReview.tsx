@@ -40,8 +40,17 @@ export function CardRoleReview({
               }}
             >
               {(['primary', 'additional'] as const).map((role) => (
-                <Field key={role} orientation="horizontal" className="w-auto">
-                  <RadioGroupItem id={`${id}-${index}-${role}`} value={role} />
+                <Field
+                  key={role}
+                  orientation="horizontal"
+                  className="w-auto"
+                  data-disabled={review.cards.length === 1 && role === 'additional'}
+                >
+                  <RadioGroupItem
+                    id={`${id}-${index}-${role}`}
+                    value={role}
+                    disabled={review.cards.length === 1 && role === 'additional'}
+                  />
                   <FieldLabel htmlFor={`${id}-${index}-${role}`}>
                     {t(`pdf.cards.${role}`)}
                   </FieldLabel>
