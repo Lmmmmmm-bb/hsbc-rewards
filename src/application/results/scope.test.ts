@@ -51,7 +51,7 @@ describe('shared result selection', () => {
         ?.rateBasisPoints,
     ).toBe(120)
   })
-  it('preserves the verified demo amounts and isolates quality by half-year', () => {
+  it('preserves the verified demo amounts and balanced sources in each half-year', () => {
     const state = session(createDemoDataset())
     const view = deriveWorkspace(state)
     expect(selectResultScope(state, view).totals.totalRewardMicroRc).toBe(
@@ -64,7 +64,7 @@ describe('shared result selection', () => {
     expect(
       selectResultScope(state, view, { periodId: '2026-H2' })
         .mismatchStatementCount,
-    ).toBe(1)
+    ).toBe(0)
     expect(() =>
       selectResultScope(state, view, { periodId: '2020-H1' }),
     ).toThrow('period_not_found')

@@ -34,7 +34,7 @@ export function RewardCard({
             {t('card.product')}
           </p>
           <h3 className="text-base font-semibold">
-            {t(`card.${card.card.role}`)} · ·· {card.card.lastFour}
+            {t(`card.${card.card.role}`)} · {card.card.lastFour}
           </h3>
           <Badge variant="outline">{card.currencies.join(' / ')}</Badge>
         </div>

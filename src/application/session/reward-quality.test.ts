@@ -12,11 +12,21 @@ function inspect(dataset: Dataset, rate: number | null = 900000) {
 }
 
 describe('reward quality aggregates', () => {
-  it('separates balance mismatch, missing eligibility evidence and excluded payments in the demo', () => {
-    const { quality } = inspect(createDemoDataset())
+  it('separates injected balance mismatch, missing eligibility evidence and excluded payments', () => {
+    const demo = createDemoDataset()
+    const dataset: Dataset = {
+      ...demo,
+      statements: demo.statements.map((source) => source.id === 'demo-main-2026-10'
+        ? { ...source, accounts: source.accounts.map((account) => account.currency === 'CNY'
+          ? { ...account, closingMinor: account.closingMinor! + 3000 } : account) }
+        : source),
+      transactions: demo.transactions.map((row) => row.id === 'demo-additional-2026-10-1'
+        ? { ...row, classification: { ...row.classification, region: null } } : row),
+    }
+    const { quality } = inspect(dataset)
 
     expect(quality.total).toMatchObject({
-      matchedAccounts: 10,
+      matchedAccounts: 11,
       mismatchAccounts: 1,
       unverifiedAccounts: 0,
       excludedCount: 11,
@@ -30,7 +40,7 @@ describe('reward quality aggregates', () => {
       uncertainEligibilityCount: 0,
     })
     expect(quality.byCard.get('demo-additional')).toMatchObject({
-      matchedAccounts: 5,
+      matchedAccounts: 6,
       excludedCount: 3,
       uncertainEligibilityCount: 1,
     })

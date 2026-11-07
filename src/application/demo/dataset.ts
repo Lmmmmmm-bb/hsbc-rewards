@@ -47,7 +47,7 @@ const examples: readonly DemoStatement[] = [
       [5, 'DEMO HOTEL SGP', 'HKD', 180000, 'SGD', 30000],
       [9, 'DEMO STORE JPN', 'HKD', 80000, 'JPY', 1500000],
       [12, 'DEMO TAXI HKG', 'HKD', 6200],
-      [15, 'DEMO RESTAURANT UNIONPAY QR CN', 'CNY', 45000],
+      [15, 'DEMO RESTAURANT CN', 'CNY', 45000],
       [21, 'PAYMENT RECEIVED', 'HKD', -100000],
     ],
   },
@@ -55,7 +55,7 @@ const examples: readonly DemoStatement[] = [
     id: 'main-2026-06', card: 'main', date: '2026-06-22', from: '2026-05-23',
     balances: [['CNY', 90000, 1270000], ['HKD', 305000, 443500]],
     rows: [
-      [4, 'DEMO TRAVEL UNIONPAY QR CN', 'CNY', 4000000],
+      [4, 'DEMO TRAVEL APPLE PAY CN', 'CNY', 4000000],
       [8, 'DEMO HOME STORE APPLE PAY CN', 'CNY', 3200000],
       [12, 'DEMO ELECTRONICS STORE SAMSUNG PAY CN', 'CNY', 1200000],
       [15, 'DEMO HOTEL CN', 'CNY', 900000],
@@ -72,15 +72,14 @@ const examples: readonly DemoStatement[] = [
       [5, 'DEMO COFFEE HKG', 'HKD', 12800],
       [8, 'DEMO AIRLINE USA', 'HKD', 365000, 'USD', 46800],
       [11, 'DEMO STORE FRA', 'HKD', 215000, 'EUR', 25000],
-      [14, 'DEMO SUPERMARKET UNIONPAY QR CN', 'CNY', 58000],
+      [14, 'DEMO SUPERMARKET CN', 'CNY', 58000],
       [18, 'DEMO WALLET TOP UP HKG', 'HKD', 50000],
       [21, 'PAYMENT RECEIVED', 'CNY', -60000],
     ],
   },
   {
     id: 'main-2026-10', card: 'main', date: '2026-10-22', from: '2026-09-23',
-    // The CNY closing balance deliberately differs by CNY 30 to demonstrate reconciliation.
-    balances: [['CNY', 500000, 483000], ['HKD', 200000, 213000]],
+    balances: [['CNY', 500000, 480000], ['HKD', 200000, 213000]],
     rows: [
       [6, 'DEMO APPLE PAY STORE MO', 'HKD', 10000, 'MOP', 10309],
       [10, 'FINANCE CHARGE', 'HKD', 3000],
@@ -93,9 +92,9 @@ const examples: readonly DemoStatement[] = [
   },
   {
     id: 'additional-2026-10', card: 'additional', date: '2026-10-22', from: '2026-09-23',
-    balances: [['HKD', 100000, 190000]],
+    balances: [['HKD', 100000, 190000], ['CNY', 0, 0]],
     rows: [
-      [7, 'DEMO UNKNOWN MERCHANT', 'HKD', 15000],
+      [7, 'DEMO BOOK STORE HKG', 'HKD', 15000],
       [9, 'DEMO TRAVEL STORE JPN', 'HKD', 50000, 'JPY', 1000000],
       [17, 'DEMO COFFEE HKG', 'HKD', 25000],
     ],
