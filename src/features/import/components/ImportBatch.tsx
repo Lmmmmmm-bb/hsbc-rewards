@@ -66,8 +66,8 @@ export function ImportBatch({
       <Button
         data-file-status-trigger
         variant="outline"
-        size="sm"
-        className="w-full justify-between"
+        size="lg"
+        className="h-auto min-h-10 w-full justify-between gap-3 px-3 py-2 text-left whitespace-normal"
         onClick={onStatus}
         aria-haspopup="dialog"
       >

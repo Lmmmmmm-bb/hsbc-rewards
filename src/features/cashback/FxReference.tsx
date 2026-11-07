@@ -41,9 +41,9 @@ export function FxReference({
             <span className="font-mono font-medium tabular-nums">
               1 HKD = {number(fx.hkdToCnyPpm / 1_000_000, 6)} CNY
             </span>
-            {(fx.stale || fx.source === 'live') && (
-              <Badge variant={fx.stale ? 'secondary' : 'outline'}>
-                {t(fx.stale ? 'fx.stale' : 'fx.available')}
+            {fx.stale && (
+              <Badge variant="secondary">
+                {t('fx.stale')}
               </Badge>
             )}
           </p>
