@@ -25,6 +25,16 @@ function setup(rows: SessionState['dataset']['transactions']) {
 }
 
 describe('result detail queries', () => {
+  it('filters refunds and repayments before pagination while retaining fees', () => {
+    const { scope } = setup((['purchase', 'refund', 'repayment', 'fee'] as const).map((kind) => transaction({
+      id: kind,
+      classification: { ...transaction().classification, kind },
+    })))
+    const filtered = transactionPage(scope, { hideRefundsAndRepayments: true }, null, 0)
+    expect(filtered.entries.map(({ row }) => row.id)).toEqual(['fee', 'purchase'])
+    expect(filtered.count).toBe(2)
+    expect(transactionPage(scope, { hideRefundsAndRepayments: false }, null, 0).count).toBe(4)
+  })
   it('matches a reason and flag within the same component', () => {
     const { scope } = setup([
       transaction({

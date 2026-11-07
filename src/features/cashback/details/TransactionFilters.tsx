@@ -1,4 +1,5 @@
 import { useId } from 'react'
+import { RiCheckLine } from '@remixicon/react'
 import type { ResultScope } from '@/application/results/scope'
 import type {
   TransactionFilter,
@@ -139,6 +140,21 @@ export function TransactionFilters({
           })
         }
       />
+      <div className="col-span-full">
+        <Button
+          variant="outline"
+          size="sm"
+          aria-pressed={!!filter.hideRefundsAndRepayments}
+          className="h-auto min-h-8 whitespace-normal aria-pressed:bg-muted"
+          onClick={() => onFilter({
+            ...filter,
+            hideRefundsAndRepayments: !filter.hideRefundsAndRepayments,
+          })}
+        >
+          {filter.hideRefundsAndRepayments && <RiCheckLine data-icon="inline-start" aria-hidden="true" />}
+          {t('details.hideRefundsAndRepayments')}
+        </Button>
+      </div>
       {(filter.reason || filter.warning || filter.reconciliation) && (
         <div className="col-span-full flex flex-wrap items-center gap-x-2 text-xs">
           <span>

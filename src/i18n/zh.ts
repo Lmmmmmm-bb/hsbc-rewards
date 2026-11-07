@@ -4,6 +4,7 @@ export const zh = {
   "details.filter.mismatch": "已筛选余额有差异的账单交易",
   "details.filter.unverified": "已筛选无法核对的账单交易",
   "details.filters": "筛选交易",
+  "details.hideRefundsAndRepayments": "隐藏退款和还款",
   "details.transactionRecords": "交易记录",
   "details.transactionInfo": "交易信息",
   "details.componentRewards": "三项奖励",

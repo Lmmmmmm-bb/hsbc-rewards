@@ -19,6 +19,7 @@ export function initialNavigation(
   return {
     cardId: request.cardId ?? null,
     filter: {
+      hideRefundsAndRepayments: request.hideRefundsAndRepayments ?? true,
       component: request.component,
       flags: request.flags,
       reason: request.reason,

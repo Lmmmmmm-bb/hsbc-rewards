@@ -25,8 +25,12 @@ describe('detail result changes', () => {
       page: 0,
       transactionId: 'selected',
       updated: true,
-      filter: { component: 'pulse', flags: ['capped'] },
+      filter: { component: 'pulse', flags: ['capped'], hideRefundsAndRepayments: true },
     })
+  })
+  it('hides refunds and repayments by default and preserves an explicit choice', () => {
+    expect(initialNavigation({}, session).filter.hideRefundsAndRepayments).toBe(true)
+    expect(initialNavigation({ hideRefundsAndRepayments: false }, session).filter.hideRefundsAndRepayments).toBe(false)
   })
   it('treats quote provenance as a result change without changing the numeric rate', () => {
     const state = {

@@ -5,6 +5,7 @@ import { componentFlags } from './status'
 
 export type TransactionFlag = 'pending' | 'uncertain' | 'excluded' | 'capped'
 export interface TransactionFilter {
+  readonly hideRefundsAndRepayments?: boolean
   readonly component?: RewardTier
   readonly flags?: readonly TransactionFlag[]
   readonly reason?: string
@@ -27,6 +28,10 @@ export function selectTransactions(
     : null
   return scope.rewards.flatMap((reward) => {
     const row = byId.get(reward.transactionId)!
+    if (
+      filter.hideRefundsAndRepayments &&
+      (row.classification.kind === 'refund' || row.classification.kind === 'repayment')
+    ) return []
     if (balanceIds && !balanceIds.has(row.id)) return []
     if (
       filter.warning &&

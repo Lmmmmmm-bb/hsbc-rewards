@@ -10,6 +10,7 @@ export const en = {
   "details.filter.mismatch": "Transactions from mismatched statement accounts",
   "details.filter.unverified": "Transactions from unverified statement accounts",
   "details.filters": "Filter transactions",
+  "details.hideRefundsAndRepayments": "Hide refunds and repayments",
   "details.transactionRecords": "Transaction records",
   "details.transactionInfo": "Transaction information",
   "details.componentRewards": "Reward components",
