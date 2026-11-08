@@ -110,7 +110,7 @@ Node.js 版本以 `.nvmrc` 为准，pnpm 版本与命令以 `package.json` 为�
 ## 构建与部署
 
 - 保持 React、首屏 UI 稳定依赖和 PDF.js 引擎的分包边界；UI 分组只捕获静态首屏模块，不提升弹窗专用依赖。PDF 引擎、Worker、辅助资源和弹窗内容保持按需加载；PDF 辅助资源须为独立哈希文件，不内联。
-- HTML 只预加载首屏使用的 Inter Latin 可变字体及 Roboto Latin 500 WOFF2，源码路径交由 Vite 生成哈希 URL 并与 CSS 一致，保留 `font-display: swap`。
+- HTML 只预加载首屏使用的 Inter Latin 可变字体，源码路径交由 Vite 生成哈希 URL 并与 CSS 一致，保留 `font-display: swap`。
 - 浏览器与预渲染共用 `src/app/AppRoot.tsx`；预渲染不运行副作用、不读取账单或请求汇率，并释放资源。服务端渲染、公开文档生成和审计代码不得进入浏览器包。
 - 首屏语言引导为无请求的经典内联脚本，只注入小型元信息表，不包含 React、完整词典或会话；准备脚本在 head，激活脚本在双语静态内容之后，合计 gzip 不超过 2 KiB。
 - 规范网址、分享图规格和本地化元信息集中在 `src/app/seo.ts`，不另建副本。Open Graph / Twitter Card 只由 `vite-plugin-open-graph` 生成；分享图只提交最终 `public/social-card.png`。

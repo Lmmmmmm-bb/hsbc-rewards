@@ -67,7 +67,7 @@ export function WorkspaceShell({
             className="flex items-center gap-2 font-semibold tracking-tight"
           >
             <HsbcLogo />
-            <span data-brand-title className="font-brand text-lg font-medium">
+            <span data-brand-title className="font-sans text-lg font-semibold tracking-normal">
               {t('app.brand')}
             </span>
           </a>
