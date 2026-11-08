@@ -7,17 +7,17 @@ const plural = (count: string | number, one: string, other: string) =>
 export const en = {
   "details.statementDate": "Statement date",
   "details.statementPeriod": "Statement period",
-  "details.filter.mismatch": "Transactions from mismatched statement accounts",
-  "details.filter.unverified": "Transactions from unverified statement accounts",
+  "details.filter.mismatch": "Transactions linked to balance discrepancies",
+  "details.filter.unverified": "Transactions linked to unverified balances",
   "details.filters": "Filter transactions",
   "details.hideRefundsAndRepayments": "Hide refunds and repayments",
   "details.transactionRecords": "Transaction records",
   "details.transactionInfo": "Transaction information",
   "details.componentRewards": "Reward components",
   "details.transactionReward": "Estimated RewardCash",
-  "details.note.transactions": "Filters do not reallocate spending caps. Refunds do not reduce estimates or restore caps.",
+  "details.note.transactions": "Filters do not affect calculations. Refunds do not reduce estimates or restore spending caps.",
 
-  "import.additionalHint": 'Add statements to update your rewards.',
+  "import.additionalHint": "Add statements to update your reward estimates.",
   "fx.details": "Exchange rate basis and updates",
   "caps.pending": "Pending",
   "caps.exhausted": "Cap exhausted",
@@ -29,11 +29,11 @@ export const en = {
   "caps.bankBasis": "Based on posted amounts or the bank’s HKD equivalent.",
   "caps.sources": ({ count }) => `{count} related source ${plural(count, 'statement', 'statements')} imported`,
   "caps.observed": 'Transaction dates {from} — {to}',
-  "caps.noTransactions": "No transactions are observed in this range. Earlier spending may still exist.",
+  "caps.noTransactions": "No imported transactions in this range. Earlier spending may still exist.",
 
   "details.title": "Reward details",
   "details.scope": "Scope",
-  "details.updated": "Results have changed. Pagination has restarted from the first page.",
+  "details.updated": "Results updated. Returned to the first page.",
   "details.allCards": "All cards",
   "details.component": "Reward component",
   "details.allComponents": "All components",
@@ -44,14 +44,14 @@ export const en = {
   "details.flag.excluded": "Excluded",
   "details.flag.capped": "Capped",
   "details.issueFilter": "Filtered to the selected quality issue",
-  "details.clearReason": "Clear this condition",
+  "details.clearReason": "Clear this filter",
   "details.recordCount": ({ count }) => `{count} ${plural(count, 'transaction', 'transactions')}`,
   "details.pageNumber": "Page {page} of {pages}",
   "details.empty": "No records match the current filters.",
   "details.previous": "Previous",
   "details.next": "Next",
   "details.back": "Back",
-  "details.inspect": "Inspect related records",
+  "details.inspect": "View related transactions",
   "details.card": "View details",
   "details.transactionDate": "Transaction date",
   "details.postingDate": "Posting date",
@@ -68,7 +68,7 @@ export const en = {
   "details.sourceUnavailable": "Source-statement details are no longer available",
   "details.sourcePage": "Page {page}",
   "details.sourceText": 'Statement text',
-  "details.objectMissing": "The original item is no longer in these results. Close this dialog and open the current results again.",
+  "details.objectMissing": "The selected content is no longer available. Reopen details from the overview.",
   "details.kind.purchase": "Purchase",
   "details.kind.refund": "Refund",
   "details.kind.repayment": "Repayment",
@@ -93,11 +93,11 @@ export const en = {
   'agent.dialogHint': 'Allow AI tools in your browser to read analysis results on this page.',
   'agent.allow': 'Allow result access',
   'agent.revoke': 'Stop sharing',
-  'agent.shared': 'Sharing is enabled for real results in this page',
-  'agent.notShared': 'Real results are not shared',
+  'agent.shared': 'Statement result sharing enabled',
+  'agent.notShared': 'Statement results not shared',
   'agent.connecting': 'Preparing AI tools for this page…',
   'agent.retry': 'Retry AI access',
-  'agent.connectionFailed': 'AI access could not be prepared. Your statements and import progress are kept. Please retry.',
+  'agent.connectionFailed': 'AI connection failed. Statements and progress are preserved. Please retry.',
   'agent.unsupported': 'WebMCP is disabled or unsupported in this browser. Try searching for WebMCP at chrome://flags in Chrome, enabling it, and restarting the browser.',
   'agent.allowPreparing': 'Preparing AI tools. Please wait.',
   'agent.allowFailed': 'AI access failed. Click “Retry AI access.”',
@@ -135,7 +135,7 @@ export const en = {
   'language.switchToEnglish': 'Switch to English',
   'dialogContent.loading': 'Loading content…',
   'dialogContent.failed': 'Content could not be loaded',
-  'dialogContent.retained': 'Imported statements are kept. Retry or reopen this dialog later.',
+  'dialogContent.retained': 'Statements are preserved. Retry or reopen later.',
   'dialogContent.retry': 'Reload content',
   'rules.tabRewards': 'Reward rules',
   'rules.tabCalculation': 'How estimates work',
@@ -188,7 +188,7 @@ export const en = {
     'Your manually selected language is saved on this device and takes priority on reload or future visits. Clearing results keeps it. If storage is blocked, it lasts only on this page.',
   'pdf.dialogTitle': 'File status',
   'pdf.cards.title': 'Confirm card roles',
-  'pdf.cards.hint': 'HKD and CNY subaccounts are combined by card. Check each card’s role; a single card defaults to primary.',
+  'pdf.cards.hint': 'HKD and CNY subaccounts are grouped by card. Confirm each role; a single card defaults to primary.',
   'pdf.cards.card': 'Card {index} · ending {lastFour}',
   'pdf.cards.primary': 'Primary',
   'pdf.cards.additional': 'Additional',
@@ -200,7 +200,7 @@ export const en = {
     'Processing continues after closing. Canceling discards this batch and keeps earlier results.',
   'pdf.failedFilesHint':
     'Failed files were not added. Select them again to retry.',
-  'pdf.viewRewards': 'View RewardCash',
+  'pdf.viewRewards': 'View reward estimates',
   'pdf.backToRewards': 'Back to overview',
   'pdf.summary.imported': 'Added to estimate',
   'pdf.summary.locked': 'Waiting for password',
@@ -211,7 +211,7 @@ export const en = {
   'rules.dialogTitle': 'RewardCash rules',
   'rules.exampleTitle': 'Combining three reward components',
   'rules.exampleBody':
-    'For an eligible UnionPay QR purchase in mainland China posted as CNY 250, the formula adds estimated basic, Outside Hong Kong, and PULSE exclusive rewards, in that order. Assumes enrollment, the full extra 5X allocated to Outside Hong Kong, and enough capacity under both spending caps.',
+    'For an eligible primary-card UnionPay QR purchase in mainland China posted as CNY 250, the formula adds estimated basic, Outside Hong Kong, and PULSE exclusive rewards, in that order. Assumes enrollment, the full extra 5X allocated to Outside Hong Kong, and enough capacity under both spending caps.',
   'rules.assumptionsTitle': 'Estimation assumptions',
   'rules.sourcesTitle': 'Official rule sources',
   'precision.title': 'Precision and rounding',
@@ -234,16 +234,16 @@ export const en = {
   'period.range': 'Date range',
   'period.capHint':
     'Rewards are totaled by half-year. Outside Hong Kong shows cap usage for the year through that period’s end; PULSE shows that half-year’s usage. Do not add shared cap usage across cards.',
-  'card.reward': 'Period RewardCash estimate',
+  'card.reward': 'Estimated RewardCash',
   'card.enrollmentIgnoredShort':
     'Historical estimates ignore enrollment effective dates.',
   'import.anywhere':
     'Drop PDFs anywhere on this page. Only English text-based HSBC PULSE statements are supported; unlock protected files on your device.',
-  'drop.title': 'Drop PDFs to calculate rewards',
+  'drop.title': 'Drop files to import statements',
   'drop.hint': 'Add multiple statements at once. Files are processed on your device.',
-  'drop.busy': 'The current batch is still processing',
+  'drop.busy': 'Complete the current batch first',
   'drop.busyHint':
-    'Unlock or remove files awaiting a password, then wait for this batch to finish. Or cancel it to add more files.',
+    'Resolve any prompts and confirm card roles in File status, or cancel this batch to add files.',
   'pdf.batchCount': 'Selected files · {count}',
   'pdf.needsAttention': ({ count }) => `{count} ${plural(count, 'file needs', 'files need')} attention`,
   'pdf.showFiles': 'View file status',
@@ -305,7 +305,7 @@ export const en = {
     'HKD 100,000 equivalent per year',
   'rules.pulse.body':
     'CNY or MOP purchases in mainland China or Macau using Reward+ or UnionPay App QR (primary cards only), Apple Pay, Google Pay, or Samsung Pay.',
-  'reason.qrPrimary': 'Qualifying QR payments require a primary card. Confirmed additional-card transactions are excluded from PULSE extra rewards.',
+  'reason.qrPrimary': 'Additional-card QR payments not eligible',
   'rewards.qrPrimary': 'When card role is not stated, QR payment labels are estimated as primary-card payments without changing the recorded card identity. Actual eligibility follows bank records.',
   'rules.pulse.cap':
     'HKD / CNY 80,000 per half-year; MOP at its HKD equivalent',
@@ -327,7 +327,7 @@ export const en = {
   'cashback.demoNotice':
     'Importing PDFs replaces this example with your statement results.',
   'cashback.checkWarning': ({ count }) =>
-    `{count} ${plural(count, 'statement is', 'statements are')} affected. Identified transactions remain in the estimate.`,
+    `{count} ${plural(count, 'statement is', 'statements are')} affected. Identified transactions are retained; rewards depend on eligibility.`,
   'cashback.checkWarningTitle': 'Statement balance mismatch',
   'cashback.memory':
     'PDFs are processed on your device. Results clear on reload, close, or restart.',
@@ -373,7 +373,7 @@ export const en = {
   'pdf.status.locked': 'Password required',
   'pdf.status.extracted': 'Text extracted',
   'pdf.status.parsing': 'Identifying',
-  'pdf.status.parsed': 'Awaiting review',
+  'pdf.status.parsed': 'Awaiting confirmation',
   'pdf.status.imported': 'Added to estimate',
   'pdf.status.error': 'Processing failed',
   'pdf.status.duplicate': 'Duplicate skipped',
@@ -414,7 +414,7 @@ export const en = {
   'pdf.error.duplicate':
     'Identical file already in this batch or current results; skipped.',
   'pdf.error.batch-busy':
-    'Unlock or remove files awaiting a password, then wait for this batch to finish. Or cancel it to add more files.',
+    'Finish processing and confirm card roles for the current batch, or cancel it before adding files.',
   'card.primary': 'Primary card',
   'card.additional': 'Additional card',
   'card.unknown': 'Card',
@@ -442,7 +442,7 @@ export const en = {
   'fx.loadingHint':
     'Fetching a public reference rate; results update automatically once available.',
   'fx.refreshingHint':
-    'Updating automatically; estimates use the rate marked as older until finished.',
+    'Updating; using the previous rate for now.',
   'fx.failed':
     'Rate unavailable. Retrying automatically.',
   'fx.timeout': 'Rate request timed out. Retrying automatically.',
@@ -471,7 +471,7 @@ export const en = {
   'rewards.poolConflict':
     'Conflicting spending cap sharing details; caps are estimated separately for each card.',
   'rewards.knownPortion': 'Calculated: {amount}',
-  'quality.title': 'Statement balance checks',
+  'quality.title': 'Statement and transaction checks',
   'quality.matched': 'Matched checks: {count}',
   'quality.mismatch': 'Mismatched checks: {count}',
   'quality.unverified': 'Unable to check: {count}',
@@ -482,9 +482,9 @@ export const en = {
   'quality.duplicateHint': ({ count }) =>
     `{count} ${plural(count, 'transaction may be duplicated across statements and is retained', 'transactions may be duplicated across statements and are retained')} without unique bank references. Reward eligibility is assessed separately.`,
   'quality.referenceHint': ({ count }) =>
-    `{count} ${plural(count, 'transaction has', 'transactions have')} conflicting bank references and ${plural(count, 'remains', 'remain')} in the estimate.`,
+    `{count} ${plural(count, 'transaction has', 'transactions have')} conflicting bank references and ${plural(count, 'remains', 'remain')} in the results. Rewards depend on eligibility.`,
   'quality.unverifiedHint': ({ count }) =>
-    `{count} balance ${plural(count, 'check lacks', 'checks lack')} required balances. Identified transactions remain in the estimate.`,
+    `{count} balance ${plural(count, 'check lacks', 'checks lack')} required balances. Identified transactions are retained; rewards depend on eligibility.`,
   'quality.uncertainHint': ({ count }) =>
     `{count} ${plural(count, 'transaction lacks', 'transactions lack')} merchant location, original currency, payment method, or date details. Estimated conservatively from available data.`,
   'reasons.title': 'Reward eligibility',
@@ -497,7 +497,7 @@ export const en = {
   'reason.region': 'Merchant location unavailable',
   'reason.currency':
     'Original currency unavailable',
-  'reason.originalHkd': 'HKD spending excluded from Outside Hong Kong',
+  'reason.originalHkd': 'Original currency is HKD',
   'reason.regionExcluded':
     'Merchant location not eligible',
   'reason.currencyExcluded': 'Original currency is neither CNY nor MOP',
@@ -515,7 +515,7 @@ export const en = {
   'rewards.pending': 'Pending calculation',
   'rewards.fxMissing': 'Pending conversion',
   'rewards.fxUnavailableHint':
-    'Reference rate missing; CNY reference values and some capped rewards are pending.',
+    'Reference rate unavailable. CNY reference values and rewards that require this rate are pending.',
   'privacy.title': 'Privacy and independence',
   'privacy.localTitle': 'How data is stored',
   'privacy.localBody':
