@@ -32,15 +32,17 @@ export function FileStatusRow({
               aria-hidden="true"
             />
             <div className="min-w-0 flex-1 space-y-1">
-              <p className="break-all text-sm font-medium">{item.name}</p>
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <p className="min-w-0 break-all text-sm font-medium">{item.name}</p>
+                <Badge variant={item.status === 'error' ? 'default' : 'secondary'}>
+                  {t(`pdf.status.${item.status}`)}
+                </Badge>
+              </div>
               <p className="text-xs text-muted-foreground">
                 {number(item.size / 1024, 0)} KB
               </p>
             </div>
             <div className="-mt-1 -mr-1 flex min-h-6 shrink-0 items-center gap-2">
-              <Badge variant={item.status === 'error' ? 'default' : 'secondary'}>
-                {t(`pdf.status.${item.status}`)}
-              </Badge>
               {editable && (
                 <Button
                   variant="ghost"
