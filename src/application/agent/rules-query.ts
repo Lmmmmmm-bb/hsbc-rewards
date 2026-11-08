@@ -15,7 +15,7 @@ export function getAgentRules(input: AgentToolInputs['reward_get_rules'], t: Tra
     ...(['overview', 'eligibility', 'caps'].includes(topic) ? { components } : {}),
     ...(topic === 'overview' || topic === 'assumptions' ? {
       assumptionCodes: BASELINE_ASSUMPTIONS,
-      notes: [t('rewards.latest'), t('rewards.imported'), t('rules.sharingBody'), t('rewards.enrollment'), t('rewards.enrollmentPeriodIgnored'), t('rewards.fxEffect'), t('rules.exclusions')],
+      notes: [t('rewards.latest'), t('rewards.imported'), t('rules.sharingBody'), t('rewards.enrollment'), t('rewards.enrollmentPeriodIgnored'), t('rewards.qrPrimary'), t('rewards.fxEffect'), t('rules.exclusions'), t('rules.diningPeriods'), t('rules.diningEvidence'), t('rules.otherPromotions')],
     } : {}),
     ...(topic === 'overview' || topic === 'sources' ? { sources: LATEST_RULES.sources } : {}),
   }

@@ -37,7 +37,8 @@ export function deduplicateTransactions(input: readonly Transaction[]) {
 
   const possibleDuplicateIds = new Set<string>()
   for (const group of signatures.values()) {
-    if (group.length > 1 && group.some(t => !t.bankReference)) group.forEach(t => possibleDuplicateIds.add(t.id))
+    const files = new Set(group.flatMap(t => t.sources.map(source => source.fileHash)))
+    if (group.length > 1 && files.size > 1 && group.some(t => !t.bankReference)) group.forEach(t => possibleDuplicateIds.add(t.id))
   }
 
   const referenceGroups = new Map<string, Transaction[]>()

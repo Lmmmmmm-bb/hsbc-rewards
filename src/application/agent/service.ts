@@ -126,6 +126,7 @@ export function createAgentService(deps: {
         const meta = result.meta && latest ? { ...result.meta, latestImport: {
           batchRef: latest.batchRef, active: latest.active, outcome: latest.outcome,
           uncommittedFiles: latest.uncommittedFiles,
+          cardConfirmationRequired: latest.cardConfirmationRequired,
           failedFiles: latest.failedFiles, skippedFiles: latest.skippedFiles, partialSuccess: latest.partialSuccess,
         } } : undefined
 

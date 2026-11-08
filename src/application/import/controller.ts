@@ -13,6 +13,7 @@ import {
 } from './limits'
 import type {
   ImportDependencies,
+  ImportCardRole,
   ImportItem,
   ImportSnapshot,
   PdfImportController,
@@ -46,6 +47,7 @@ export function createPdfImportController(
     outcome: EMPTY_OUTCOME,
   }
   let baselineRevision = 0
+  let reviewSequence = 0
   const listeners = new Set<() => void>()
   const pending = new Map<string, PendingFile>()
 
@@ -57,7 +59,7 @@ export function createPdfImportController(
       ...snapshot,
       items,
       rejected,
-      active: items.some((item) =>
+      active: Boolean(snapshot.cardReview) || items.some((item) =>
         ['queued', 'reading', 'locked', 'parsing'].includes(item.status),
       ),
     }
@@ -246,11 +248,11 @@ export function createPdfImportController(
     finish()
   }
 
-  function finish() {
+  function finish(roles?: readonly ImportCardRole[]) {
     if (
       !dependencies.commit ||
       snapshot.outcome.status !== 'idle' ||
-      snapshot.active ||
+      (snapshot.active && !roles) ||
       snapshot.items.length === 0 ||
       [...pending.values()].some((entry) => entry.running)
     )
@@ -268,22 +270,33 @@ export function createPdfImportController(
     }
 
     try {
-      const outcome = dependencies.commit(files, baselineRevision)
+      if (dependencies.reviewCards && !roles) {
+        const cards = dependencies.reviewCards(files, baselineRevision)
+        if (snapshot.batch !== batch) return
+        if (cards.length) {
+          snapshot = { ...snapshot, cardReview: { id: ++reviewSequence, cards } }
+          publish(snapshot.items)
+          return
+        }
+      }
+      const outcome = dependencies.commit(files, baselineRevision, roles)
       if (snapshot.batch !== batch) return
 
       pending.forEach(release)
       pending.clear()
-      snapshot = { ...snapshot, outcome: { status: 'committed', ...outcome } }
+      snapshot = { ...snapshot, cardReview: undefined, outcome: { status: 'committed', ...outcome } }
       publish(
         snapshot.items.map((item) =>
           item.status === 'parsed' ? { ...item, status: 'imported' } : item,
         ),
       )
     } catch (error) {
+      if (snapshot.batch !== batch) return
       pending.forEach(release)
       pending.clear()
       snapshot = {
         ...snapshot,
+        cardReview: undefined,
         outcome: {
           ...EMPTY_OUTCOME,
           status: 'failed',
@@ -302,6 +315,7 @@ export function createPdfImportController(
     snapshot = {
       ...snapshot,
       batch: snapshot.batch + 1,
+      cardReview: undefined,
       outcome: EMPTY_OUTCOME,
     }
     pending.forEach(release)
@@ -379,7 +393,7 @@ export function createPdfImportController(
       )
         return
 
-      snapshot = { ...snapshot, outcome: EMPTY_OUTCOME }
+      snapshot = { ...snapshot, cardReview: undefined, outcome: EMPTY_OUTCOME }
       update(id, { status: 'queued' })
       pump()
     },
@@ -394,11 +408,25 @@ export function createPdfImportController(
       const entry = pending.get(id)
       if (entry) release(entry)
       pending.delete(id)
+      snapshot = { ...snapshot, cardReview: undefined }
       update(id, { status: 'removed', problem: null })
       pump()
     },
 
     cancel,
+    setCardRole(reviewId, cardId, role) {
+      const review = snapshot.cardReview
+      if (review?.id !== reviewId || !['primary', 'additional'].includes(role)) return
+      snapshot = { ...snapshot, cardReview: { ...review,
+        cards: review.cards.map(card => card.cardId === cardId ? { ...card, role } : card),
+      } }
+      publish(snapshot.items)
+    },
+    confirmCards(reviewId) {
+      const review = snapshot.cardReview
+      if (review?.id !== reviewId || review.cards.some((card) => card.role === null)) return
+      finish(review.cards)
+    },
     preview: (id) => pending.get(id)?.pages ?? null,
   }
 }

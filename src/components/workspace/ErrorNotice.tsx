@@ -13,10 +13,14 @@ export function ErrorNotice({
   role?: 'alert' | 'status'
 }) {
   return (
-    <Alert role={role}>
+    <Alert role={role} className="gap-y-1 p-3">
       <RiErrorWarningLine aria-hidden="true" />
       {title && <AlertTitle className="text-primary">{title}</AlertTitle>}
-      {children && <AlertDescription>{children}</AlertDescription>}
+      {children && (
+        <AlertDescription className="flex flex-col items-start gap-2 [&_p:not(:last-child)]:mb-0">
+          {children}
+        </AlertDescription>
+      )}
     </Alert>
   )
 }

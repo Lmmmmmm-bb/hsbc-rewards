@@ -25,7 +25,7 @@ export function LocalPdfImport({
             className="size-5 text-primary"
             aria-hidden="true"
           />
-          <h2 className="text-sm font-semibold">{t('import.dropTitle')}</h2>
+          <h2 className="text-sm font-medium">{t('import.dropTitle')}</h2>
         </div>
         <PdfFilePicker
           label={t('pdf.choose')}

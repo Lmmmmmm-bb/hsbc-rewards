@@ -84,6 +84,11 @@ describe('workspace runtime composition', () => {
     const file = pdf()
 
     active.importer.start([file])
+    await vi.waitFor(() => expect(active.importer.getSnapshot().cardReview).toBeDefined())
+    expect(active.store.replace).not.toHaveBeenCalled()
+    expect(extracted.dispose).toHaveBeenCalledOnce()
+    expect(request).not.toHaveBeenCalled()
+    active.importer.confirmCards(active.importer.getSnapshot().cardReview!.id)
     await vi.waitFor(() => expect(active.importer.getSnapshot().outcome.status).toBe('committed'))
     expect(active.store.replace).toHaveBeenCalledOnce()
     expect(active.store.getSnapshot().dataset.transactions).toHaveLength(1)

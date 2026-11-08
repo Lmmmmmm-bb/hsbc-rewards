@@ -20,7 +20,7 @@ export function getAgentQuality(snapshots: AgentSnapshots, input: QualityInput) 
     const codes = [...new Set([
       ...row.warnings.map((warning) => warning.code), ...reward.assumptions,
       ...reward.tiers.flatMap((tier) => tier.reasonCodes.filter((code) =>
-        ['region.unknown', 'currency.original-unknown', 'fx.required-for-cap'].includes(code))),
+        ['region.unknown', 'currency.original-unknown', 'payment.unknown', 'fx.required-for-cap'].includes(code))),
     ])].sort()
 
     return codes.length ? [{ kind: 'transaction', transactionRef: snapshot.references.get('transaction', row.id), codes }] : []

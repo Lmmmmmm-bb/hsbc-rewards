@@ -35,12 +35,12 @@ export function RewardReasons({
     reasons: TierDetails[number]['reasons'],
     component: RewardTier,
   ) => (
-    <ul className="space-y-2">
+    <ul className="flex flex-col gap-1">
       {reasons.map(({ code, count }) => (
         <li key={code} className="flex items-start justify-between gap-3">
           <Button
             variant="ghost"
-            className="h-auto min-w-0 justify-start p-0 text-left whitespace-normal text-foreground hover:bg-transparent hover:underline"
+            className="h-auto min-h-6 min-w-0 justify-start p-0 text-left font-normal whitespace-normal text-foreground hover:bg-transparent hover:underline"
             onClick={() => onReason?.(component, code)}
           >
             {t(reasonMessage(code))}
@@ -56,11 +56,11 @@ export function RewardReasons({
       <AccordionItem value="reasons">
         <AccordionTrigger>{t('reasons.title')}</AccordionTrigger>
         <AccordionContent>
-          <div className="space-y-3">
+          <div className="grid gap-4 @lg/reward:grid-cols-2">
             {children}
             {shared.length > 0 && (
-              <section className="space-y-3">
-                <h4 className="font-medium text-primary">
+              <section className="flex min-w-0 flex-col gap-2">
+                <h4 className="text-xs font-medium text-foreground">
                   {t('reasons.common')}
                 </h4>
                 {list(shared, 'basic')}
@@ -70,8 +70,8 @@ export function RewardReasons({
               const specific = reasons.filter((reason) => !common(reason.code))
 
               return (
-                <section key={tier} className="space-y-2">
-                  <h4 className="font-medium text-primary">
+                <section key={tier} className="flex flex-col gap-2">
+                  <h4 className="text-xs font-medium text-foreground">
                     {t(`rewards.${tier}`)}
                   </h4>
                   {specific.length ? (

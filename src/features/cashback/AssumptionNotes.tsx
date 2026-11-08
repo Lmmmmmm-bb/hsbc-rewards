@@ -10,6 +10,7 @@ const labels = {
   'role-conflict': 'rewards.roleConflict',
   'pool-conflict': 'rewards.poolConflict',
   'enrollment-period': 'rewards.enrollmentPeriodIgnored',
+  'qr-primary': 'rewards.qrPrimary',
 } as const satisfies Readonly<Record<AssumptionKind, MessageKey>>
 
 export function AssumptionNotes({

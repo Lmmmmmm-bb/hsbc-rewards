@@ -20,6 +20,19 @@ function setup() {
 }
 
 describe('bounded import status', () => {
+  it('requests page confirmation without exposing provisional card identities', () => {
+    const { references, pages, batch } = setup()
+    const waiting: ImportSnapshot = { ...batch,
+      items: [{ ...batch.items[0], status: 'parsed', problem: null }],
+      cardReview: { id: 9, cards: [{ cardId: 'PRIVATE_CARD_ID', lastFour: '1234', role: 'primary' }] },
+    }
+    const result = readAgentImport(waiting, references, 1000, {}, pages)
+    expect(result).toMatchObject({ nextAction: 'user_confirm_cards', cardConfirmationRequired: true,
+      successfulFiles: 0, uncommittedFiles: 1, pollAfterMs: null, active: true })
+    expect(JSON.stringify(result)).not.toContain('PRIVATE_')
+    expect(JSON.stringify(result)).not.toContain('1234')
+  })
+
   it('pages every file once while keeping whole-batch counts and actions on every page', () => {
     const { references, pages, batch } = setup()
     let page = readAgentImport(batch, references, 1000, { limit: 20 }, pages)

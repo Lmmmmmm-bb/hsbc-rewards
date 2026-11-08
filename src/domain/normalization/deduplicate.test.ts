@@ -13,12 +13,24 @@ describe('unique-evidence transaction merging', () => {
     expect(result.mergedIds).toEqual(['transaction-b'])
   })
 
-  it('retains same-day same-amount purchases without a unique reference', () => {
-    const result = deduplicateTransactions([transaction(), transaction({ id: 'transaction-b' })])
+  it('flags unproven same-day same-amount transactions only across files', () => {
+    const a = transaction()
+    const b = transaction({ id: 'transaction-b', sources: [{ ...a.sources[0], statementId: 'statement-b', fileHash: 'synthetic-b' }] })
+    const result = deduplicateTransactions([a, b])
 
     expect(result.transactions).toHaveLength(2)
     expect(result.possibleDuplicateIds).toHaveLength(2)
     expect(result.transactions[0].warnings[0].code).toBe('transaction.possible-duplicate')
+  })
+
+  it('keeps distinct printed rows in one statement without a duplicate warning', () => {
+    const a = transaction()
+    const b = transaction({ id: 'transaction-b', sources: [{ ...a.sources[0], row: 2 }] })
+    const result = deduplicateTransactions([a, b])
+
+    expect(result.transactions).toHaveLength(2)
+    expect(result.possibleDuplicateIds).toEqual([])
+    expect(result.transactions.every(row => row.warnings.length === 0)).toBe(true)
   })
 
   it('does not merge conflicting amounts or independent bank references', () => {

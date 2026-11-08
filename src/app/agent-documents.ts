@@ -58,8 +58,8 @@ If the browser supports WebMCP but loading or registration fails, the ${t('agent
 2. Synthetic example data can be read directly. For real results, reward_request_access opens the page's ${t('agent.dialogTitle')} dialog. A page action enables sharing; this tool call does not grant access. Close the dialog when finished. Enabling sharing covers later imports on this page. Switching from the example to real data requires enabling real-data sharing.
 3. Provide only user-authorized files through the browser's normal file upload ability. The primary input selector is \`${AGENT_FILE_INPUT_SELECTOR}\`; its visible page control is Choose PDF files (localized by the page). When file status is open, its Add more files control can open the chooser. A browser with direct file-input support may use the input selector. PDF bytes, local paths, URLs, and passwords are not tool arguments.
 4. Only English text-based HSBC PULSE statements are supported. Scans, OCR, other languages, and other card types are outside scope. Maximum per file: ${IMPORT_LIMITS.fileBytes} bytes and ${IMPORT_LIMITS.pages} pages. Page-session total: ${IMPORT_LIMITS.files} files / ${IMPORT_LIMITS.sessionBytes} bytes, including repeated batches.
-5. Read reward_get_import_status. Its counts and nextAction cover the entire batch; files contains one page, totalCount is the number of visible files, and nextCursor continues the list with the same batchRef. Successful files are committed together when the batch ends. Files waiting for a password keep the batch open. For locked files, use reward_open_import with fileRef to locate the local password form; targeting a referenced file requires sharing. A user enters the password in the page. Five consecutive incorrect attempts pause unlocking for 60 seconds.
-6. Closing file status keeps processing active. For nextAction=wait, use pollAfterMs instead of tight polling. user_unlock and wait_for_cooldown require page interaction or the reported per-file wait. review_failed_files identifies failed or rejected work. read_summary means committed results can be queried; provide_files means more input is needed.
+5. Read reward_get_import_status. Its counts and nextAction cover the entire batch; files contains one page, totalCount is the number of visible files, and nextCursor continues the list with the same batchRef. Successful files are committed together after parsing and page confirmation of card roles. HKD/CNY subaccounts are linked to actual cards before confirmation; unrecognized single-card roles default to primary; multiple unrecognized cards require individual choices. Choices remain in page memory and do not create shared spending caps. Files waiting for a password keep the batch open. For locked files, use reward_open_import with fileRef to locate the local password form; targeting a referenced file requires sharing. A user enters the password in the page. Five consecutive incorrect attempts pause unlocking for 60 seconds.
+6. Closing file status keeps processing active. For nextAction=wait, use pollAfterMs instead of tight polling. user_confirm_cards (cardConfirmationRequired=true) requires confirming Primary / Additional choices for every card in file status before the batch is included. Closing the dialog keeps these choices. user_unlock and wait_for_cooldown require page interaction or the reported per-file wait. review_failed_files identifies failed or rejected work. read_summary means committed results can be queried; provide_files means more input is needed.
 7. Use reward_get_summary to obtain resultToken, availablePeriods, and paginated card references. Query single-card details, quality, or transactions using that token. Read meta.latestImport before describing coverage: earlier results remain readable while new files are uncommitted.
 8. If the user requests cancellation, reward_cancel_import requires the current batchRef and discards only that batch's uncommitted work. It preserves earlier results. Aborting a tool call or closing a dialog does not cancel imports. After this batch ends, failed files can be selected again. Tools do not reset the complete session; Start over is a page action.
 
@@ -134,6 +134,14 @@ ${AGENT_PROBLEMS.map((code) => `- agent.${code}: ${t(`agent.error.${code}`)}`).j
 Expected recovery actions include request_access, provide_files, read_summary, finish_current_dialog, and review_request. UI acknowledgments may return enable_sharing, continue, or handle_file. Read import-specific nextAction and retryAfterSeconds for file handling. Import problems retain stable source codes such as password-required, invalid-pdf, duplicate, and session-limit. Error messages never echo submitted passwords, file contents, or internal stack traces.
 
 ## Public rule version and sources
+
+${t('rewards.qrPrimary')}
+
+${t('rules.diningPeriods')}
+
+${t('rules.diningEvidence')}
+
+${t('rules.otherPromotions')}
 
 This deployment uses ${LATEST_RULES.id}, verified ${LATEST_RULES.verifiedAt}. reward_get_rules returns the same application version and localized explanations; it does not fetch or reverify current bank terms.
 

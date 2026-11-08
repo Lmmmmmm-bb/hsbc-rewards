@@ -1,4 +1,5 @@
 import { useId } from 'react'
+import { RiCheckLine } from '@remixicon/react'
 import type { ResultScope } from '@/application/results/scope'
 import type {
   TransactionFilter,
@@ -34,7 +35,7 @@ function FilterSelect({
   const id = useId()
   const selected = choices.find((choice) => choice.value === value)?.label
   return (
-    <div className={cn('min-w-0 space-y-1', className)}>
+    <div className={cn('flex min-w-0 flex-col gap-1', className)}>
       <label htmlFor={id} className="block text-xs text-muted-foreground">
         {label}
       </label>
@@ -85,13 +86,14 @@ export function TransactionFilters({
   const { t } = useI18n()
   return (
     <div
-      className="grid shrink-0 grid-cols-2 items-end gap-2 border bg-muted/30 p-2.5 sm:grid-cols-3"
+      className="grid shrink-0 grid-cols-2 items-end gap-2 border bg-muted/30 p-2.5 @2xl/details:grid-cols-3"
       data-detail-filters
       role="group"
       aria-label={t('details.filters')}
     >
       <FilterSelect
         label={t('cashback.cards')}
+        className="col-span-2 @2xl/details:col-span-1"
         value={cardId ?? 'all'}
         choices={[
           { value: 'all', label: t('details.allCards') },
@@ -125,7 +127,6 @@ export function TransactionFilters({
       <FilterSelect
         label={t('details.status')}
         value={filter.flags?.[0] ?? 'all'}
-        className="col-span-2 sm:col-span-1"
         choices={[
           { value: 'all', label: t('details.allStatuses') },
           ...(['pending', 'uncertain', 'excluded', 'capped'] as const).map(
@@ -139,8 +140,23 @@ export function TransactionFilters({
           })
         }
       />
+      <div className="col-span-full">
+        <Button
+          variant="outline"
+          size="sm"
+          aria-pressed={!!filter.hideRefundsAndRepayments}
+          className="h-auto min-h-8 whitespace-normal aria-pressed:bg-muted"
+          onClick={() => onFilter({
+            ...filter,
+            hideRefundsAndRepayments: !filter.hideRefundsAndRepayments,
+          })}
+        >
+          {filter.hideRefundsAndRepayments && <RiCheckLine data-icon="inline-start" aria-hidden="true" />}
+          {t('details.hideRefundsAndRepayments')}
+        </Button>
+      </div>
       {(filter.reason || filter.warning || filter.reconciliation) && (
-        <div className="col-span-2 flex flex-wrap items-center gap-x-2 text-xs sm:col-span-3">
+        <div className="col-span-full flex flex-wrap items-center gap-x-2 text-xs">
           <span>
             {filter.reason
               ? t(reasonMessage(filter.reason))

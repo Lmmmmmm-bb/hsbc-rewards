@@ -32,27 +32,31 @@ export function FileStatusRow({
               aria-hidden="true"
             />
             <div className="min-w-0 flex-1 space-y-1">
-              <p className="break-all text-sm font-medium">{item.name}</p>
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <p className="min-w-0 break-all text-sm font-medium">{item.name}</p>
+                <Badge variant={item.status === 'error' ? 'default' : 'secondary'}>
+                  {t(`pdf.status.${item.status}`)}
+                </Badge>
+              </div>
               <p className="text-xs text-muted-foreground">
                 {number(item.size / 1024, 0)} KB
               </p>
             </div>
-            <Badge variant={item.status === 'error' ? 'default' : 'secondary'}>
-              {t(`pdf.status.${item.status}`)}
-            </Badge>
-            {editable && (
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                aria-label={t('pdf.remove', { name: item.name })}
-                onClick={() => controller.remove(item.id)}
-              >
-                <RiCloseLine aria-hidden="true" />
-              </Button>
-            )}
+            <div className="-mt-1 -mr-1 flex min-h-6 shrink-0 items-center gap-2">
+              {editable && (
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={t('pdf.remove', { name: item.name })}
+                  onClick={() => controller.remove(item.id)}
+                >
+                  <RiCloseLine aria-hidden="true" />
+                </Button>
+              )}
+            </div>
           </div>
           {(item.status === 'parsed' || item.status === 'imported') && (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               {t('pdf.parsedSummary', {
                 pages: item.totalPages ?? 0,
                 transactions: item.transactions,
@@ -60,7 +64,7 @@ export function FileStatusRow({
             </p>
           )}
           {(item.status === 'reading' || item.status === 'parsing') && (
-            <div role="status" className="space-y-1">
+            <div role="status" className="space-y-2">
               <Progress
                 value={
                   item.status === 'parsing' || !item.totalPages

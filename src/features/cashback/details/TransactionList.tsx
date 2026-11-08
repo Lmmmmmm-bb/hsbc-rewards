@@ -76,7 +76,7 @@ export function TransactionList({
         >
           <div className="p-2 pr-3">
             {!count && <p className="py-6">{t('details.empty')}</p>}
-            <ul className="grid gap-2 sm:grid-cols-2" data-transaction-grid>
+            <ul className="grid gap-2 @2xl/details:grid-cols-2" data-transaction-grid>
               {entries.map((entry) => (
                 <li key={entry.row.id} className="min-w-0">
                   <TransactionRow

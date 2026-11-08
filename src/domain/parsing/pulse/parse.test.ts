@@ -216,6 +216,43 @@ describe('HSBC Pulse English statement parser', () => {
     )
   })
 
+  it('separates inline MOP money from the merchant and preserves mobile-payment evidence', () => {
+    const dataset = parse([
+      pulsePage({
+        currency: 'HKD',
+        closing: '240.00',
+        ledger: [
+          purchase('SYNTHETIC CAFE MAC MO MOP 250.00', '240.00'),
+          line('APPLE PAY-MOBILE:0000'),
+        ],
+      }),
+    ])
+
+    expect(dataset.transactions[0]).toMatchObject({
+      description: 'SYNTHETIC CAFE MAC MO',
+      original: { currency: 'MOP', minor: 25000 },
+      account: { currency: 'HKD', minor: 24000 },
+      classification: { region: 'MO', paymentMethod: 'apple-pay' },
+    })
+    expect(reconcileStatement(dataset.statements[0], dataset.transactions)[0].status).toBe('matched')
+    expect(calculateRewards(dataset.transactions, dataset.cards).cards[0]).toMatchObject({
+      basicMicroRc: 960000, abroadMicroRc: 4800000, pulseMicroRc: 4800000,
+    })
+  })
+
+  it('rejects conflicting inline and continuation original amounts', () => {
+    expect(() => parse([
+      pulsePage({
+        currency: 'HKD',
+        closing: '240.00',
+        ledger: [
+          purchase('SYNTHETIC CAFE MO MOP 250.00', '240.00'),
+          line('ORIGINAL AMOUNT: MOP 260.00'),
+        ],
+      }),
+    ])).toThrow('parse.conflicting-original-amount')
+  })
+
   it('recognizes a separate card block and shares only the explicitly common statement account', () => {
     const dataset = parse([
       pulsePage({

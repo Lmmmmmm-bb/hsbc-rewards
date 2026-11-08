@@ -22,7 +22,7 @@ export function FxReference({
   return (
     <section
       data-fx-reference
-      className="space-y-2 text-xs"
+      className="space-y-3 text-xs"
       aria-label={t('fx.title')}
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -41,9 +41,9 @@ export function FxReference({
             <span className="font-mono font-medium tabular-nums">
               1 HKD = {number(fx.hkdToCnyPpm / 1_000_000, 6)} CNY
             </span>
-            {(fx.stale || fx.source === 'live') && (
-              <Badge variant={fx.stale ? 'secondary' : 'outline'}>
-                {t(fx.stale ? 'fx.stale' : 'fx.available')}
+            {fx.stale && (
+              <Badge variant="secondary">
+                {t('fx.stale')}
               </Badge>
             )}
           </p>

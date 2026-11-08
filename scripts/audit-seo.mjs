@@ -53,12 +53,8 @@ export async function verifySeoBuild(directory, { indexable, expectedHeading }) 
 
     return url
   })
-  assert.equal(fontPreloads.length, 2, 'Only the two visible Latin fonts should be preloaded.')
-  assert.equal(new Set(fontPreloads).size, 2, 'A font must not be preloaded twice.')
-
-  for (const family of ['inter-latin-wght-normal-', 'roboto-latin-500-normal-']) {
-    assert.ok(fontPreloads.some(url => url.startsWith(`/assets/${family}`)), 'Preload the exact font subsets used on the initial page.')
-  }
+  assert.equal(fontPreloads.length, 1, 'Only the visible Inter Latin font should be preloaded.')
+  assert.ok(fontPreloads[0].startsWith('/assets/inter-latin-wght-normal-'), 'Preload the exact font subset used on the initial page.')
 
   const stylesheets = [...html.matchAll(/<link\b[^>]*rel="stylesheet"[^>]*href="(\/assets\/[^"]+\.css)"[^>]*>/g)]
   const css = (await Promise.all(stylesheets.map(([, url]) => readFile(join(directory, url), 'utf8')))).join('\n')

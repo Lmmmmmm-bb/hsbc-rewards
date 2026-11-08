@@ -77,7 +77,7 @@ export function ResultDetailsContent({
   return (
     <div
       ref={host}
-      className="flex min-h-0 flex-1 flex-col gap-3"
+      className="@container/details flex min-h-0 flex-1 flex-col gap-3"
       data-result-details
     >
       <p className="shrink-0 text-xs text-muted-foreground">

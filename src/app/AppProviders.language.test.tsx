@@ -12,7 +12,7 @@ import { LOCALE_PREFERENCE_KEY } from '@/i18n/browser-preference'
 import { createMemorySession } from '@/store/memory-session'
 import { workspace } from './runtime/workspace'
 import { createPdfImportController } from '@/application/import/controller'
-import { commitImportedBatch } from '@/application/import/commit'
+import { commitImportedBatch, reviewImportedCards } from '@/application/import/commit'
 import { deriveWorkspace } from '@/application/session/selectors'
 import type { SessionStore } from '@/application/session/types'
 import type { PdfImportController } from '@/application/import/types'
@@ -171,7 +171,7 @@ describe('page language lifecycle', () => {
 })
 
 describe('language changes during an import', () => {
-  const scenarios = (['reading', 'parsing', 'locked'] as const).flatMap((phase) =>
+  const scenarios = (['reading', 'parsing', 'locked', 'review'] as const).flatMap((phase) =>
     (['commit', 'cancel'] as const).map((outcome) => ({ phase, outcome })),
   )
   it.each(scenarios)(
@@ -186,7 +186,7 @@ describe('language changes during an import', () => {
         pages: [pulsePage({ closing: '10.00', ledger: [purchase('SYNTHETIC STORE CN', '10.00')] })],
         dispose: vi.fn(async () => {}),
       }
-      const commit = vi.fn((files, revision) => commitImportedBatch(store, files, revision))
+      const commit = vi.fn((files, revision, roles) => commitImportedBatch(store, files, revision, roles))
       const controller = createPdfImportController({
         reader: { read: async (_, options) => {
           signal = options.signal
@@ -205,10 +205,15 @@ describe('language changes during an import', () => {
           return { revision: state.revision, hashes: state.dataset.statements.map((item) => item.fileHash), files: state.dataset.statements.length, bytes: 1000 }
         },
         commit,
+        reviewCards: (files, revision) => reviewImportedCards(store, files, revision),
       })
       const unlock = vi.spyOn(controller, 'unlock')
       controller.start([{ name: 'synthetic.pdf', size: 100, type: 'application/pdf', arrayBuffer: async () => new TextEncoder().encode('%PDF-synthetic').buffer }])
-      await vi.waitFor(() => expect(controller.getSnapshot().items[0].status).toBe(phase))
+      if (phase === 'review') {
+        await vi.waitFor(() => expect(controller.getSnapshot().cardReview).toBeDefined())
+        const review = controller.getSnapshot().cardReview!
+        controller.setCardRole(review.id, review.cards[0].cardId, 'additional')
+      } else await vi.waitFor(() => expect(controller.getSnapshot().items[0].status).toBe(phase))
       const beforeSession = store.getSnapshot()
       const beforeBatch = controller.getSnapshot()
       const { createRoot } = await import('react-dom/client')
@@ -253,6 +258,11 @@ describe('language changes during an import', () => {
           query(container, 'form').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }))
         }
         else gate.resolve()
+        await vi.waitFor(() => expect(controller.getSnapshot().cardReview).toBeDefined())
+        const review = controller.getSnapshot().cardReview!
+        for (const card of review.cards)
+          if (card.role === null) controller.setCardRole(review.id, card.cardId, 'primary')
+        controller.confirmCards(review.id)
         await vi.waitFor(() => expect(controller.getSnapshot().outcome.status).toBe('committed'))
       })
 

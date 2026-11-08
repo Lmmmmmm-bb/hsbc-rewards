@@ -19,7 +19,7 @@ export function summarizeAgentImport(batch: ImportSnapshot, references: AgentRef
   const failedFiles = items.filter((item) => item.status === 'error').length
   const processing = batch.outcome.status === 'idle' && items.some((item) => ['queued', 'reading', 'parsing', 'parsed'].includes(item.status))
   const nextAction = locked.length ? locked.some((item) => passwordWaitSeconds(item.gate, now) === 0) ? 'user_unlock' : 'wait_for_cooldown'
-    : processing ? 'wait' : failedFiles || batch.outcome.status === 'failed' ? 'review_failed_files' : batch.outcome.status === 'committed' ? 'read_summary' : 'provide_files'
+    : batch.cardReview ? 'user_confirm_cards' : processing ? 'wait' : failedFiles || batch.outcome.status === 'failed' ? 'review_failed_files' : batch.outcome.status === 'committed' ? 'read_summary' : 'provide_files'
 
   return {
     batchRef,
@@ -31,6 +31,7 @@ export function summarizeAgentImport(batch: ImportSnapshot, references: AgentRef
     partialSuccess: batch.outcome.status === 'committed' && failedFiles > 0,
     rejected: batch.rejected,
     nextAction,
+    cardConfirmationRequired: Boolean(batch.cardReview),
     pollAfterMs: nextAction === 'wait' ? 1000 : null,
     uncommittedFiles: batch.outcome.status === 'idle'
       ? items.filter((item) => ['queued', 'reading', 'locked', 'parsing', 'parsed', 'extracted'].includes(item.status)).length : 0,

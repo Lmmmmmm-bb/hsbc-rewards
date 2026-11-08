@@ -34,6 +34,7 @@ export interface Card {
   readonly lastFour: string
   readonly holderName?: string
   readonly role: 'primary' | 'additional' | 'unknown'
+  readonly roleSource?: 'user'
   readonly statementIds?: readonly string[]
   readonly accountIds?: readonly string[]
   readonly warnings?: readonly DomainWarning[]

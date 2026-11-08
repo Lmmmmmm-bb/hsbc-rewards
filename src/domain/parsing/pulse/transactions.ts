@@ -112,6 +112,9 @@ export function readPulseTransactions(
         if (!description)
           throw new DomainError('parse.missing-transaction-description')
 
+        // Foreign currency and amount can share the merchant row before posted money.
+        const original = /^(.*\S)\s+([A-Z]{3})\s+([+-]?[\d,]+\.\d{2}\s*(?:CR|DR)?)$/i.exec(description)
+
         const posted = resolveDateToken(shortDate(match[1]), {
           from: resolutionFrom,
           to: metadata.date,
@@ -125,9 +128,11 @@ export function readPulseTransactions(
           cardNumber,
           postingDate: posted.date,
           transactionDate: transacted.date,
-          description,
+          description: original?.[1] ?? description,
           minor,
-          original: null,
+          original: original
+            ? { currency: normalizeCurrency(original[2]), minor: parseMinor(original[3]) }
+            : null,
           sourceRows: [{ page: page.page, row }],
           warningCodes: [
             ...new Set([...posted.warningCodes, ...transacted.warningCodes]),

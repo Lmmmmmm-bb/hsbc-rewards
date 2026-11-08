@@ -1,7 +1,7 @@
 import type { SessionStore } from '@/application/session/types'
 import { createPdfImportController } from '@/application/import/controller'
 import { sha256 } from '@/adapters/crypto/sha256'
-import { commitImportedBatch } from '@/application/import/commit'
+import { commitImportedBatch, reviewImportedCards } from '@/application/import/commit'
 import { addMinor } from '@/domain/money/money'
 
 /** Bind the local import pipeline to its session; PDF and parser implementations stay lazy. */
@@ -23,7 +23,8 @@ export function createPdfImportRuntime(store: SessionStore) {
         return pulseStatementParser.parse(pages, source, signal)
       },
     },
-    commit: (files, revision) => commitImportedBatch(store, files, revision),
+    reviewCards: (files, revision) => reviewImportedCards(store, files, revision),
+    commit: (files, revision, roles) => commitImportedBatch(store, files, revision, roles),
     now: () => Date.now(),
     yieldTask: () => new Promise((resolve) => setTimeout(resolve, 0)),
     existing: () => {

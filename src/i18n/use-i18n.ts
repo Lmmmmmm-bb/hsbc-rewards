@@ -29,10 +29,10 @@ export function useI18n() {
       timeZone: 'Asia/Hong_Kong',
     }).format(new Date(`${iso}T00:00:00Z`))
 
-  const rc = (microRc: number | null) =>
+  const rc = (microRc: number | null, precision: 'decimal' | 'exact' = 'exact') =>
     microRc === null
       ? value.t('rewards.pending')
-      : `${formatRewardNumber(microRc, value.locale, 'exact')} RC`
+      : `${formatRewardNumber(microRc, value.locale, precision)} RC`
 
   const dateTime = (timestamp: number) =>
     new Intl.DateTimeFormat(value.locale, {

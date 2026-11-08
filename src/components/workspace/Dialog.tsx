@@ -51,7 +51,7 @@ export function Dialog({
         aria-describedby={description ? descriptionId : undefined}
         data-dialog-size={size}
         className={cn(
-          'flex max-h-[90svh] flex-col overflow-hidden sm:max-w-xl',
+          'flex max-h-[90svh] w-[calc(100%-1.5rem)] max-w-xl flex-col overflow-hidden min-[360px]:w-[calc(100%-2rem)] sm:w-[calc(100%-3rem)] sm:max-w-xl',
           size === 'confirmation'
             ? ''
             : 'h-[min(42rem,90svh)] min-h-[min(24rem,90svh)] lg:h-[min(48rem,90svh)] lg:min-h-[min(32rem,90svh)]',
