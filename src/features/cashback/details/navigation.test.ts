@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest'
 import type { SessionState } from '@/application/session/types'
 import { createDemoDataset } from '@/application/demo/dataset'
 import { initialNavigation, synchronizeNavigation } from './navigation'
+import { deriveWorkspace } from '@/application/session/selectors'
+import { selectResultScope } from '@/application/results/scope'
+import { selectTransactions } from '@/application/results/transactions'
 
 describe('detail result changes', () => {
   const session: SessionState = {
@@ -31,6 +34,16 @@ describe('detail result changes', () => {
   it('hides refunds and repayments by default and preserves an explicit choice', () => {
     expect(initialNavigation({}, session).filter.hideRefundsAndRepayments).toBe(true)
     expect(initialNavigation({ hideRefundsAndRepayments: false }, session).filter.hideRefundsAndRepayments).toBe(false)
+  })
+  it.each(['refund', 'repayment'])('shows matching records when opening a %s reason', (kind) => {
+    const request = { reason: `transaction.${kind}` }
+    const state = initialNavigation(request, session)
+    const scope = selectResultScope(session, deriveWorkspace(session))
+    const entries = selectTransactions(scope, state.filter)
+    expect(entries.length).toBeGreaterThan(0)
+    expect(entries.every(({ row }) => row.classification.kind === kind)).toBe(true)
+    expect(initialNavigation({ ...request, hideRefundsAndRepayments: true }, session)
+      .filter.hideRefundsAndRepayments).toBe(true)
   })
   it('treats quote provenance as a result change without changing the numeric rate', () => {
     const state = {
